@@ -1,0 +1,19 @@
+#! /usr/bin/bash -v
+#
+# this is an "executable" which should run the compiler 
+# '{self.cc} {options} {source_file}'
+# Inputs: /path/to/program.c
+# Outputs: /path/to/program (executable)
+
+# need to strip the extension
+# get last argument. Ignore all the other ones for now
+filepath=${!#}
+base="${filepath%.*}"
+echo "Compiling $base (.c)"
+
+gcc -E -P $base.c -o $base.i
+
+java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.aocomp.driver.Java2C < $base.i > $base.s
+# TODO: die if not 0.
+
+gcc $base.s -o $base
