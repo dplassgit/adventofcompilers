@@ -1,19 +1,26 @@
-#! /usr/bin/bash -v
+#! /usr/bin/bash
 #
 # this is an "executable" which should run the compiler 
 # '{self.cc} {options} {source_file}'
 # Inputs: /path/to/program.c
 # Outputs: /path/to/program (executable)
 
-# need to strip the extension
-# get last argument. Ignore all the other ones for now
+# Use last argument as filepath.
 filepath=${!#}
+# Strip the extension
 base="${filepath%.*}"
 echo "Compiling $base (.c)"
 
+# Preprocess
 gcc -E -P $base.c -o $base.i
 
-java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.aocomp.driver.Java2C < $base.i > $base.s
-# TODO: die if not 0.
+rm -f $base.s
 
-gcc $base.s -o $base
+# if --lex or --parse, do not generate .s
+if [[ $1 == '--lex' || $1 == '--parse' ]]; then
+	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.aocomp.driver.Java2C < $base.i > /dev/null || exit 1;
+else
+	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.aocomp.driver.Java2C < $base.i > $base.s || exit 1;
+	gcc $base.s -o $base;
+fi
+
