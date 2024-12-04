@@ -1,6 +1,6 @@
 package com.plasstech.lang.c.driver;
 
-public class Java2C {
+public class Driver {
 
   public static void main(String args[]) {
     // TODO: instantiate the lexer & parser, read from stdin, and write to stdout
