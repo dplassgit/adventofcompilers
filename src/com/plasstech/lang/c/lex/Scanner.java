@@ -22,47 +22,56 @@ public class Scanner {
   }
 
   private char peek() {
-    if (loc + 1 < text.length()) {
-      cc = text.charAt(loc + 1);
-    } else {
-      // Indicates no more characters
-      cc = 0;
+    if (loc < text.length()) {
+      return text.charAt(loc);
     }
-    return cc;
+    // Indicates no more characters
+    return 0;
   }
 
   public Token nextToken() {
     // skip unwanted whitespace
-    while (cc == ' ' || cc == '\n' || cc == '\t' || cc == '\r') {
-      advance();
-    }
-    if (cc == '/' && peek() == '/') {
-      advance(); // go past the two slashes
-      advance();
-      while (cc != 0 && cc != '\n') {
+    boolean whitespace = true;
+    while (whitespace) {
+      while (cc == ' ' || cc == '\n' || cc == '\t' || cc == '\r') {
         advance();
       }
-      if (cc == 0) {
-        return eofToken();
-      }
-    }
-    if (cc == '/' && peek() == '*') {
-      // start of comment
-      advance(); // go past the two slashes
-      advance();
-      while (true) {
-        while (cc != 0 && cc != '*') {
-          advance();
+      if (cc == '/') {
+        char next = peek();
+        if (next == '/') {
+          // two slashes 
+          advance(); // go past the two slashes
+          advance(); // get the next char
+          while (cc != 0 && cc != '\n') {
+            advance();
+          }
+          if (cc == 0) {
+            return eofToken();
+          }
+          advance(); // eat the \n
+        } else if (next == '*') {
+          // start of comment
+          advance(); // go past the star
+          advance(); // get the next char
+          boolean foundClosing = false;
+          while (!foundClosing) {
+            while (cc != 0 && cc != '*') {
+              advance();
+            }
+            // either EOF or we got a *
+            if (cc == 0) {
+              System.err.println("Unclosed comment");
+              System.exit(-1);
+            }
+            advance(); // eat the star
+            if (cc == '/') {
+              advance(); // eat the slash
+              foundClosing = true;
+            }
+          }
         }
-        // either EOF or we got a *
-        if (cc == 0) {
-          System.err.println("Unclosed comment");
-          System.exit(-1);
-        }
-        if (peek() == '/') {
-          advance(); // eat the slash
-          break;
-        }
+      } else {
+        whitespace = false;
       }
     }
 
