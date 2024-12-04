@@ -100,7 +100,14 @@ public class Scanner {
   }
 
   private Token makeSymbol() {
-    return null;
+    String symbol = String.valueOf(cc);
+    advance();
+    for (TokenType tt : TokenType.values()) {
+      if (tt.isSymbol() && tt.text.equals(symbol)) {
+        return new Token(tt, symbol);
+      }
+    }
+    return errorToken("Illegal character " + symbol);
   }
 
   private Token makeText() {

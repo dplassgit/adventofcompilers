@@ -38,4 +38,8 @@ public enum TokenType {
     this.text = null;
     this.isKeyword = kw;
   }
+
+  public boolean isSymbol() {
+    return !isKeyword && text != null;
+  }
 }

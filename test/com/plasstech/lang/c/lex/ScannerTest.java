@@ -96,4 +96,22 @@ public class ScannerTest {
     s = new Scanner("234.");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
   }
+
+  @Test
+  public void nextTokenSymbol() {
+    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.OBRACE);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.CBRACE);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.OPAREN);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.CPAREN);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.SEMICOLON);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenBadSymbol() {
+    assertThat(new Scanner("@").nextToken().type()).isEqualTo(TokenType.ERROR);
+    assertThat(new Scanner(".").nextToken().type()).isEqualTo(TokenType.ERROR);
+    assertThat(new Scanner("\\").nextToken().type()).isEqualTo(TokenType.ERROR);
+  }
 }
