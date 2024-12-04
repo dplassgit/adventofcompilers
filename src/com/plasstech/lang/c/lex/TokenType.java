@@ -2,6 +2,7 @@ package com.plasstech.lang.c.lex;
 
 public enum TokenType {
   EOF,
+  ERROR,
   INT(true),
   RETURN(true),
   VOID(true),

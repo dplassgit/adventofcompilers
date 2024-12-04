@@ -47,4 +47,53 @@ public class ScannerTest {
     Token t = s.nextToken();
     assertThat(t.type()).isEqualTo(TokenType.EOF);
   }
+
+  @Test
+  public void nextTokenKeywords() {
+    Scanner s = new Scanner("int return void");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.INT);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.RETURN);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.VOID);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenVariables() {
+    Scanner s = new Scanner("INT a b3");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.VARIABLE);
+    assertThat(t.value()).isEqualTo("INT");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.VARIABLE);
+    assertThat(t.value()).isEqualTo("a");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.VARIABLE);
+    assertThat(t.value()).isEqualTo("b3");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenIntConstant() {
+    Scanner s = new Scanner("0 1 23");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.INT_LITERAL);
+    assertThat(t.value()).isEqualTo("0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.INT_LITERAL);
+    assertThat(t.value()).isEqualTo("1");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.INT_LITERAL);
+    assertThat(t.value()).isEqualTo("23");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenBadIntConstant() {
+    Scanner s = new Scanner("0a");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
+    s = new Scanner("23B");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
+    s = new Scanner("234.");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
+  }
 }

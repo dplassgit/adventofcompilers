@@ -1,5 +1,7 @@
 package com.plasstech.lang.c.lex;
 
+import java.util.Optional;
+
 public class Scanner {
   private final String text;
   private int loc; // absolute location in text
@@ -31,48 +33,9 @@ public class Scanner {
 
   public Token nextToken() {
     // skip unwanted whitespace
-    boolean whitespace = true;
-    while (whitespace) {
-      while (cc == ' ' || cc == '\n' || cc == '\t' || cc == '\r') {
-        advance();
-      }
-      if (cc == '/') {
-        char next = peek();
-        if (next == '/') {
-          // two slashes 
-          advance(); // go past the two slashes
-          advance(); // get the next char
-          while (cc != 0 && cc != '\n') {
-            advance();
-          }
-          if (cc == 0) {
-            return eofToken();
-          }
-          advance(); // eat the \n
-        } else if (next == '*') {
-          // start of comment
-          advance(); // go past the star
-          advance(); // get the next char
-          boolean foundClosing = false;
-          while (!foundClosing) {
-            while (cc != 0 && cc != '*') {
-              advance();
-            }
-            // either EOF or we got a *
-            if (cc == 0) {
-              System.err.println("Unclosed comment");
-              System.exit(-1);
-            }
-            advance(); // eat the star
-            if (cc == '/') {
-              advance(); // eat the slash
-              foundClosing = true;
-            }
-          }
-        }
-      } else {
-        whitespace = false;
-      }
+    Optional<Token> maybeEof = skipWhitespace();
+    if (maybeEof.isPresent()) {
+      return maybeEof.get();
     }
 
     if (Character.isDigit(cc)) {
@@ -86,6 +49,50 @@ public class Scanner {
     }
 
     return eofToken();
+  }
+
+  private Optional<Token> skipWhitespace() {
+    while (true) {
+      while (cc == ' ' || cc == '\n' || cc == '\t' || cc == '\r') {
+        advance();
+      }
+      if (cc == '/') {
+        char next = peek();
+        if (next == '/') {
+          // two slashes 
+          advance(); // go past the two slashes
+          advance(); // get the next char
+          while (cc != 0 && cc != '\n') {
+            advance();
+          }
+          if (cc == 0) {
+            return Optional.of(eofToken());
+          }
+          advance(); // eat the \n
+        } else if (next == '*') {
+          // start of comment
+          advance(); // go past the star
+          advance(); // get the next char
+          boolean foundClosing = false;
+          while (!foundClosing) {
+            while (cc != 0 && cc != '*') {
+              advance();
+            }
+            // either EOF or we got a *
+            if (cc == 0) {
+              return Optional.of(errorToken("Unclosed comment"));
+            }
+            advance(); // eat the star
+            if (cc == '/') {
+              advance(); // eat the slash
+              foundClosing = true;
+            }
+          }
+        }
+      } else {
+        return Optional.empty();
+      }
+    }
   }
 
   private static Token eofToken() {
@@ -110,6 +117,13 @@ public class Scanner {
     String value = sb.toString();
     try {
       // Figure out if it's a keyword
+      if (value.toLowerCase().equals(value)) {
+        // all lower case
+        TokenType maybeTt = TokenType.valueOf(value.toUpperCase());
+        if (maybeTt.isKeyword) {
+          return new Token(maybeTt, value);
+        }
+      }
     } catch (Exception e) {
     }
     // Not a keyword, must be a variable.
@@ -117,6 +131,21 @@ public class Scanner {
   }
 
   private Token makeNumber() {
-    return null;
+    StringBuilder sb = new StringBuilder();
+    while (Character.isDigit(cc) || cc == '_') {
+      sb.append(cc);
+      advance();
+    }
+    if (Character.isLetter(cc) || cc == '.') {
+      return errorToken("Illegal character " + cc);
+    }
+
+    String value = sb.toString();
+    return new Token(TokenType.INT_LITERAL, value);
+  }
+
+  private Token errorToken(String message) {
+    System.err.println(message);
+    return new Token(TokenType.ERROR, message);
   }
 }
