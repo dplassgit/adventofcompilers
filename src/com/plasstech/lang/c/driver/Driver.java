@@ -7,6 +7,8 @@ import java.io.InputStreamReader;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
+import com.plasstech.lang.c.parser.Parser;
+import com.plasstech.lang.c.parser.ParserException;
 
 public class Driver {
 
@@ -26,26 +28,45 @@ public class Driver {
   }
 
   public static void main(String args[]) {
-    if (args.length > 1 && args[1].equals("--lex")) {
-      String input = readStdin();
-
-      // Run the lexer
-      Scanner s = new Scanner(input);
-      Token t = s.nextToken();
-      while (t.type() != TokenType.EOF && t.type() != TokenType.ERROR) {
-        //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
-        //            t.isKeyword() ? " (keyword)" : "", t.value());
-        t = s.nextToken();
+    String input = readStdin();
+    Scanner s = new Scanner(input);
+    if (args.length > 1) {
+      if (args[1].equals("--lex")) {
+        System.exit(justLex(s));
       }
-      if (t.type() == TokenType.ERROR) {
-        System.exit(-1);
+      if (args[1].equals("--parse")) {
+        System.exit(justParse(s));
       }
-      System.exit(0);
     }
-    // TODO: instantiate the lexer & parser, read from stdin, and write to stdout
     System.out.println("   .globl main");
     System.out.println("main:");
     System.out.println("   movl $2, %eax");
     System.out.println("   ret");
+  }
+
+  private static int justParse(Scanner s) {
+    Parser p = new Parser(s);
+    try {
+      p.parse();
+      return 0;
+    } catch (ParserException pe) {
+      System.err.println(pe.getMessage());
+      return -1;
+    }
+  }
+
+  private static int justLex(Scanner s) {
+    // Run the lexer
+    Token t = s.nextToken();
+    while (t.type() != TokenType.EOF && t.type() != TokenType.ERROR) {
+      //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
+      //            t.isKeyword() ? " (keyword)" : "", t.value());
+      t = s.nextToken();
+    }
+    if (t.type() == TokenType.ERROR) {
+      System.err.println(t.value());
+      return -1;
+    }
+    return 0;
   }
 }

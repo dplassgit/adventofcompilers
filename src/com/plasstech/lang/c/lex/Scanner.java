@@ -152,7 +152,6 @@ public class Scanner {
   }
 
   private Token errorToken(String message) {
-    System.err.println(message);
     return new Token(TokenType.ERROR, message);
   }
 }
