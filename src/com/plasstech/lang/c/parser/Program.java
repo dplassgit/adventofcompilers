@@ -7,7 +7,7 @@ public class Program extends AstNode {
     this.functionDef = functionDef;
   }
 
-  public FunctionDef getFunctionDef() {
+  public FunctionDef functionDef() {
     return functionDef;
   }
 }

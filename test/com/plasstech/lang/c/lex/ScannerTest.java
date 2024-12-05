@@ -63,13 +63,13 @@ public class ScannerTest {
   public void nextTokenVariables() {
     Scanner s = new Scanner("INT a b3");
     Token t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.VARIABLE);
+    assertThat(t.type()).isEqualTo(TokenType.IDENTIFIER);
     assertThat(t.value()).isEqualTo("INT");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.VARIABLE);
+    assertThat(t.type()).isEqualTo(TokenType.IDENTIFIER);
     assertThat(t.value()).isEqualTo("a");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.VARIABLE);
+    assertThat(t.type()).isEqualTo(TokenType.IDENTIFIER);
     assertThat(t.value()).isEqualTo("b3");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }

@@ -6,7 +6,7 @@ public enum TokenType {
   INT(true),
   RETURN(true),
   VOID(true),
-  VARIABLE,
+  IDENTIFIER,
   //  STRING_LITERAL,
   INT_LITERAL,
   OBRACE("{"),

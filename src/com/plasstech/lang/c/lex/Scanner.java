@@ -134,7 +134,7 @@ public class Scanner {
     } catch (Exception e) {
     }
     // Not a keyword, must be a variable.
-    return new Token(TokenType.VARIABLE, value);
+    return new Token(TokenType.IDENTIFIER, value);
   }
 
   private Token makeNumber() {
