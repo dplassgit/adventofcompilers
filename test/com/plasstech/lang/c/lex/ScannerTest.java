@@ -51,7 +51,9 @@ public class ScannerTest {
   @Test
   public void nextTokenKeywords() {
     Scanner s = new Scanner("int return void");
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.INT);
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.INT);
+    assertThat(t.isKeyword()).isTrue();
     assertThat(s.nextToken().type()).isEqualTo(TokenType.RETURN);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.VOID);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);

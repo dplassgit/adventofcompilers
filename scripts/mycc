@@ -9,7 +9,7 @@
 filepath=${!#}
 # Strip the extension
 base="${filepath%.*}"
-echo "Compiling $base (.c)"
+# echo "Compiling $base (.c)"
 
 # Preprocess
 gcc -E -P $base.c -o $base.i
@@ -18,7 +18,7 @@ rm -f $base.s
 
 # if --lex or --parse, do not generate .s
 if [[ $1 == '--lex' || $1 == '--parse' ]]; then
-	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.lang.c.driver.Driver < $base.i > /dev/null || exit 1;
+	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.lang.c.driver.Driver -- $1 < $base.i;
 else
 	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.lang.c.driver.Driver < $base.i > $base.s || exit 1;
 	gcc $base.s -o $base;
