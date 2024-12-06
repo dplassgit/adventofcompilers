@@ -1,6 +1,7 @@
 package com.plasstech.lang.c.lex;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
@@ -91,12 +92,9 @@ public class ScannerTest {
 
   @Test
   public void nextTokenBadIntConstant() {
-    Scanner s = new Scanner("0a");
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
-    s = new Scanner("23B");
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
-    s = new Scanner("234.");
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.ERROR);
+    assertThrows(ScannerException.class, () -> new Scanner("0a").nextToken());
+    assertThrows(ScannerException.class, () -> new Scanner("23B").nextToken());
+    assertThrows(ScannerException.class, () -> new Scanner("234.").nextToken());
   }
 
   @Test
@@ -112,8 +110,8 @@ public class ScannerTest {
 
   @Test
   public void nextTokenBadSymbol() {
-    assertThat(new Scanner("@").nextToken().type()).isEqualTo(TokenType.ERROR);
-    assertThat(new Scanner(".").nextToken().type()).isEqualTo(TokenType.ERROR);
-    assertThat(new Scanner("\\").nextToken().type()).isEqualTo(TokenType.ERROR);
+    assertThrows(ScannerException.class, () -> new Scanner("@").nextToken());
+    assertThrows(ScannerException.class, () -> new Scanner(".").nextToken());
+    assertThrows(ScannerException.class, () -> new Scanner("\\").nextToken());
   }
 }

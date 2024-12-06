@@ -80,7 +80,7 @@ public class Scanner {
             }
             // either EOF or we got a *
             if (cc == 0) {
-              return Optional.of(errorToken("Unclosed comment"));
+              return Optional.of(error("Unclosed comment"));
             }
             advance(); // eat the star
             if (cc == '/') {
@@ -107,7 +107,7 @@ public class Scanner {
         return new Token(tt, symbol);
       }
     }
-    return errorToken("Illegal character " + symbol);
+    return error("Illegal character " + symbol);
   }
 
   private Token makeText() {
@@ -144,14 +144,14 @@ public class Scanner {
       advance();
     }
     if (Character.isLetter(cc) || cc == '.') {
-      return errorToken("Illegal character " + cc);
+      return error("Illegal character " + cc);
     }
 
     String value = sb.toString();
     return new Token(TokenType.INT_LITERAL, value);
   }
 
-  private Token errorToken(String message) {
-    return new Token(TokenType.ERROR, message);
+  private Token error(String message) {
+    throw new ScannerException(message);
   }
 }

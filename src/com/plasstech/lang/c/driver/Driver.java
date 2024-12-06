@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 
 import com.plasstech.lang.c.lex.Scanner;
+import com.plasstech.lang.c.lex.ScannerException;
 import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Parser;
@@ -57,16 +58,17 @@ public class Driver {
 
   private static int justLex(Scanner s) {
     // Run the lexer
-    Token t = s.nextToken();
-    while (t.type() != TokenType.EOF && t.type() != TokenType.ERROR) {
-      //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
-      //            t.isKeyword() ? " (keyword)" : "", t.value());
-      t = s.nextToken();
-    }
-    if (t.type() == TokenType.ERROR) {
-      System.err.println(t.value());
+    try {
+      Token t = s.nextToken();
+      while (t.type() != TokenType.EOF) {
+        //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
+        //            t.isKeyword() ? " (keyword)" : "", t.value());
+        t = s.nextToken();
+      }
+      return 0;
+    } catch (ScannerException se) {
+      System.err.println(se.getMessage());
       return -1;
     }
-    return 0;
   }
 }
