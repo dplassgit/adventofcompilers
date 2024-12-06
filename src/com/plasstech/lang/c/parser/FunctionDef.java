@@ -16,4 +16,9 @@ public class FunctionDef extends AstNode {
   public Statement body() {
     return body;
   }
+
+  @Override
+  public void accept(AstNodeVisitor visitor) {
+    visitor.visit(this);
+  }
 }

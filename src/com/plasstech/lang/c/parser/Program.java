@@ -10,4 +10,9 @@ public class Program extends AstNode {
   public FunctionDef functionDef() {
     return functionDef;
   }
+
+  @Override
+  public void accept(AstNodeVisitor visitor) {
+    visitor.visit(this);
+  }
 }

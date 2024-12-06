@@ -10,4 +10,9 @@ public class Constant<T> extends Exp {
   public T value() {
     return value;
   }
+
+  @Override
+  public void accept(AstNodeVisitor visitor) {
+    visitor.visit(this);
+  }
 }

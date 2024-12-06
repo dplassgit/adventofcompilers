@@ -10,4 +10,9 @@ public class Return extends Statement {
   public Exp expr() {
     return expr;
   }
+
+  @Override
+  public void accept(AstNodeVisitor visitor) {
+    visitor.visit(this);
+  }
 }
