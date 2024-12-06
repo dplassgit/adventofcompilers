@@ -10,6 +10,8 @@ import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.ParserException;
+import com.plasstech.lang.c.parser.PrettyPrinter;
+import com.plasstech.lang.c.parser.Program;
 
 public class Driver {
 
@@ -38,11 +40,25 @@ public class Driver {
       if (args[1].equals("--parse")) {
         System.exit(justParse(s));
       }
+      if (args[1].equals("--prettyprint")) {
+        prettyPrint(s);
+        return;
+      }
     }
     System.out.println("   .globl main");
     System.out.println("main:");
     System.out.println("   movl $2, %eax");
     System.out.println("   ret");
+  }
+
+  private static void prettyPrint(Scanner s) {
+    Parser p = new Parser(s);
+    try {
+      Program program = p.parse();
+      new PrettyPrinter().prettyPrint(program);
+    } catch (ParserException pe) {
+      System.err.println(pe.getMessage());
+    }
   }
 
   private static int justParse(Scanner s) {

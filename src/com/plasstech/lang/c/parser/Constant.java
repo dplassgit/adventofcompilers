@@ -15,4 +15,9 @@ public class Constant<T> extends Exp {
   public void accept(AstNodeVisitor visitor) {
     visitor.visit(this);
   }
+
+  @Override
+  public String toString() {
+    return value.toString();
+  }
 }

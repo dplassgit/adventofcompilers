@@ -17,10 +17,12 @@ gcc -E -P $base.c -o $base.i
 rm -f $base.s
 
 # if --lex or --parse, do not generate .s
-if [[ $1 == '--lex' || $1 == '--parse' ]]; then
-	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.lang.c.driver.Driver -- $1 < $base.i;
+export CLASSPATH=/mnt/c/Users/dplas/dev/adventofcompilers/bin:/mnt/c/Users/dplas/dev/adventofcompilers/lib/guava-33.0.0-jre.jar
+if [[ $1 == '--lex' || $1 == '--parse' || $1 == '--prettyprint' ]]; then
+	#java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin;/mnt/c/Users/dplas/dev/adventofcompilers/lib com.plasstech.lang.c.driver.Driver -- $1 < $base.i;
+	java com.plasstech.lang.c.driver.Driver -- $1 < $base.i;
 else
-	java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin com.plasstech.lang.c.driver.Driver < $base.i > $base.s || exit 1;
+	java com.plasstech.lang.c.driver.Driver < $base.i > $base.s || exit 1;
 	gcc $base.s -o $base;
 fi
 
