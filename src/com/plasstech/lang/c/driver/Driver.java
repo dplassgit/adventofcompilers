@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
+import com.plasstech.lang.c.codegen.CodeGen;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.ScannerException;
 import com.plasstech.lang.c.lex.Token;
@@ -40,6 +41,9 @@ public class Driver {
       if (args[1].equals("--parse")) {
         System.exit(justParse(s));
       }
+      if (args[1].equals("--codegen")) {
+        System.exit(codeGen(s));
+      }
       if (args[1].equals("--prettyprint")) {
         prettyPrint(s);
         return;
@@ -51,13 +55,30 @@ public class Driver {
     System.out.println("   ret");
   }
 
+  private static int codeGen(Scanner s) {
+    Parser p = new Parser(s);
+    try {
+      Program program = p.parse();
+      new CodeGen().generate(program);
+      return 0;
+    } catch (ScannerException e) {
+      System.err.println(e.getMessage());
+      return -1;
+    } catch (ParserException e) {
+      System.err.println(e.getMessage());
+      return -1;
+    }
+  }
+
   private static void prettyPrint(Scanner s) {
     Parser p = new Parser(s);
     try {
       Program program = p.parse();
       new PrettyPrinter().prettyPrint(program);
-    } catch (ParserException pe) {
-      System.err.println(pe.getMessage());
+    } catch (ScannerException e) {
+      System.err.println(e.getMessage());
+    } catch (ParserException e) {
+      System.err.println(e.getMessage());
     }
   }
 
@@ -66,8 +87,11 @@ public class Driver {
     try {
       p.parse();
       return 0;
-    } catch (ParserException pe) {
-      System.err.println(pe.getMessage());
+    } catch (ScannerException e) {
+      System.err.println(e.getMessage());
+      return -1;
+    } catch (ParserException e) {
+      System.err.println(e.getMessage());
       return -1;
     }
   }
