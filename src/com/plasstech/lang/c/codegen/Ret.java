@@ -5,4 +5,10 @@ public class Ret extends Instruction {
   public String toString() {
     return "ret";
   }
+
+  @Override
+  public void accept(AsmNodeVisitor visitor) {
+    visitor.visit(this);
+  }
+
 }

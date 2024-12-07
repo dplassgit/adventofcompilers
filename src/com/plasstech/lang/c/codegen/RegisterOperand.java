@@ -2,7 +2,7 @@ package com.plasstech.lang.c.codegen;
 
 public class RegisterOperand extends Operand {
   public enum Register {
-    RAX
+    EAX
   }
 
   private final Register register;

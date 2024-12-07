@@ -10,4 +10,9 @@ public class AsmProgramNode extends AsmNode {
   public AsmFunctionNode function() {
     return function;
   }
+
+  @Override
+  public void accept(AsmNodeVisitor visitor) {
+    visitor.visit(this);
+  }
 }

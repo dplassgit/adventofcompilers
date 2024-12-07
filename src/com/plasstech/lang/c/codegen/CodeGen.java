@@ -19,7 +19,7 @@ public class CodeGen {
   }
 
   private static class StatementVisitor extends DefaultAstNodeVisitor {
-    List<Instruction> instructions = new ArrayList<Instruction>();
+    List<Instruction> instructions = new ArrayList<>();
 
     @Override
     public void visit(Return n) {
@@ -28,7 +28,7 @@ public class CodeGen {
       n.expr().accept(ov);
 
       // Add a "mov" and a "ret"
-      instructions.add(new Mov(ov.operand, new RegisterOperand(Register.RAX)));
+      instructions.add(new Mov(ov.operand, new RegisterOperand(Register.EAX)));
       instructions.add(new Ret());
     }
   }

@@ -3,7 +3,11 @@ package com.plasstech.lang.c.driver;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.List;
 
+import com.google.common.base.Joiner;
+import com.plasstech.lang.c.codegen.AsmCodeGen;
+import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.CodeGen;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.ScannerException;
@@ -32,83 +36,65 @@ public class Driver {
   }
 
   public static void main(String args[]) {
-    String input = readStdin();
-    Scanner s = new Scanner(input);
-    if (args.length > 1) {
-      if (args[1].equals("--lex")) {
-        System.exit(justLex(s));
-      }
-      if (args[1].equals("--parse")) {
-        System.exit(justParse(s));
-      }
-      if (args[1].equals("--codegen")) {
-        System.exit(codeGen(s));
-      }
-      if (args[1].equals("--prettyprint")) {
-        prettyPrint(s);
+    try {
+      String input = readStdin();
+      Scanner s = new Scanner(input);
+      if (args.length > 1) {
+        if (args[1].equals("--lex")) {
+          justLex(s);
+        }
+        if (args[1].equals("--parse")) {
+          justParse(s);
+        }
+        if (args[1].equals("--codegen")) {
+          codeGen(s);
+        }
+        if (args[1].equals("--prettyprint")) {
+          prettyPrint(s);
+        }
         return;
       }
-    }
-    System.out.println("   .globl main");
-    System.out.println("main:");
-    System.out.println("   movl $2, %eax");
-    System.out.println("   ret");
-  }
 
-  private static int codeGen(Scanner s) {
-    Parser p = new Parser(s);
-    try {
-      Program program = p.parse();
-      new CodeGen().generate(program);
-      return 0;
-    } catch (ScannerException e) {
-      System.err.println(e.getMessage());
-      return -1;
+      // Generate asm:
+      List<String> asm = generateAsm(s);
+      System.out.println(Joiner.on('\n').join(asm));
     } catch (ParserException e) {
       System.err.println(e.getMessage());
-      return -1;
+      System.exit(-1);
+    } catch (ScannerException e) {
+      System.err.println(e.getMessage());
+      System.exit(-1);
     }
+  }
+
+  private static List<String> generateAsm(Scanner s) {
+    AsmProgramNode program = codeGen(s);
+    AsmCodeGen acg = new AsmCodeGen();
+    return acg.generate(program);
+  }
+
+  private static AsmProgramNode codeGen(Scanner s) {
+    Program program = justParse(s);
+    return new CodeGen().generate(program);
   }
 
   private static void prettyPrint(Scanner s) {
-    Parser p = new Parser(s);
-    try {
-      Program program = p.parse();
-      new PrettyPrinter().prettyPrint(program);
-    } catch (ScannerException e) {
-      System.err.println(e.getMessage());
-    } catch (ParserException e) {
-      System.err.println(e.getMessage());
-    }
+    Program program = justParse(s);
+    new PrettyPrinter().prettyPrint(program);
   }
 
-  private static int justParse(Scanner s) {
+  private static Program justParse(Scanner s) {
     Parser p = new Parser(s);
-    try {
-      p.parse();
-      return 0;
-    } catch (ScannerException e) {
-      System.err.println(e.getMessage());
-      return -1;
-    } catch (ParserException e) {
-      System.err.println(e.getMessage());
-      return -1;
-    }
+    return p.parse();
   }
 
-  private static int justLex(Scanner s) {
+  private static void justLex(Scanner s) {
     // Run the lexer
-    try {
-      Token t = s.nextToken();
-      while (t.type() != TokenType.EOF) {
-        //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
-        //            t.isKeyword() ? " (keyword)" : "", t.value());
-        t = s.nextToken();
-      }
-      return 0;
-    } catch (ScannerException se) {
-      System.err.println(se.getMessage());
-      return -1;
+    Token t = s.nextToken();
+    while (t.type() != TokenType.EOF) {
+      //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
+      //            t.isKeyword() ? " (keyword)" : "", t.value());
+      t = s.nextToken();
     }
   }
 }

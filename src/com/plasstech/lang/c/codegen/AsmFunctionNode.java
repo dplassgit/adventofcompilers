@@ -18,4 +18,9 @@ public class AsmFunctionNode extends AsmNode {
   public List<Instruction> instructions() {
     return instructions;
   }
+
+  @Override
+  public void accept(AsmNodeVisitor visitor) {
+    visitor.visit(this);
+  }
 }
