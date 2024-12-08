@@ -102,12 +102,29 @@ public class Scanner {
   private Token makeSymbol() {
     String symbol = String.valueOf(cc);
     advance();
-    for (TokenType tt : TokenType.values()) {
-      if (tt.isSymbol() && tt.text.equals(symbol)) {
-        return new Token(tt, symbol);
+    if (cc != 0) {
+      // cc is already the next symbol
+      String twoCharSymbol = symbol + cc;
+      Optional<TokenType> tt = findSymbolByString(twoCharSymbol);
+      if (tt.isPresent()) {
+        advance();
+        return new Token(tt.get(), twoCharSymbol);
       }
     }
+    Optional<TokenType> tt = findSymbolByString(symbol);
+    if (tt.isPresent()) {
+      return new Token(tt.get(), symbol);
+    }
     return error("Illegal character " + symbol);
+  }
+
+  private static Optional<TokenType> findSymbolByString(String symbol) {
+    for (TokenType tt : TokenType.values()) {
+      if (tt.isSymbol() && tt.text.equals(symbol)) {
+        return Optional.of(tt);
+      }
+    }
+    return Optional.empty();
   }
 
   private Token makeText() {

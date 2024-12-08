@@ -17,7 +17,9 @@ public enum TokenType {
   //  COMMA(","),
   //  STAR("*"),
   //  PLUS("+"),
-  //  DASH("-"),
+  MINUS("-"),
+  DECREMENT("--"),
+  TWIDDLE("~"),
   //  SLASH("/"),
   SEMICOLON(";");
 

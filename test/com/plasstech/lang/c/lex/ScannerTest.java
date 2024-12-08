@@ -99,12 +99,21 @@ public class ScannerTest {
 
   @Test
   public void nextTokenSymbol() {
-    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n");
+    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n - ~");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OPAREN);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CPAREN);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.SEMICOLON);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.MINUS);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.TWIDDLE);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenDecrement() {
+    Scanner s = new Scanner("--");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DECREMENT);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
