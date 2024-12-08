@@ -13,4 +13,7 @@ public class DefaultAstNodeVisitor implements AstNodeVisitor {
 
   @Override
   public void visit(Return n) {}
+
+  @Override
+  public void visit(UnaryExp n) {}
 }

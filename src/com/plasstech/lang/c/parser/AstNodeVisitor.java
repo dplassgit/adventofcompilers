@@ -8,4 +8,6 @@ public interface AstNodeVisitor {
   void visit(Program n);
 
   void visit(Return n);
+
+  void visit(UnaryExp n);
 }

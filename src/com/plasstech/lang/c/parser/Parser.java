@@ -47,14 +47,27 @@ public class Parser {
   }
 
   private Exp parseExp() {
-    // Only int literal
+    if (token.type() == TokenType.OPAREN) {
+      advance();
+      Exp innerExp = parseExp();
+      expect(TokenType.CPAREN);
+      return innerExp;
+    }
+    if (token.type() == TokenType.MINUS || token.type() == TokenType.TWIDDLE) {
+      TokenType tt = token.type();
+      advance();
+      Exp innerExp = parseExp();
+      return new UnaryExp(tt, innerExp);
+    }
+
+    // Int literal
     String valueAsString = token.value();
     expect(TokenType.INT_LITERAL);
     int value = Integer.parseInt(valueAsString);
     return new Constant<Integer>(value);
   }
 
-  private void error(String message) {
+  private static void error(String message) {
     throw new ParserException(message);
   }
 
@@ -63,6 +76,6 @@ public class Parser {
       advance();
       return;
     }
-    error(String.format("Expected %s, saw %s", tt.name(), token.type().name()));
+    error(String.format("Expected `%s`, saw `%s`", tt.toString(), token.type().toString()));
   }
 }

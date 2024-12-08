@@ -24,6 +24,18 @@ public class PrettyPrinter implements AstNodeVisitor {
   }
 
   @Override
+  public void visit(UnaryExp n) {
+    System.out.printf("%sUnary (\n", spaces());
+    indentation += 2;
+    System.out.printf("%soperator: %s\n", spaces(), n.operator().toString());
+    System.out.printf("%sexp:\n", spaces());
+    indentation += 2;
+    n.exp().accept(this);
+    indentation -= 4;
+    System.out.printf("%s)\n", spaces());
+  }
+
+  @Override
   public void visit(FunctionDef n) {
     System.out.printf("%sFunction (\n", spaces());
     indentation += 2;

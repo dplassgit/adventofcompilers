@@ -43,4 +43,15 @@ public enum TokenType {
   public boolean isSymbol() {
     return !isKeyword && text != null;
   }
+
+  @Override
+  public String toString() {
+    if (isSymbol()) {
+      return text;
+    }
+    if (isKeyword) {
+      return name().toLowerCase();
+    }
+    return name();
+  }
 }

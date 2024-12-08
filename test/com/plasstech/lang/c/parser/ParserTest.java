@@ -44,7 +44,7 @@ public class ParserTest {
   }
 
   @Test
-  public void chapter1MissingCloseBrace() {
+  public void missingCloseBrace() {
     String input = "int main(void) { return 1;";
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
@@ -52,7 +52,7 @@ public class ParserTest {
   }
 
   @Test
-  public void chapter1MissingSemi() {
+  public void missingSemi() {
     String input = "int main(void) { return 1}";
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
@@ -62,6 +62,102 @@ public class ParserTest {
   @Test
   public void chapter1ExtraCode() {
     String input = "int main(void) { return 1;} int";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter2ParserParentheses() {
+    String input = """
+        int main(void) {
+          return (1);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter2ParserNegative() {
+    String input = """
+        int main(void) {
+          return -1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter2ParserNegativeParens() {
+    String input = """
+        int main(void) {
+          return -(-(1));
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter2ParserTwiddle() {
+    String input = """
+        int main(void) {
+          return ~1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter2ParserDoubleTwiddle() {
+    String input = """
+        int main(void) {
+          return ~~1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter2ParserNegativeMissingConstant() {
+    String input = """
+        int main(void) {
+          return -;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter2ParserParenthesisNegative() {
+    String input = """
+        int main(void) {
+          return (-);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter2ParserDecrementConstant() {
+    String input = """
+        int main(void) {
+          return --3;
+        }
+        """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     assertThrows(ParserException.class, () -> p.parse());
