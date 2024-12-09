@@ -18,7 +18,7 @@ public class FunctionDef extends AstNode {
   }
 
   @Override
-  public void accept(AstNodeVisitor visitor) {
-    visitor.visit(this);
+  public <R> R accept(AstNodeVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

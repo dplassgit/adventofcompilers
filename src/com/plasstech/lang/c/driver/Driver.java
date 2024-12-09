@@ -9,6 +9,7 @@ import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.CodeGen;
+import com.plasstech.lang.c.codegen.tacky.TackyCodeGen;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.ScannerException;
 import com.plasstech.lang.c.lex.Token;
@@ -49,6 +50,9 @@ public class Driver {
         if (args[1].equals("--codegen")) {
           codeGen(s);
         }
+        if (args[1].equals("--tacky")) {
+          tackyCodeGen(s);
+        }
         if (args[1].equals("--prettyprint")) {
           prettyPrint(s);
         }
@@ -65,6 +69,12 @@ public class Driver {
       System.err.println(e.getMessage());
       System.exit(-1);
     }
+  }
+
+  private static void tackyCodeGen(Scanner s) {
+    Program program = justParse(s);
+    // This throws on error, doesn't really generate anything
+    new TackyCodeGen().generate(program);
   }
 
   private static List<String> generateAsm(Scanner s) {
@@ -92,8 +102,6 @@ public class Driver {
     // Run the lexer
     Token t = s.nextToken();
     while (t.type() != TokenType.EOF) {
-      //        System.err.printf("Token type %s%s value %s\n", t.type().toString(),
-      //            t.isKeyword() ? " (keyword)" : "", t.value());
       t = s.nextToken();
     }
   }

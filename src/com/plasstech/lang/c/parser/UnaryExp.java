@@ -12,16 +12,16 @@ public class UnaryExp extends Exp {
     this.exp = exp;
   }
 
-  @Override
-  public void accept(AstNodeVisitor visitor) {
-    visitor.visit(this);
-  }
-
   public TokenType operator() {
     return operator;
   }
 
   public Exp exp() {
     return exp;
+  }
+
+  @Override
+  public <R> R accept(AstNodeVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 }

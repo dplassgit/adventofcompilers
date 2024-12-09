@@ -2,29 +2,32 @@ package com.plasstech.lang.c.parser;
 
 import com.google.common.base.Strings;
 
-public class PrettyPrinter implements AstNodeVisitor {
+public class PrettyPrinter implements AstNodeVisitor<Void> {
   private int indentation;
 
-  public void prettyPrint(Program p) {
+  public Void prettyPrint(Program p) {
     p.accept(this);
+    return null;
   }
 
   @Override
-  public void visit(Program n) {
+  public Void visit(Program n) {
     System.out.println("Program (");
     indentation += 2;
     n.functionDef().accept(this);
     System.out.println(")");
     indentation -= 2;
+    return null;
   }
 
   @Override
-  public <T> void visit(Constant<T> n) {
+  public <T> Void visit(Constant<T> n) {
     System.out.printf("%sConstant(%s)\n", spaces(), n.toString());
+    return null;
   }
 
   @Override
-  public void visit(UnaryExp n) {
+  public Void visit(UnaryExp n) {
     System.out.printf("%sUnary (\n", spaces());
     indentation += 2;
     System.out.printf("%soperator: %s\n", spaces(), n.operator().toString());
@@ -33,10 +36,11 @@ public class PrettyPrinter implements AstNodeVisitor {
     n.exp().accept(this);
     indentation -= 4;
     System.out.printf("%s)\n", spaces());
+    return null;
   }
 
   @Override
-  public void visit(FunctionDef n) {
+  public Void visit(FunctionDef n) {
     System.out.printf("%sFunction (\n", spaces());
     indentation += 2;
     System.out.printf("%sname: \"%s\"\n", spaces(), n.name());
@@ -45,15 +49,17 @@ public class PrettyPrinter implements AstNodeVisitor {
     n.body().accept(this);
     indentation -= 4;
     System.out.printf("%s)\n", spaces());
+    return null;
   }
 
   @Override
-  public void visit(Return n) {
+  public Void visit(Return n) {
     System.out.printf("%sReturn (\n", spaces());
     indentation += 2;
     n.expr().accept(this);
     indentation -= 2;
     System.out.printf("%s)\n", spaces());
+    return null;
   }
 
   private String spaces() {

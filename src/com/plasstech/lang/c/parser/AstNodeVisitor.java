@@ -1,13 +1,13 @@
 package com.plasstech.lang.c.parser;
 
-public interface AstNodeVisitor {
-  <T> void visit(Constant<T> n);
+public interface AstNodeVisitor<R> {
+  <T> R visit(Constant<T> n);
 
-  void visit(FunctionDef n);
+  R visit(FunctionDef n);
 
-  void visit(Program n);
+  R visit(Program n);
 
-  void visit(Return n);
+  R visit(Return n);
 
-  void visit(UnaryExp n);
+  R visit(UnaryExp n);
 }

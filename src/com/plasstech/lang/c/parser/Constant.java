@@ -12,8 +12,8 @@ public class Constant<T> extends Exp {
   }
 
   @Override
-  public void accept(AstNodeVisitor visitor) {
-    visitor.visit(this);
+  public <R> R accept(AstNodeVisitor<R> visitor) {
+    return visitor.visit(this);
   }
 
   @Override

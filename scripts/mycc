@@ -15,12 +15,12 @@ base="${filepath%.*}"
 gcc -E -P $base.c -o $base.i
 
 # if --lex or --parse, do not generate .s
-export CLASSPATH=/mnt/c/Users/dplas/dev/adventofcompilers/bin:/mnt/c/Users/dplas/dev/adventofcompilers/lib/guava-33.0.0-jre.jar
-if [[ $1 == '--lex' || $1 == '--parse' || $1 == '--prettyprint' || $1 == '--codegen' ]]; then
+CLASSPATH=/mnt/c/Users/dplas/dev/adventofcompilers/bin:/mnt/c/Users/dplas/dev/adventofcompilers/lib/guava-33.0.0-jre.jar
+if [[ $1 == '--lex' || $1 == '--parse' || $1 == '--prettyprint' || $1 == '--codegen' || $1 == '--tacky' ]]; then
 	#java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin;/mnt/c/Users/dplas/dev/adventofcompilers/lib com.plasstech.lang.c.driver.Driver -- $1 < $base.i;
-	java com.plasstech.lang.c.driver.Driver -- $1 < $base.i
+	java -classpath $CLASSPATH com.plasstech.lang.c.driver.Driver -- $1 < $base.i
 else
-	java com.plasstech.lang.c.driver.Driver < $base.i > $base.s
+	java -classpath $CLASSPATH com.plasstech.lang.c.driver.Driver < $base.i > $base.s
 	rv=$?
 	if [[ $rv == '0' ]]; then
 		gcc $base.s -o $base

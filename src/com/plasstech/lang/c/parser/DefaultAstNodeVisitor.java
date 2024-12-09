@@ -1,19 +1,29 @@
 package com.plasstech.lang.c.parser;
 
-public class DefaultAstNodeVisitor implements AstNodeVisitor {
+public class DefaultAstNodeVisitor implements AstNodeVisitor<Void> {
 
   @Override
-  public <T> void visit(Constant<T> n) {}
+  public <T> Void visit(Constant<T> n) {
+    return null;
+  }
 
   @Override
-  public void visit(FunctionDef n) {}
+  public Void visit(FunctionDef n) {
+    return null;
+  }
 
   @Override
-  public void visit(Program n) {}
+  public Void visit(Program n) {
+    return null;
+  }
 
   @Override
-  public void visit(Return n) {}
+  public Void visit(Return n) {
+    return null;
+  }
 
   @Override
-  public void visit(UnaryExp n) {}
+  public Void visit(UnaryExp n) {
+    return null;
+  }
 }
