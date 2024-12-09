@@ -1,7 +1,7 @@
 package com.plasstech.lang.c.parser;
 
-public abstract class AstNode {
+public interface AstNode {
 
   /** Visitor pattern. */
-  public abstract <T> T accept(AstNodeVisitor<T> visitor);
+  <T> T accept(AstNodeVisitor<T> visitor);
 }

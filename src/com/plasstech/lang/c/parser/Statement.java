@@ -1,5 +1,3 @@
 package com.plasstech.lang.c.parser;
 
-public abstract class Statement extends AstNode {
-
-}
+public interface Statement extends AstNode {}

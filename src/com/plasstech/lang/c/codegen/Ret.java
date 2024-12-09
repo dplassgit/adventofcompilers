@@ -1,6 +1,6 @@
 package com.plasstech.lang.c.codegen;
 
-public class Ret extends Instruction {
+public record Ret() implements Instruction {
   @Override
   public String toString() {
     return "ret";

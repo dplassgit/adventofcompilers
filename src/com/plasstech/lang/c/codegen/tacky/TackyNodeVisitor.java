@@ -9,7 +9,7 @@ public interface TackyNodeVisitor {
 
   void visit(TackyReturn tackyReturn);
 
-  void visit(TackyConstant tackyConstant);
+  void visit(TackyIntConstant tackyConstant);
 
   void visit(TackyVar tackyVar);
 }
