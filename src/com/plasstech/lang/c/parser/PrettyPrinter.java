@@ -56,7 +56,7 @@ public class PrettyPrinter implements AstNodeVisitor<Void> {
   public Void visit(Return n) {
     System.out.printf("%sReturn (\n", spaces());
     indentation += 2;
-    n.expr().accept(this);
+    n.exp().accept(this);
     indentation -= 2;
     System.out.printf("%s)\n", spaces());
     return null;

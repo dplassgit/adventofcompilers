@@ -22,7 +22,7 @@ public class ParserTest {
     Statement statement = fn.body();
     assertThat(statement).isInstanceOf(Return.class);
     Return returnStmt = (Return) statement;
-    Exp expr = returnStmt.expr();
+    Exp expr = returnStmt.exp();
     assertThat(expr).isInstanceOf(Constant.class);
     Constant<Integer> constant = (Constant<Integer>) expr;
     assertThat(constant.value()).isEqualTo(1);

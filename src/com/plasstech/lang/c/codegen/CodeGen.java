@@ -24,7 +24,7 @@ public class CodeGen {
       List<Instruction> instructions = new ArrayList<>();
       // Generate the instructions for the expression
       OperandVisitor ov = new OperandVisitor();
-      Operand op = n.expr().accept(ov);
+      Operand op = n.exp().accept(ov);
 
       // Add a "mov" and a "ret"
       instructions.add(new Mov(op, new RegisterOperand(Register.EAX)));
