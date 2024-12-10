@@ -16,8 +16,8 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
 
   private static int id = 0;
 
-  private static String makeTemp() {
-    return String.format("temp.%d", id++);
+  private static String makeTemp(String prefix) {
+    return String.format("%s.%d", prefix, id++);
   }
 
   public TackyProgram generate(Program program) {
@@ -41,7 +41,7 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
   @Override
   public TackyVal visit(UnaryExp n) {
     TackyVal src = n.exp().accept(this);
-    String destName = makeTemp();
+    String destName = makeTemp("unary_exp");
     TackyVar dst = new TackyVar(destName);
     instructions.add(new TackyUnary(dst, n.operator(), src));
     return dst;

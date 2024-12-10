@@ -38,4 +38,10 @@ public class AsmCodeGen implements AsmNodeVisitor {
     // I'm not sure I like this... /shrug.
     emitted.add("  " + n.toString());
   }
+
+  @Override
+  public void visit(AsmUnary asmUnary) {}
+
+  @Override
+  public void visit(AllocateStack allocateStack) {}
 }

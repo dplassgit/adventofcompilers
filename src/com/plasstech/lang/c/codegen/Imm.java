@@ -1,12 +1,6 @@
 package com.plasstech.lang.c.codegen;
 
-public class Imm extends Operand {
-  private final String value;
-
-  public Imm(String value) {
-    this.value = value;
-  }
-
+public record Imm(String value) implements Operand {
   public String value() {
     return value;
   }

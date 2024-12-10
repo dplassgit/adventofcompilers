@@ -8,4 +8,8 @@ public interface AsmNodeVisitor {
   void visit(Mov n);
 
   void visit(Ret n);
+
+  void visit(AsmUnary asmUnary);
+
+  void visit(AllocateStack allocateStack);
 }

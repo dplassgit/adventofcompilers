@@ -1,18 +1,9 @@
 package com.plasstech.lang.c.codegen;
 
-public class RegisterOperand extends Operand {
+public record RegisterOperand(Register register) implements Operand {
   public enum Register {
-    EAX
-  }
-
-  private final Register register;
-
-  public RegisterOperand(Register register) {
-    this.register = register;
-  }
-
-  public Register register() {
-    return register;
+    EAX,
+    R10D
   }
 
   @Override
