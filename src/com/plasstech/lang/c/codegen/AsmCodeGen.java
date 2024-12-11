@@ -13,9 +13,8 @@ public class AsmCodeGen implements AsmNodeVisitor {
 
   @Override
   public void visit(AsmProgramNode n) {
-    emitted.add("  .section .note.GNU-stack,\"\",@progbits");
-    emitted.add("  .section .text");
     n.function().accept(this);
+    emitted.add("  .section .note.GNU-stack,\"\",@progbits");
   }
 
   @Override
