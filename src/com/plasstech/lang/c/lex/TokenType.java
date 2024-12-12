@@ -15,12 +15,13 @@ public enum TokenType {
   //  OBRACK("["),
   //  CBRACK("]"),
   //  COMMA(","),
-  //  STAR("*"),
-  //  PLUS("+"),
+  STAR("*"),
+  PLUS("+"),
   MINUS("-"),
   DECREMENT("--"),
   TWIDDLE("~"),
-  //  SLASH("/"),
+  SLASH("/"),
+  PERCENT("%"),
   SEMICOLON(";");
 
   public final String text;

@@ -56,42 +56,45 @@ public class Scanner {
       while (cc == ' ' || cc == '\n' || cc == '\t' || cc == '\r') {
         advance();
       }
-      if (cc == '/') {
-        char next = peek();
-        if (next == '/') {
-          // two slashes 
-          advance(); // go past the two slashes
-          advance(); // get the next char
-          while (cc != 0 && cc != '\n') {
-            advance();
-          }
-          if (cc == 0) {
-            return Optional.of(eofToken());
-          }
-          advance(); // eat the \n
-        } else if (next == '*') {
-          // start of comment
-          advance(); // go past the star
-          advance(); // get the next char
-          boolean foundClosing = false;
-          while (!foundClosing) {
-            while (cc != 0 && cc != '*') {
-              advance();
-            }
-            // either EOF or we got a *
-            if (cc == 0) {
-              return Optional.of(error("Unclosed comment"));
-            }
-            advance(); // eat the star
-            if (cc == '/') {
-              advance(); // eat the slash
-              foundClosing = true;
-            }
-          }
-        }
-      } else {
+      if (cc != '/') {
         return Optional.empty();
       }
+      char next = peek();
+      if (next == '/') {
+        // two slashes 
+        advance(); // go past the two slashes
+        advance(); // get the next char
+        while (cc != 0 && cc != '\n') {
+          advance();
+        }
+        if (cc == 0) {
+          return Optional.of(eofToken());
+        }
+        advance(); // eat the \n
+        continue;
+      }
+      if (next == '*') {
+        // start of comment
+        advance(); // go past the star
+        advance(); // get the next char
+        boolean foundClosing = false;
+        while (!foundClosing) {
+          while (cc != 0 && cc != '*') {
+            advance();
+          }
+          // either EOF or we got a *
+          if (cc == 0) {
+            return Optional.of(error("Unclosed comment"));
+          }
+          advance(); // eat the star
+          if (cc == '/') {
+            advance(); // eat the slash
+            foundClosing = true;
+          }
+        }
+        continue;
+      }
+      return Optional.empty();
     }
   }
 

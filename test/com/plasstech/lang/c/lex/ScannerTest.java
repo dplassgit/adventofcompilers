@@ -99,7 +99,7 @@ public class ScannerTest {
 
   @Test
   public void nextTokenSymbol() {
-    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n - ~");
+    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / %");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OPAREN);
@@ -107,6 +107,10 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.SEMICOLON);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.MINUS);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.TWIDDLE);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.PLUS);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.STAR);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.SLASH);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.PERCENT);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
@@ -122,5 +126,6 @@ public class ScannerTest {
     assertThrows(ScannerException.class, () -> new Scanner("@").nextToken());
     assertThrows(ScannerException.class, () -> new Scanner(".").nextToken());
     assertThrows(ScannerException.class, () -> new Scanner("\\").nextToken());
+    assertThrows(ScannerException.class, () -> new Scanner("/*").nextToken());
   }
 }
