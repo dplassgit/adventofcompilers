@@ -27,6 +27,8 @@ public class AsmCodeGen implements AsmNodeVisitor<Void> {
   public Void visit(AsmFunctionNode n) {
     emitted.add(String.format("  .globl %s", n.name()));
     emitted.add(String.format("%s:", n.name()));
+    emitted.add("  pushq %rbp");
+    emitted.add("  movq %rsp, %rbp");
     for (Instruction i : n.instructions()) {
       i.accept(this);
     }
@@ -42,22 +44,28 @@ public class AsmCodeGen implements AsmNodeVisitor<Void> {
 
   @Override
   public Void visit(Ret n) {
-    // I'm not sure I like this... /shrug.
-    emitted.add("  " + n.toString());
+    emitted.add("  movq %rbp, %rsp");
+    emitted.add("  popq %rbp");
+    emitted.add("  ret");
     return null;
   }
 
   @Override
   public Void visit(AsmUnary asmUnary) {
-    // TODO
-    emitted.add("  ; AsmUnary");
+    String instruction = switch (asmUnary.operator()) {
+      case MINUS -> "negl";
+      case TWIDDLE -> "notl";
+      default -> throw new IllegalStateException("Bad");
+    };
+    emitted.add(String.format("  %s %s", instruction, asmUnary.operand().toString()));
     return null;
   }
 
   @Override
   public Void visit(AllocateStack allocateStack) {
-    // TODO
-    emitted.add("  ; allocate stack");
+    if (allocateStack.bytes() > 0) {
+      emitted.add(String.format("  subq $%d, %%rsp", allocateStack.bytes()));
+    }
     return null;
   }
 }

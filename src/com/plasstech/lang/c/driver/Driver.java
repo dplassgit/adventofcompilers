@@ -10,6 +10,8 @@ import com.plasstech.lang.c.codegen.AsmCodeGen;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.CodeGen;
 import com.plasstech.lang.c.codegen.tacky.TackyCodeGen;
+import com.plasstech.lang.c.codegen.tacky.TackyProgram;
+import com.plasstech.lang.c.codegen.tacky.TackyToAsmCodeGen;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.ScannerException;
 import com.plasstech.lang.c.lex.Token;
@@ -78,14 +80,14 @@ public class Driver {
   }
 
   private static List<String> generateAsm(Scanner s) {
-    AsmProgramNode program = codeGen(s);
-    AsmCodeGen acg = new AsmCodeGen();
-    return acg.generate(program);
+    Program prog = justParse(s);
+    TackyProgram tp = new TackyCodeGen().generate(prog);
+    AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
+    return new AsmCodeGen().generate(an);
   }
 
   private static AsmProgramNode codeGen(Scanner s) {
     Program program = justParse(s);
-    // TODO: this must use the TackyCodeGen
     return new CodeGen().generate(program);
   }
 
