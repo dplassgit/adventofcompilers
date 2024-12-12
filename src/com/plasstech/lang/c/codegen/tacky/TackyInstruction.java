@@ -1,3 +1,14 @@
 package com.plasstech.lang.c.codegen.tacky;
 
-public interface TackyInstruction extends TackyNode {}
+/**
+ * Represents an instruction.
+ */
+public interface TackyInstruction {
+  public interface Visitor<R> {
+    R visit(TackyUnary tackyUnaryOp);
+
+    R visit(TackyReturn tackyReturn);
+  }
+
+  <R> R accept(Visitor<R> visitor);
+}

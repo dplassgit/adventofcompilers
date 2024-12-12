@@ -11,6 +11,11 @@ import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
 import com.plasstech.lang.c.parser.UnaryExp;
 
+/**
+ * Input: Program (Parse AST)
+ * <p>
+ * Output: TackyProgram (Tacky AST)
+ */
 public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
   private List<TackyInstruction> instructions = new ArrayList<>();
 

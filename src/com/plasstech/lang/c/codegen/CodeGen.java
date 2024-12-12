@@ -12,10 +12,20 @@ import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
 
+/**
+ * Input: Program (AST). Output: AsmProgramNode (ASM AST)
+ */
 public class CodeGen {
   public AsmProgramNode generate(Program program) {
     AsmFunctionNode function = generate(program.functionDef());
     return new AsmProgramNode(function);
+  }
+
+  private AsmFunctionNode generate(FunctionDef functionDef) {
+    Statement body = functionDef.body();
+    StatementVisitor sv = new StatementVisitor();
+    List<Instruction> instructions = body.accept(sv);
+    return new AsmFunctionNode(functionDef.name(), ImmutableList.copyOf(instructions));
   }
 
   private static class StatementVisitor extends GenericNodeVisitor<List<Instruction>> {
@@ -38,12 +48,5 @@ public class CodeGen {
     public <T> Operand visit(Constant<T> n) {
       return new Imm(n.value().toString());
     }
-  }
-
-  private AsmFunctionNode generate(FunctionDef functionDef) {
-    Statement body = functionDef.body();
-    StatementVisitor sv = new StatementVisitor();
-    List<Instruction> instructions = body.accept(sv);
-    return new AsmFunctionNode(functionDef.name(), ImmutableList.copyOf(instructions));
   }
 }

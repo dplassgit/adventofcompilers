@@ -85,6 +85,7 @@ public class Driver {
 
   private static AsmProgramNode codeGen(Scanner s) {
     Program program = justParse(s);
+    // TODO: this must use the TackyCodeGen
     return new CodeGen().generate(program);
   }
 

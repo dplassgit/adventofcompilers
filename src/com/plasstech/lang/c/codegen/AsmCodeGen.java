@@ -3,6 +3,11 @@ package com.plasstech.lang.c.codegen;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Input: AsmProgramNode (ASM AST)
+ * <p>
+ * Output: List<String> Assembly language text
+ */
 public class AsmCodeGen implements AsmNodeVisitor {
   private final List<String> emitted = new ArrayList<>();
 
@@ -39,8 +44,12 @@ public class AsmCodeGen implements AsmNodeVisitor {
   }
 
   @Override
-  public void visit(AsmUnary asmUnary) {}
+  public void visit(AsmUnary asmUnary) {
+    // TODO
+  }
 
   @Override
-  public void visit(AllocateStack allocateStack) {}
+  public void visit(AllocateStack allocateStack) {
+    // TODO
+  }
 }
