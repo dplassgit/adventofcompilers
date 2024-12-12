@@ -41,6 +41,7 @@ public class TackyToAsmCodeGenTest {
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
     System.out.println(an.toString());
+    List<String> asm = new AsmCodeGen().generate(an);
+    System.out.println(Joiner.on("\n").join(asm));
   }
-
 }

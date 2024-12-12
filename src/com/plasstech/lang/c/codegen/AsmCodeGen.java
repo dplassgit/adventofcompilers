@@ -8,7 +8,7 @@ import java.util.List;
  * <p>
  * Output: List<String> Assembly language text
  */
-public class AsmCodeGen implements AsmNodeVisitor {
+public class AsmCodeGen implements AsmNodeVisitor<Void> {
   private final List<String> emitted = new ArrayList<>();
 
   public List<String> generate(AsmProgramNode program) {
@@ -17,39 +17,47 @@ public class AsmCodeGen implements AsmNodeVisitor {
   }
 
   @Override
-  public void visit(AsmProgramNode n) {
+  public Void visit(AsmProgramNode n) {
     n.function().accept(this);
     emitted.add("  .section .note.GNU-stack,\"\",@progbits");
+    return null;
   }
 
   @Override
-  public void visit(AsmFunctionNode n) {
+  public Void visit(AsmFunctionNode n) {
     emitted.add(String.format("  .globl %s", n.name()));
     emitted.add(String.format("%s:", n.name()));
     for (Instruction i : n.instructions()) {
       i.accept(this);
     }
+    return null;
   }
 
   @Override
-  public void visit(Mov n) {
+  public Void visit(Mov n) {
     // I'm not sure I like this... /shrug.
     emitted.add("  " + n.toString());
+    return null;
   }
 
   @Override
-  public void visit(Ret n) {
+  public Void visit(Ret n) {
     // I'm not sure I like this... /shrug.
     emitted.add("  " + n.toString());
+    return null;
   }
 
   @Override
-  public void visit(AsmUnary asmUnary) {
+  public Void visit(AsmUnary asmUnary) {
     // TODO
+    emitted.add("  ; AsmUnary");
+    return null;
   }
 
   @Override
-  public void visit(AllocateStack allocateStack) {
+  public Void visit(AllocateStack allocateStack) {
     // TODO
+    emitted.add("  ; allocate stack");
+    return null;
   }
 }

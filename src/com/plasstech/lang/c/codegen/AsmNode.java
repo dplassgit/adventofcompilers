@@ -1,5 +1,5 @@
 package com.plasstech.lang.c.codegen;
 
 public interface AsmNode {
-  void accept(AsmNodeVisitor visitor);
+  <R> R accept(AsmNodeVisitor<R> visitor);
 }

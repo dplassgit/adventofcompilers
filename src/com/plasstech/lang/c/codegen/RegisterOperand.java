@@ -10,4 +10,9 @@ public record RegisterOperand(Register register) implements Operand {
   public String toString() {
     return "%" + register.name().toLowerCase();
   }
+
+  @Override
+  public <R> R accept(Visitor<R> visitor) {
+    return visitor.visit(this);
+  }
 }
