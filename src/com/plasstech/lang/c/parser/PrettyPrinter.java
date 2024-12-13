@@ -40,6 +40,23 @@ public class PrettyPrinter implements AstNodeVisitor<Void> {
   }
 
   @Override
+  public Void visit(BinExp n) {
+    System.out.printf("%sBinary (\n", spaces());
+    indentation += 2;
+    System.out.printf("%left:\n", spaces());
+    indentation += 2;
+    n.left().accept(this);
+    indentation -= 2;
+    System.out.printf("%soperator: %s\n", spaces(), n.operator().toString());
+    System.out.printf("%right:\n", spaces());
+    indentation += 2;
+    n.right().accept(this);
+    indentation -= 4;
+    System.out.printf("%s)\n", spaces());
+    return null;
+  }
+
+  @Override
   public Void visit(FunctionDef n) {
     System.out.printf("%sFunction (\n", spaces());
     indentation += 2;

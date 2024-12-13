@@ -162,4 +162,21 @@ public class ParserTest {
     Parser p = new Parser(s);
     assertThrows(ParserException.class, () -> p.parse());
   }
+
+  @Test
+  public void chapter3BinExp() {
+    String input = """
+        int main(void) {
+          return 3+4;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    Statement statement = fn.body();
+    Return returnStmt = (Return) statement;
+    Exp expr = returnStmt.exp();
+    assertThat(expr).isInstanceOf(BinExp.class);
+  }
 }

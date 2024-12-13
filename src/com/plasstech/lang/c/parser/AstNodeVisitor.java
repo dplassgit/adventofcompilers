@@ -10,4 +10,6 @@ public interface AstNodeVisitor<R> {
   R visit(Return n);
 
   R visit(UnaryExp n);
+
+  R visit(BinExp binExp);
 }

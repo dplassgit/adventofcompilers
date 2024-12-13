@@ -25,4 +25,9 @@ public abstract class GenericNodeVisitor<R> implements AstNodeVisitor<R> {
   public R visit(UnaryExp n) {
     return null;
   }
+
+  @Override
+  public R visit(BinExp n) {
+    return null;
+  }
 }
