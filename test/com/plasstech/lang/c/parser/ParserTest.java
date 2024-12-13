@@ -6,6 +6,7 @@ import static org.junit.Assert.assertThrows;
 import org.junit.Test;
 
 import com.plasstech.lang.c.lex.Scanner;
+import com.plasstech.lang.c.lex.TokenType;
 
 public class ParserTest {
 
@@ -176,7 +177,59 @@ public class ParserTest {
     FunctionDef fn = prog.functionDef();
     Statement statement = fn.body();
     Return returnStmt = (Return) statement;
-    Exp expr = returnStmt.exp();
-    assertThat(expr).isInstanceOf(BinExp.class);
+    Exp exp = returnStmt.exp();
+    assertThat(exp).isInstanceOf(BinExp.class);
+    BinExp bin = (BinExp) exp;
+    Exp left = bin.left();
+    assertThat(left).isInstanceOf(Constant.class);
+    assertThat(bin.operator()).isEqualTo(TokenType.PLUS);
+    Exp right = bin.right();
+    assertThat(right).isInstanceOf(Constant.class);
+  }
+
+  @Test
+  public void chapter3BinExpAndFactor() {
+    String input = """
+        int main(void) {
+          return (3+4)-(6+7);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    Statement statement = fn.body();
+    Return returnStmt = (Return) statement;
+    Exp exp = returnStmt.exp();
+    assertThat(exp).isInstanceOf(BinExp.class);
+    BinExp bin = (BinExp) exp;
+    Exp left = bin.left();
+    assertThat(left).isInstanceOf(BinExp.class);
+    assertThat(bin.operator()).isEqualTo(TokenType.MINUS);
+    Exp right = bin.right();
+    assertThat(right).isInstanceOf(BinExp.class);
+  }
+
+  @Test
+  public void chapter3BinExpPrecedence() {
+    String input = """
+        int main(void) {
+          return 1*2-3;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    Statement statement = fn.body();
+    Return returnStmt = (Return) statement;
+    Exp exp = returnStmt.exp();
+    assertThat(exp).isInstanceOf(BinExp.class);
+    BinExp bin = (BinExp) exp;
+    Exp left = bin.left();
+    assertThat(left).isInstanceOf(BinExp.class);
+    assertThat(bin.operator()).isEqualTo(TokenType.MINUS);
+    Exp right = bin.right();
+    assertThat(right).isInstanceOf(Constant.class);
   }
 }
