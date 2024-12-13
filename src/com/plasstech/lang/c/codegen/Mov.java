@@ -8,7 +8,7 @@ public record Mov(Operand src, Operand dest) implements Instruction {
   }
 
   @Override
-  public <R> R accept(AsmNodeVisitor<R> visitor) {
+  public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
 }

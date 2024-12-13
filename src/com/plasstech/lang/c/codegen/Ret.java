@@ -7,7 +7,7 @@ public record Ret() implements Instruction {
   }
 
   @Override
-  public <R> R accept(AsmNodeVisitor<R> visitor) {
+  public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
 }

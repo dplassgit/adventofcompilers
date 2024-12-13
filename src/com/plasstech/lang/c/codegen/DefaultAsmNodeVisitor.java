@@ -1,6 +1,6 @@
 package com.plasstech.lang.c.codegen;
 
-public abstract class DefaultAsmNodeVisitor<R> implements AsmNodeVisitor<R> {
+public abstract class DefaultAsmNodeVisitor<R> implements AsmNode.Visitor<R> {
   @Override
   public R visit(AsmProgramNode n) {
     return null;

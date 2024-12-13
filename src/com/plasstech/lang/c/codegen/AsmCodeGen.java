@@ -8,7 +8,7 @@ import java.util.List;
  * <p>
  * Output: List<String> Assembly language text
  */
-public class AsmCodeGen implements AsmNodeVisitor<Void> {
+public class AsmCodeGen implements AsmNode.Visitor<Void> {
   private final List<String> emitted = new ArrayList<>();
 
   public List<String> generate(AsmProgramNode program) {
@@ -16,6 +16,7 @@ public class AsmCodeGen implements AsmNodeVisitor<Void> {
     return emitted;
   }
 
+  // Maybe these methods should return List<String>?
   @Override
   public Void visit(AsmProgramNode n) {
     n.function().accept(this);
