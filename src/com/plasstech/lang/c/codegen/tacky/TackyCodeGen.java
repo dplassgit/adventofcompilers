@@ -3,6 +3,7 @@ package com.plasstech.lang.c.codegen.tacky;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.FunctionDef;
 import com.plasstech.lang.c.parser.GenericNodeVisitor;
@@ -46,9 +47,19 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
   @Override
   public TackyVal visit(UnaryExp n) {
     TackyVal src = n.exp().accept(this);
-    String destName = makeTemp("unary_exp");
+    String destName = makeTemp("unaryexp");
     TackyVar dst = new TackyVar(destName);
     instructions.add(new TackyUnary(dst, n.operator(), src));
+    return dst;
+  }
+
+  @Override
+  public TackyVal visit(BinExp n) {
+    TackyVal src1 = n.left().accept(this);
+    TackyVal src2 = n.right().accept(this);
+    String destName = makeTemp("binexp");
+    TackyVar dst = new TackyVar(destName);
+    instructions.add(new TackyBinary(dst, src1, n.operator(), src2));
     return dst;
   }
 

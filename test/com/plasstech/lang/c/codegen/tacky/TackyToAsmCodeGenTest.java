@@ -44,4 +44,49 @@ public class TackyToAsmCodeGenTest {
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
+
+  @Test
+  public void generateBinaryConstants() {
+    String input = "int main(void) { return 1+2; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    TackyProgram tp = new TackyCodeGen().generate(prog);
+    AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
+    assertThat(an).isNotNull();
+    System.out.println(an.toString());
+    List<String> asm = new AsmCodeGen().generate(an);
+    System.out.println(Joiner.on("\n").join(asm));
+  }
+
+  @Test
+  public void generateBinaryMultiple() {
+    String input = "int main(void) { return 1+2+(3-4); }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    TackyProgram tp = new TackyCodeGen().generate(prog);
+    AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
+    assertThat(an).isNotNull();
+    System.out.println(an.toString());
+    List<String> asm = new AsmCodeGen().generate(an);
+    System.out.println(Joiner.on("\n").join(asm));
+  }
+
+  @Test
+  public void generateMultiply() {
+    String input = "int main(void) { return 1*2+3; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    TackyProgram tp = new TackyCodeGen().generate(prog);
+    AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
+    assertThat(an).isNotNull();
+    System.out.println(an.toString());
+    List<String> asm = new AsmCodeGen().generate(an);
+    System.out.println(Joiner.on("\n").join(asm));
+  }
 }

@@ -48,4 +48,17 @@ public class TackyCodeGenTest {
     assertThat(tp).isNotNull();
     System.out.println(tp.toString());
   }
+
+  @Test
+  public void generateBinary() {
+    String input = "int main(void) { return 1+2*3; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    TackyCodeGen cg = new TackyCodeGen();
+    TackyProgram tp = cg.generate(prog);
+    assertThat(tp).isNotNull();
+    System.out.println(tp.toString());
+  }
 }

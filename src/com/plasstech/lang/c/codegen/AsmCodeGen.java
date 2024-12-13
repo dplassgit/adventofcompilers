@@ -52,21 +52,45 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
   }
 
   @Override
-  public Void visit(AsmUnary asmUnary) {
-    String instruction = switch (asmUnary.operator()) {
+  public Void visit(AsmUnary n) {
+    String instruction = switch (n.operator()) {
       case MINUS -> "negl";
       case TWIDDLE -> "notl";
-      default -> throw new IllegalStateException("Bad");
+      default -> throw new IllegalStateException("Bad unary operator " + n.operator());
     };
-    emitted.add(String.format("  %s %s", instruction, asmUnary.operand().toString()));
+    emitted.add(String.format("  %s %s", instruction, n.operand().toString()));
     return null;
   }
 
   @Override
-  public Void visit(AllocateStack allocateStack) {
-    if (allocateStack.bytes() > 0) {
-      emitted.add(String.format("  subq $%d, %%rsp", allocateStack.bytes()));
+  public Void visit(AllocateStack n) {
+    if (n.bytes() > 0) {
+      emitted.add(String.format("  subq $%d, %%rsp", n.bytes()));
     }
+    return null;
+  }
+
+  @Override
+  public Void visit(AsmBinary n) {
+    String instruction = switch (n.operator()) {
+      case MINUS -> "subl";
+      case PLUS -> "addl";
+      case STAR -> "imull";
+      default -> throw new IllegalStateException("Bad");
+    };
+    emitted.add(String.format("  %s %s, %s", instruction, n.left(), n.right()));
+    return null;
+  }
+
+  @Override
+  public Void visit(Idiv n) {
+    emitted.add(String.format("  idivl %s", n.operand()));
+    return null;
+  }
+
+  @Override
+  public Void visit(Cdq n) {
+    emitted.add("  cdq");
     return null;
   }
 }

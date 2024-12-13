@@ -5,19 +5,20 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.AllocateStack;
+import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunctionNode;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.AsmUnary;
+import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.DefaultAsmNodeVisitor;
+import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
 import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Pseudo;
 import com.plasstech.lang.c.codegen.RegisterOperand;
-import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.Stack;
 
@@ -30,6 +31,28 @@ public class TackyToAsmCodeGen {
   public AsmProgramNode generate(TackyProgram program) {
     AsmFunctionNode functionNode = generate(program.functionDef());
     return new AsmProgramNode(functionNode);
+  }
+
+  private AsmFunctionNode generate(TackyFunctionDef functionDef) {
+    TackyInstruction.Visitor<List<Instruction>> visitor =
+        new TackyInstructionToInstructionsVisitor();
+    PseudoToStackInstructionVisitor siv = new PseudoToStackInstructionVisitor();
+    FixupVisitor mfv = new FixupVisitor();
+    List<Instruction> instructions = functionDef.instructions().stream()
+        .map(ti -> ti.accept(visitor)) // each tackyinstruction becomes a list of asmnodes
+        .flatMap(List::stream)
+        // remap from Pseudo -> Stack, and get the total # of bytes.
+        .map(asmNode -> asmNode.accept(siv))
+        // map mov stack1 stack2 -> mov stack1, r10; mov r10, stack2 etc
+        .map(asmNode -> asmNode.accept(mfv)) // returns a list for each instruction
+        .flatMap(List::stream)
+        .toList();
+
+    // Prepend an AllocateStack with the appropriate number of bytes (if it's > 0)
+    List<Instruction> mutableInstructions = new ArrayList<>(instructions);
+    mutableInstructions.add(0, new AllocateStack(totalOffset));
+
+    return new AsmFunctionNode(functionDef.identifier(), mutableInstructions);
   }
 
   private int totalOffset = 0;
@@ -69,6 +92,7 @@ public class TackyToAsmCodeGen {
     }
   }
 
+  /** Replace pseudo operands to stack references. See page 42. */
   private class PseudoToStackInstructionVisitor extends DefaultAsmNodeVisitor<Instruction> {
     private final Operand.Visitor<Operand> operandRemapper = new PseudoRegisterRemapper();
 
@@ -91,58 +115,26 @@ public class TackyToAsmCodeGen {
     }
 
     @Override
+    public Instruction visit(AsmBinary n) {
+      Operand newLeft = n.left().accept(operandRemapper);
+      Operand newRight = n.right().accept(operandRemapper);
+      return new AsmBinary(n.operator(), newLeft, newRight);
+    }
+
+    @Override
     public Instruction visit(AllocateStack a) {
       return a;
     }
-  }
 
-  private class MovFixupVisitor extends DefaultAsmNodeVisitor<List<Instruction>> {
     @Override
-    public List<Instruction> visit(Mov n) {
-      if (n.src() instanceof Stack && n.dest() instanceof Stack) {
-        Operand r10 = new RegisterOperand(Register.R10D);
-        return ImmutableList.of(
-            new Mov(n.src(), r10),
-            new Mov(r10, n.dest()));
-      }
-      return ImmutableList.of(n);
+    public Instruction visit(Idiv n) {
+      Operand newOperand = n.operand().accept(operandRemapper);
+      return new Idiv(newOperand);
     }
 
     @Override
-    public List<Instruction> visit(AsmUnary n) {
-      return ImmutableList.of(n);
+    public Instruction visit(Cdq n) {
+      return n;
     }
-
-    @Override
-    public List<Instruction> visit(Ret n) {
-      return ImmutableList.of(n);
-    }
-
-    @Override
-    public List<Instruction> visit(AllocateStack n) {
-      return ImmutableList.of(n);
-    }
-  }
-
-  private AsmFunctionNode generate(TackyFunctionDef functionDef) {
-    TackyInstruction.Visitor<List<Instruction>> visitor =
-        new TackyInstructionToInstructionsVisitor();
-    PseudoToStackInstructionVisitor siv = new PseudoToStackInstructionVisitor();
-    MovFixupVisitor mfv = new MovFixupVisitor();
-    List<Instruction> instructions = functionDef.instructions().stream()
-        .map(ti -> ti.accept(visitor)) // each tackyinstruction becomes a list of asmnodes
-        .flatMap(List::stream)
-        // remap from Pseudo -> Stack, and get the total # of bytes.
-        .map(asmNode -> asmNode.accept(siv))
-        // map mov stack1 stack2 -> mov stack1, r10; mov r10, stack2
-        .map(asmNode -> asmNode.accept(mfv)) // may result in multiple
-        .flatMap(List::stream)
-        .toList();
-
-    // Prepend an AllocateStack with the appropriate number of bytes (if it's > 0)
-    List<Instruction> mutableInstructions = new ArrayList<>(instructions);
-    mutableInstructions.add(0, new AllocateStack(totalOffset));
-
-    return new AsmFunctionNode(functionDef.identifier(), mutableInstructions);
   }
 }

@@ -12,6 +12,12 @@ public interface AsmNode {
 
     R visit(AsmUnary n);
 
+    R visit(AsmBinary n);
+
+    R visit(Idiv n);
+
+    R visit(Cdq n);
+
     R visit(AllocateStack n);
   }
 
