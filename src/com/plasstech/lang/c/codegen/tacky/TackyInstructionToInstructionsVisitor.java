@@ -32,6 +32,11 @@ final class TackyInstructionToInstructionsVisitor
   }
 
   @Override
+  public List<Instruction> visit(TackyBinary op) {
+    return null;
+  }
+
+  @Override
   public List<Instruction> visit(TackyReturn tackyReturn) {
     List<Instruction> instructions = new ArrayList<>();
     Operand operand = tackyReturn.val().accept(valVisitor);

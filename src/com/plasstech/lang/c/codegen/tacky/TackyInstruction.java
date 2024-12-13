@@ -5,9 +5,11 @@ package com.plasstech.lang.c.codegen.tacky;
  */
 public interface TackyInstruction {
   interface Visitor<R> {
-    R visit(TackyUnary tackyUnaryOp);
+    R visit(TackyUnary op);
 
-    R visit(TackyReturn tackyReturn);
+    R visit(TackyBinary op);
+
+    R visit(TackyReturn op);
   }
 
   <R> R accept(Visitor<R> visitor);
