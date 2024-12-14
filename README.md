@@ -25,3 +25,11 @@ or
 ```
 ./test_compiler ../adventofcompilers/scripts/mycc --chapter 3 --stage lex
 ```
+
+## Notes to self
+
+Update `TackyCodeGen` for `--stage tacky` updates.
+
+Update `TackyInstructionToInstructionsVisitor` for `--stage codegen` updates.
+
+Update `TackyToAsmCodeGen` for "Assembly Generation" updates.

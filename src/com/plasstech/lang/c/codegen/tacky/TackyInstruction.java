@@ -9,6 +9,16 @@ public interface TackyInstruction {
 
     R visit(TackyBinary op);
 
+    R visit(TackyCopy op);
+
+    R visit(TackyJump op);
+
+    R visit(TackyJumpZero op);
+
+    R visit(TackyJumpNotZero op);
+
+    R visit(TackyLabel op);
+
     R visit(TackyReturn op);
   }
 

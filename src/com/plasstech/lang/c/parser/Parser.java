@@ -62,7 +62,7 @@ public class Parser {
           .put(TokenType.MINUS, 45)
           .put(TokenType.LT, 35)
           .put(TokenType.LEQ, 35)
-          .put(TokenType.GT, git 5)
+          .put(TokenType.GT, 35)
           .put(TokenType.GEQ, 35)
           .put(TokenType.EQEQ, 30)
           .put(TokenType.NEQ, 30)

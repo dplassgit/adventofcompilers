@@ -73,4 +73,34 @@ final class TackyInstructionToInstructionsVisitor
     instructions.add(new Ret());
     return instructions;
   }
+
+  @Override
+  public List<Instruction> visit(TackyCopy op) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(TackyJump op) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(TackyJumpZero op) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(TackyJumpNotZero op) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(TackyLabel op) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }
