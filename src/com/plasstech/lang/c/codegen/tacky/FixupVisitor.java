@@ -104,43 +104,38 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(AsmProgramNode n) {
-    // TODO Auto-generated method stub
     return null;
   }
 
   @Override
   public List<Instruction> visit(AsmFunctionNode n) {
-    // TODO Auto-generated method stub
     return null;
   }
 
   @Override
   public List<Instruction> visit(Cmp n) {
-    // TODO Auto-generated method stub
+    // Fix if both operands are in memory.
+    // Fix if the second operand is a constant.
     return null;
   }
 
   @Override
   public List<Instruction> visit(Jmp n) {
-    // TODO Auto-generated method stub
-    return null;
+    return ImmutableList.of(n);
   }
 
   @Override
   public List<Instruction> visit(JmpCC n) {
-    // TODO Auto-generated method stub
-    return null;
+    return ImmutableList.of(n);
   }
 
   @Override
   public List<Instruction> visit(SetCC n) {
-    // TODO Auto-generated method stub
-    return null;
+    return ImmutableList.of(n);
   }
 
   @Override
   public List<Instruction> visit(Label n) {
-    // TODO Auto-generated method stub
-    return null;
+    return ImmutableList.of(n);
   }
 }
