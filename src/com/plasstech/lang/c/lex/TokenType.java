@@ -27,21 +27,17 @@ public enum TokenType {
   DOUBLE_AMP("&&"),
   BAR("|"),
   AMP("&"),
-  EQEQ("=="),
-  GT(">"),
-  GEQ(">="),
-  LT("<"),
-  LEQ("<="),
-  NEQ("!="),
+  EQEQ("==", true),
+  GT(">", true),
+  GEQ(">=", true),
+  LT("<", true),
+  LEQ("<=", true),
+  NEQ("!=", true),
   SEMICOLON(";");
 
   public final String text;
   public final boolean isKeyword;
-
-  TokenType(String text) {
-    this.text = text;
-    this.isKeyword = false;
-  }
+  public final boolean isConditional;
 
   TokenType() {
     this(false);
@@ -49,7 +45,20 @@ public enum TokenType {
 
   TokenType(boolean kw) {
     this.text = null;
+    this.isConditional = false;
     this.isKeyword = kw;
+  }
+
+  TokenType(String text) {
+    this.text = text;
+    this.isConditional = false;
+    this.isKeyword = false;
+  }
+
+  TokenType(String text, boolean conditional) {
+    this.text = text;
+    this.isConditional = conditional;
+    this.isKeyword = false;
   }
 
   public boolean isSymbol() {

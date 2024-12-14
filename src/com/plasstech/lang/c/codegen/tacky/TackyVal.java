@@ -3,7 +3,7 @@ package com.plasstech.lang.c.codegen.tacky;
 /**
  * Represents a value: a constant or a variable.
  */
-public interface TackyVal {
+interface TackyVal {
   interface Visitor<R> {
     R visit(TackyVar tackyVar);
 

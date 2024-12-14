@@ -5,21 +5,28 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
+import com.plasstech.lang.c.codegen.AsmFunctionNode;
+import com.plasstech.lang.c.codegen.AsmNode;
+import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Cdq;
-import com.plasstech.lang.c.codegen.DefaultAsmNodeVisitor;
+import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
+import com.plasstech.lang.c.codegen.Jmp;
+import com.plasstech.lang.c.codegen.JmpCC;
+import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.codegen.Ret;
+import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
 
 /** Fix up Mov, Binary, Idiv instructions that we've created naively. */
-class FixupVisitor extends DefaultAsmNodeVisitor<List<Instruction>> {
+class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   @Override
   public List<Instruction> visit(Mov n) {
     // Can't mov stack to stack: use r10 as an intermediary. See page 42.
@@ -93,5 +100,47 @@ class FixupVisitor extends DefaultAsmNodeVisitor<List<Instruction>> {
   @Override
   public List<Instruction> visit(Cdq n) {
     return ImmutableList.of(n);
+  }
+
+  @Override
+  public List<Instruction> visit(AsmProgramNode n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(AsmFunctionNode n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(Cmp n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(Jmp n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(JmpCC n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(SetCC n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public List<Instruction> visit(Label n) {
+    // TODO Auto-generated method stub
+    return null;
   }
 }

@@ -93,4 +93,34 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     emitted.add("  cdq");
     return null;
   }
+
+  @Override
+  public Void visit(Cmp n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Void visit(Jmp n) {
+    emitted.add(String.format("  jmp %s", n.label()));
+    return null;
+  }
+
+  @Override
+  public Void visit(JmpCC n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Void visit(SetCC n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
+
+  @Override
+  public Void visit(Label n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

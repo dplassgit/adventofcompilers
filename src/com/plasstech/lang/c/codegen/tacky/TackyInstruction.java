@@ -3,7 +3,7 @@ package com.plasstech.lang.c.codegen.tacky;
 /**
  * Represents an instruction.
  */
-public interface TackyInstruction {
+interface TackyInstruction {
   interface Visitor<R> {
     R visit(TackyUnary op);
 

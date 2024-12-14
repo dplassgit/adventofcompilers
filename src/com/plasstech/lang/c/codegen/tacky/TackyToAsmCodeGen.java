@@ -8,21 +8,28 @@ import java.util.Map;
 import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunctionNode;
+import com.plasstech.lang.c.codegen.AsmNode;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Cdq;
-import com.plasstech.lang.c.codegen.DefaultAsmNodeVisitor;
+import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
+import com.plasstech.lang.c.codegen.Jmp;
+import com.plasstech.lang.c.codegen.JmpCC;
+import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Pseudo;
 import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
+import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
 
 /**
+ * This is the "code emission" step.
+ * <p>
  * Input: TackyProgram (Tacky AST)
  * <p>
  * Output: AsmProgramNode (ASM AST)
@@ -93,7 +100,7 @@ public class TackyToAsmCodeGen {
   }
 
   /** Replace pseudo operands to stack references. See page 42. */
-  private class PseudoToStackInstructionVisitor extends DefaultAsmNodeVisitor<Instruction> {
+  private class PseudoToStackInstructionVisitor implements AsmNode.Visitor<Instruction> {
     private final Operand.Visitor<Operand> operandRemapper = new PseudoRegisterRemapper();
 
     @Override
@@ -135,6 +142,44 @@ public class TackyToAsmCodeGen {
     @Override
     public Instruction visit(Cdq n) {
       return n;
+    }
+
+    @Override
+    public Instruction visit(Cmp n) {
+      Operand newLeft = n.left().accept(operandRemapper);
+      Operand newRight = n.right().accept(operandRemapper);
+      return new Cmp(newLeft, newRight);
+    }
+
+    @Override
+    public Instruction visit(Jmp n) {
+      return n;
+    }
+
+    @Override
+    public Instruction visit(JmpCC n) {
+      return n;
+    }
+
+    @Override
+    public Instruction visit(SetCC n) {
+      Operand newOperand = n.dest().accept(operandRemapper);
+      return new SetCC(n.cc(), newOperand);
+    }
+
+    @Override
+    public Instruction visit(Label n) {
+      return n;
+    }
+
+    @Override
+    public Instruction visit(AsmProgramNode n) {
+      return null;
+    }
+
+    @Override
+    public Instruction visit(AsmFunctionNode n) {
+      return null;
     }
   }
 }
