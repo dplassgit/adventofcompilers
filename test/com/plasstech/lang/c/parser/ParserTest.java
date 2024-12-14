@@ -232,4 +232,49 @@ public class ParserTest {
     Exp right = bin.right();
     assertThat(right).isInstanceOf(Constant.class);
   }
+
+  @Test
+  public void chapter4UnaryNot() {
+    String input = """
+        int main(void) {
+          return !1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    Statement statement = fn.body();
+    Return returnStmt = (Return) statement;
+    Exp exp = returnStmt.exp();
+    assertThat(exp).isInstanceOf(UnaryExp.class);
+    UnaryExp unary = (UnaryExp) exp;
+    assertThat(unary.operator()).isEqualTo(TokenType.BANG);
+  }
+
+  @Test
+  public void chapter4Precedence() {
+    String input = """
+        int main(void) {
+          return 1>2-3;  // should be 1 > (2-3)
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    Statement statement = fn.body();
+    Return returnStmt = (Return) statement;
+    Exp exp = returnStmt.exp();
+    assertThat(exp).isInstanceOf(BinExp.class);
+    BinExp bin = (BinExp) exp;
+    Exp left = bin.left();
+    assertThat(left).isInstanceOf(Constant.class);
+    assertThat(bin.operator()).isEqualTo(TokenType.GT);
+    Exp right = bin.right();
+    assertThat(right).isInstanceOf(BinExp.class);
+    BinExp rightBin = (BinExp) right;
+    assertThat(rightBin.operator()).isEqualTo(TokenType.MINUS);
+  }
+
 }
