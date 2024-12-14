@@ -99,7 +99,7 @@ public class ScannerTest {
 
   @Test
   public void nextTokenSymbol() {
-    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / %");
+    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / % && & || | ! != < <= == > >=");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OPAREN);
@@ -111,6 +111,37 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.STAR);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.SLASH);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.PERCENT);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMP);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.AMP);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_BAR);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.BAR);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.BANG);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.NEQ);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.LT);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.LEQ);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EQEQ);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.GT);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.GEQ);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenSymbolNoSpaces() {
+    Scanner s = new Scanner("---&&&|||");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DECREMENT);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.MINUS);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMP);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.AMP);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_BAR);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.BAR);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenDoubleSymbols() {
+    Scanner s = new Scanner("----");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DECREMENT);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DECREMENT);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 

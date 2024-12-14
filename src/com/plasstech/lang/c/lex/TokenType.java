@@ -22,6 +22,17 @@ public enum TokenType {
   TWIDDLE("~"),
   SLASH("/"),
   PERCENT("%"),
+  BANG("!"),
+  DOUBLE_BAR("||"),
+  DOUBLE_AMP("&&"),
+  BAR("|"),
+  AMP("&"),
+  EQEQ("=="),
+  GT(">"),
+  GEQ(">="),
+  LT("<"),
+  LEQ("<="),
+  NEQ("!="),
   SEMICOLON(";");
 
   public final String text;
