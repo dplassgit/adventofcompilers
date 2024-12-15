@@ -69,9 +69,9 @@ public class TackyToAsmCodeGen {
   private int getOffset(String name) {
     Integer offset = pseudoMapping.get(name);
     if (offset == null) {
-      totalOffset -= 4;
-      offset = totalOffset;
-      pseudoMapping.put(name, totalOffset);
+      totalOffset += 4;
+      offset = -totalOffset;
+      pseudoMapping.put(name, offset);
     }
     return offset;
   }

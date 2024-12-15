@@ -12,4 +12,8 @@ public interface Operand {
   }
 
   <R> R accept(Visitor<R> visitor);
+
+  default String toString(int bytes) {
+    return toString();
+  }
 }

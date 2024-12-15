@@ -76,7 +76,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
       case MINUS -> "subl";
       case PLUS -> "addl";
       case STAR -> "imull";
-      default -> throw new IllegalStateException("Bad");
+      default -> throw new IllegalStateException("Bad binary operator " + n.operator().name());
     };
     emitted.add(String.format("  %s %s, %s", instruction, n.left(), n.right()));
     return null;
@@ -96,31 +96,36 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Cmp n) {
-    // TODO Auto-generated method stub
+    // Page 89
+    emitted.add(String.format("  cmpl %s, %s", n.left(), n.right()));
     return null;
   }
 
   @Override
   public Void visit(Jmp n) {
-    emitted.add(String.format("  jmp %s", n.label()));
+    // Page 89
+    emitted.add(String.format("  jmp .L%s", n.label()));
     return null;
   }
 
   @Override
   public Void visit(JmpCC n) {
-    // TODO Auto-generated method stub
+    // Page 89
+    emitted.add(String.format("  j%s .L%s", n.cc().name().toLowerCase(), n.label()));
     return null;
   }
 
   @Override
   public Void visit(SetCC n) {
-    // TODO Auto-generated method stub
+    // Page 89
+    emitted.add(String.format("  set%s %s", n.cc().name().toLowerCase(), n.dest().toString(1)));
     return null;
   }
 
   @Override
   public Void visit(Label n) {
-    // TODO Auto-generated method stub
+    // Page 89
+    emitted.add(String.format(".L%s:", n.label()));
     return null;
   }
 }

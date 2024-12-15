@@ -9,6 +9,7 @@ import org.junit.Test;
 import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
+import com.plasstech.lang.c.codegen.Instruction;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
@@ -86,6 +87,22 @@ public class TackyToAsmCodeGenTest {
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
     System.out.println(an.toString());
+    List<String> asm = new AsmCodeGen().generate(an);
+    System.out.println(Joiner.on("\n").join(asm));
+  }
+
+  @Test
+  public void generateChapter4() {
+    String input = "int main(void) { return !((1>=2) || (3<4) > (5==6)); }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    TackyProgram tp = new TackyCodeGen().generate(prog);
+    AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
+    assertThat(an).isNotNull();
+    List<Instruction> instructions = an.function().instructions();
+    System.out.println(Joiner.on("\n").join(instructions));
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }

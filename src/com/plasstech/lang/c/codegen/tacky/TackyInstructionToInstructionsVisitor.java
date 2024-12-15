@@ -41,6 +41,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand src = op.src().accept(valVisitor);
     Operand dst = op.dst().accept(valVisitor);
     if (op.operator() == TokenType.BANG) {
+      // Page 86
       instructions.add(new Cmp(ZERO, src));
       instructions.add(new Mov(ZERO, dst));
       instructions.add(new SetCC(CondCode.E, dst));
@@ -58,43 +59,58 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand src2 = op.src2().accept(valVisitor);
     Operand dst = op.dst().accept(valVisitor);
     TokenType operator = op.operator();
-    if (operator == TokenType.SLASH || operator == TokenType.PERCENT) {
-      // mov (src1, registeroperand(ax))
-      instructions.add(new Mov(src1, new RegisterOperand(Register.EAX)));
-      // cdq
-      instructions.add(new Cdq());
-      // idiv(src2)
-      instructions.add(new Idiv(src2));
-      if (operator == TokenType.SLASH) {
-        instructions.add(new Mov(new RegisterOperand(Register.EAX), dst));
-        // mov(reg(ax), dst)
-      } else {
-        // mov(reg(dx), dst)  for percent
-        instructions.add(new Mov(new RegisterOperand(Register.EDX), dst));
-      }
-      return instructions;
+    switch (operator) {
+      case SLASH:
+      case PERCENT:
+        // mov (src1, register(ax))
+        instructions.add(new Mov(src1, new RegisterOperand(Register.AX)));
+        // cdq
+        instructions.add(new Cdq());
+        // idiv(src2)
+        instructions.add(new Idiv(src2));
+        if (operator == TokenType.SLASH) {
+          // mov(reg(ax), dst)
+          instructions.add(new Mov(new RegisterOperand(Register.AX), dst));
+        } else {
+          // mov(reg(dx), dst)  for modulo
+          instructions.add(new Mov(new RegisterOperand(Register.DX), dst));
+        }
+        break;
+
+      case EQEQ:
+      case GT:
+      case GEQ:
+      case LT:
+      case LEQ:
+      case NEQ:
+        // Page 86
+        instructions.add(new Cmp(src2, src1));
+        instructions.add(new Mov(ZERO, dst));
+        instructions.add(new SetCC(CondCode.from(operator), dst));
+        break;
+
+      case PLUS:
+      case MINUS:
+      case STAR:
+        // For +, -, *: 
+        // First move src1 to dest
+        instructions.add(new Mov(src1, dst));
+        // Then use dest and src2 with the operator
+        instructions.add(new AsmBinary(op.operator(), src2, dst));
+        break;
+
+      default:
+        throw new IllegalStateException("Cannot generate code for " + operator.name());
     }
-    if (operator.isConditional) {
-      // Do something different.
-      instructions.add(new Cmp(src2, src1));
-      instructions.add(new Mov(ZERO, dst));
-      instructions.add(new SetCC(CondCode.from(operator), dst));
-    }
-    // For +, -, *: 
-    // First move src1 to dest
-    instructions.add(new Mov(src1, dst));
-    // Then use dest and src2 with the operator
-    instructions.add(new AsmBinary(op.operator(), src2, dst));
     return instructions;
   }
 
   @Override
   public List<Instruction> visit(TackyReturn tackyReturn) {
-    List<Instruction> instructions = new ArrayList<>();
     Operand operand = tackyReturn.val().accept(valVisitor);
-    instructions.add(new Mov(operand, new RegisterOperand(Register.EAX)));
-    instructions.add(new Ret());
-    return instructions;
+    return ImmutableList.of(
+        new Mov(operand, new RegisterOperand(Register.AX)),
+        new Ret());
   }
 
   @Override
@@ -111,15 +127,19 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   @Override
   public List<Instruction> visit(TackyJumpZero op) {
+    // Page 86
     Operand operand = op.condition().accept(valVisitor);
-    return ImmutableList.of(new Cmp(ZERO, operand),
+    return ImmutableList.of(
+        new Cmp(ZERO, operand),
         new JmpCC(CondCode.E, op.target()));
   }
 
   @Override
   public List<Instruction> visit(TackyJumpNotZero op) {
+    // Page 86
     Operand operand = op.condition().accept(valVisitor);
-    return ImmutableList.of(new Cmp(ZERO, operand),
+    return ImmutableList.of(
+        new Cmp(ZERO, operand),
         new JmpCC(CondCode.NE, op.target()));
   }
 

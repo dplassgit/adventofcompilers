@@ -7,7 +7,12 @@ import com.plasstech.lang.c.lex.TokenType;
 
 /** A conditional/flag code. */
 public enum CondCode {
-  E, NE, G, GE, L, LE;
+  E,
+  NE,
+  G,
+  GE,
+  L,
+  LE;
 
   private static final Map<TokenType, CondCode> FROM_TOKEN_TYPE = ImmutableMap.of(
       TokenType.EQEQ, E,

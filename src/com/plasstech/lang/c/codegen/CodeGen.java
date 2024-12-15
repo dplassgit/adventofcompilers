@@ -37,7 +37,7 @@ public class CodeGen {
       Operand op = n.exp().accept(ov);
 
       // Add a "mov" and a "ret"
-      instructions.add(new Mov(op, new RegisterOperand(Register.EAX)));
+      instructions.add(new Mov(op, new RegisterOperand(Register.AX)));
       instructions.add(new Ret());
       return instructions;
     }
