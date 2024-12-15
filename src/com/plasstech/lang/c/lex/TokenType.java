@@ -33,6 +33,7 @@ public enum TokenType {
   LT("<", true),
   LEQ("<=", true),
   NEQ("!=", true),
+  EQ("="), // note, not conditional!
   SEMICOLON(";");
 
   public final String text;

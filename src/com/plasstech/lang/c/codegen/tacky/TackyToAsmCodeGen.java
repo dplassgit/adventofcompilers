@@ -57,7 +57,9 @@ public class TackyToAsmCodeGen {
 
     // Prepend an AllocateStack with the appropriate number of bytes (if it's > 0)
     List<Instruction> mutableInstructions = new ArrayList<>(instructions);
-    mutableInstructions.add(0, new AllocateStack(totalOffset));
+    if (totalOffset != 0) {
+      mutableInstructions.add(0, new AllocateStack(totalOffset));
+    }
 
     return new AsmFunctionNode(functionDef.identifier(), mutableInstructions);
   }
