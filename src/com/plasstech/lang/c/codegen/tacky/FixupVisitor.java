@@ -25,7 +25,7 @@ import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
 
-/** Fix up Mov, Binary, Idiv instructions that we've created naively. */
+/** Fix up AsmNode instructions that we've created naively. */
 class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   private static final Operand R10_OPERAND = new RegisterOperand(Register.R10);
   private static final Operand R11_OPERAND = new RegisterOperand(Register.R11);
