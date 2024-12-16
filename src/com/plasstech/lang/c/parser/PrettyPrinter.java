@@ -2,7 +2,7 @@ package com.plasstech.lang.c.parser;
 
 import com.google.common.base.Strings;
 
-public class PrettyPrinter implements AstNodeVisitor<Void> {
+public class PrettyPrinter implements AstNode.Visitor<Void> {
   private int indentation;
 
   public Void prettyPrint(Program p) {
@@ -81,5 +81,43 @@ public class PrettyPrinter implements AstNodeVisitor<Void> {
 
   private String spaces() {
     return Strings.repeat(" ", indentation);
+  }
+
+  @Override
+  public Void visit(Var n) {
+    System.out.printf("%sVar: %s\n", spaces(), n.identifier());
+    return null;
+  }
+
+  @Override
+  public Void visit(Assignment n) {
+    System.out.printf("%sAssignment: (\n", spaces());
+    indentation += 2;
+    System.out.printf("%sleft:\n", spaces());
+    indentation += 2;
+    n.lvalue().accept(this);
+    indentation -= 2;
+    System.out.printf("%sright:\n", spaces());
+    indentation += 2;
+    n.rvalue().accept(this);
+    indentation -= 4;
+    System.out.printf("%s)\n", spaces());
+    return null;
+  }
+
+  @Override
+  public Void visit(Expression n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(NullStatement n) {
+    System.out.printf("%sNull statement\n", spaces());
+    return null;
+  }
+
+  @Override
+  public Void visit(Declaration n) {
+    throw new UnsupportedOperationException();
   }
 }

@@ -4,7 +4,7 @@ import com.google.common.base.Preconditions;
 
 public record Constant<T>(T value) implements Exp {
   @Override
-  public <R> R accept(AstNodeVisitor<R> visitor) {
+  public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
 

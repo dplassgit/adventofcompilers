@@ -1,6 +1,6 @@
 package com.plasstech.lang.c.parser;
 
-public abstract class GenericNodeVisitor<R> implements AstNodeVisitor<R> {
+public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   @Override
   public <T> R visit(Constant<T> n) {
     return null;
@@ -28,6 +28,31 @@ public abstract class GenericNodeVisitor<R> implements AstNodeVisitor<R> {
 
   @Override
   public R visit(BinExp n) {
+    return null;
+  }
+
+  @Override
+  public R visit(Var n) {
+    return null;
+  }
+
+  @Override
+  public R visit(Assignment n) {
+    return null;
+  }
+
+  @Override
+  public R visit(Expression n) {
+    return null;
+  }
+
+  @Override
+  public R visit(NullStatement n) {
+    return null;
+  }
+
+  @Override
+  public R visit(Declaration n) {
     return null;
   }
 }
