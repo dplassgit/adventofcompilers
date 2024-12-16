@@ -3,6 +3,7 @@ package com.plasstech.lang.c.parser;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.plasstech.lang.c.lex.Scanner;
@@ -42,7 +43,7 @@ public class Parser {
     Statement statement = parseStatement();
     expect(TokenType.CBRACE);
 
-    return new FunctionDef(varName, statement);
+    return new FunctionDef(varName, ImmutableList.of(statement));
   }
 
   private Statement parseStatement() {

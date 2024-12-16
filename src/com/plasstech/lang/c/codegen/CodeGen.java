@@ -5,12 +5,12 @@ import java.util.List;
 
 import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.RegisterOperand.Register;
+import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.FunctionDef;
 import com.plasstech.lang.c.parser.GenericNodeVisitor;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
-import com.plasstech.lang.c.parser.Statement;
 
 /**
  * Input: Program (AST). Output: AsmProgramNode (ASM AST)
@@ -22,7 +22,7 @@ public class CodeGen {
   }
 
   private AsmFunctionNode generate(FunctionDef functionDef) {
-    Statement body = functionDef.body();
+    BlockItem body = functionDef.body().get(0);
     StatementVisitor sv = new StatementVisitor();
     List<Instruction> instructions = body.accept(sv);
     return new AsmFunctionNode(functionDef.name(), ImmutableList.copyOf(instructions));

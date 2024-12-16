@@ -20,7 +20,7 @@ public class ParserTest {
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
     assertThat(fn.name()).isEqualTo("main");
-    Statement statement = fn.body();
+    BlockItem statement = fn.body().get(0);
     assertThat(statement).isInstanceOf(Return.class);
     Return returnStmt = (Return) statement;
     Exp expr = returnStmt.exp();
@@ -175,7 +175,7 @@ public class ParserTest {
     Parser p = new Parser(s);
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
-    Statement statement = fn.body();
+    BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isInstanceOf(BinExp.class);
@@ -198,7 +198,7 @@ public class ParserTest {
     Parser p = new Parser(s);
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
-    Statement statement = fn.body();
+    BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isInstanceOf(BinExp.class);
@@ -221,7 +221,7 @@ public class ParserTest {
     Parser p = new Parser(s);
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
-    Statement statement = fn.body();
+    BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isInstanceOf(BinExp.class);
@@ -244,7 +244,7 @@ public class ParserTest {
     Parser p = new Parser(s);
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
-    Statement statement = fn.body();
+    BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isInstanceOf(UnaryExp.class);
@@ -263,7 +263,7 @@ public class ParserTest {
     Parser p = new Parser(s);
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
-    Statement statement = fn.body();
+    BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isInstanceOf(BinExp.class);

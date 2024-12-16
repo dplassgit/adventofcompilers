@@ -5,12 +5,12 @@ import java.util.List;
 
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.BinExp;
+import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.FunctionDef;
 import com.plasstech.lang.c.parser.GenericNodeVisitor;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
-import com.plasstech.lang.c.parser.Statement;
 import com.plasstech.lang.c.parser.UnaryExp;
 
 /**
@@ -38,8 +38,10 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
     return new TackyFunctionDef(functionDef.name(), generate(functionDef.body()));
   }
 
-  private List<TackyInstruction> generate(Statement body) {
-    body.accept(this);
+  private List<TackyInstruction> generate(List<BlockItem> body) {
+    for (BlockItem item : body) {
+      item.accept(this);
+    }
     return instructions;
   }
 

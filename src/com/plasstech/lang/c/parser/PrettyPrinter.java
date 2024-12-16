@@ -63,7 +63,9 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
     System.out.printf("%sname: \"%s\"\n", spaces(), n.name());
     System.out.printf("%sbody:\n", spaces());
     indentation += 2;
-    n.body().accept(this);
+    for (BlockItem item : n.body()) {
+      item.accept(this);
+    }
     indentation -= 4;
     System.out.printf("%s)\n", spaces());
     return null;
