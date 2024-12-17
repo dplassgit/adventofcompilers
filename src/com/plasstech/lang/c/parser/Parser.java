@@ -1,9 +1,10 @@
 package com.plasstech.lang.c.parser;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.plasstech.lang.c.lex.Scanner;
@@ -32,23 +33,64 @@ public class Parser {
   }
 
   private FunctionDef parseFunction() {
-    // expect int identifier ( void ) { statement }
+    // expect int identifier ( void ) { statements }
     expect(TokenType.INT);
-    String varName = token.value();
+    String functionName = token.value();
     expect(TokenType.IDENTIFIER);
     expect(TokenType.OPAREN);
     expect(TokenType.VOID);
     expect(TokenType.CPAREN);
     expect(TokenType.OBRACE);
-    Statement statement = parseStatement();
+    List<BlockItem> statements = parseStatements();
     expect(TokenType.CBRACE);
 
-    return new FunctionDef(varName, ImmutableList.of(statement));
+    return new FunctionDef(functionName, statements);
   }
 
-  private Statement parseStatement() {
+  private List<BlockItem> parseStatements() {
     // return exp ;
+    List<BlockItem> statements = new ArrayList<>();
+    while (token.type() != TokenType.CBRACE) {
+      BlockItem item = switch (token.type()) {
+        case RETURN -> parseReturn();
+        case INT -> parseDeclaration();
+        case SEMICOLON -> {
+          advance();
+          yield new NullStatement();
+        }
+        default -> parseExpAsStatement();
+      };
+      statements.add(item);
+    }
+    return statements;
+  }
+
+  private Expression parseExpAsStatement() {
+    Exp exp = parseExp();
+    expect(TokenType.SEMICOLON);
+    return new Expression(exp);
+  }
+
+  // int var [ = exp] ;
+  private Declaration parseDeclaration() {
+    expect(TokenType.INT);
+    String varName = token.value();
+    expect(TokenType.IDENTIFIER);
+    if (token.type() == TokenType.SEMICOLON) {
+      advance();
+      return new Declaration(varName);
+    }
+    // Declaration with initialization
+    expect(TokenType.EQ);
+    Exp init = parseExp();
+    expect(TokenType.SEMICOLON);
+    return new Declaration(varName, init);
+  }
+
+  // return exp;
+  private Return parseReturn() {
     expect(TokenType.RETURN);
+    // This doesn't handle return; yet.
     Exp exp = parseExp();
     expect(TokenType.SEMICOLON);
     return new Return(exp);

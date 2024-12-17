@@ -53,6 +53,14 @@ public class ParserTest {
   }
 
   @Test
+  public void nullExpr() {
+    String input = "int main(void) { ; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
   public void missingSemi() {
     String input = "int main(void) { return 1}";
     Scanner s = new Scanner(input);
@@ -277,4 +285,72 @@ public class ParserTest {
     assertThat(rightBin.operator()).isEqualTo(TokenType.MINUS);
   }
 
+  @Test
+  public void declaration() {
+    String input = """
+        int main(void) {
+          int i;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    assertThat(statement).isInstanceOf(Declaration.class);
+    Declaration d = (Declaration) statement;
+    assertThat(d.identifier()).isEqualTo("i");
+  }
+
+  @Test
+  public void initialized() {
+    String input = """
+        int main(void) {
+          int i = 1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    assertThat(statement).isInstanceOf(Declaration.class);
+    Declaration d = (Declaration) statement;
+    assertThat(d.identifier()).isEqualTo("i");
+    assertThat(d.init()).hasValue(new Constant<Integer>(1));
+  }
+
+  @Test
+  public void multipleStatements() {
+    String input = """
+        int main(void) {
+          int i;
+          ;
+          return 1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body()).hasSize(3);
+    assertThat(fn.body().get(0)).isInstanceOf(Declaration.class);
+    assertThat(fn.body().get(1)).isInstanceOf(NullStatement.class);
+    assertThat(fn.body().get(2)).isInstanceOf(Return.class);
+  }
+
+  @Test
+  public void expAsStatement() {
+    String input = """
+        int main(void) {
+          1+1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    assertThat(statement).isInstanceOf(Expression.class);
+  }
 }
