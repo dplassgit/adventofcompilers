@@ -109,7 +109,12 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
 
   @Override
   public Void visit(Expression n) {
-    throw new UnsupportedOperationException();
+    System.out.printf("%sExpressionStatement: (\n", spaces());
+    indentation += 2;
+    n.exp().accept(this);
+    indentation -= 2;
+    System.out.printf("%s)\n", spaces());
+    return null;
   }
 
   @Override

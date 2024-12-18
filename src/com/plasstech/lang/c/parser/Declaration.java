@@ -6,11 +6,11 @@ import java.util.Optional;
  * Declaration of a variable, with an optional initial expression.
  */
 record Declaration(String identifier, Optional<Exp> init) implements BlockItem {
-  public Declaration(String identifier) {
+  Declaration(String identifier) {
     this(identifier, Optional.empty());
   }
 
-  public Declaration(String identifier, Exp init) {
+  Declaration(String identifier, Exp init) {
     this(identifier, Optional.of(init));
   }
 

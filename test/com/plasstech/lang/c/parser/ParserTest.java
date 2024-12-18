@@ -25,6 +25,7 @@ public class ParserTest {
     Return returnStmt = (Return) statement;
     Exp expr = returnStmt.exp();
     assertThat(expr).isInstanceOf(Constant.class);
+    @SuppressWarnings("unchecked")
     Constant<Integer> constant = (Constant<Integer>) expr;
     assertThat(constant.value()).isEqualTo(1);
   }
@@ -303,7 +304,7 @@ public class ParserTest {
   }
 
   @Test
-  public void initialized() {
+  public void initializedDeclaration() {
     String input = """
         int main(void) {
           int i = 1;
@@ -352,5 +353,35 @@ public class ParserTest {
     FunctionDef fn = prog.functionDef();
     BlockItem statement = fn.body().get(0);
     assertThat(statement).isInstanceOf(Expression.class);
+  }
+
+  @Test
+  public void variableAsExpression() {
+    String input = """
+        int main(void) {
+          a;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    // Surely there's a better way to do this, and don't call me Shirley.
+    BlockItem statement = fn.body().get(0);
+    Expression exp = (Expression) statement;
+    Var var = (Var) exp.exp();
+    assertThat(var.identifier()).isEqualTo("a");
+  }
+
+  @Test
+  public void variablesInExpression() {
+    String input = """
+        int main(void) {
+          return a+3*c-main>0;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
   }
 }

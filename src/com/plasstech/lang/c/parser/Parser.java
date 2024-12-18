@@ -110,7 +110,8 @@ public class Parser {
           .put(TokenType.EQEQ, 30)
           .put(TokenType.NEQ, 30)
           .put(TokenType.DOUBLE_AMP, 10)
-          .put(TokenType.DOUBLE_BAR, 5).build();
+          .put(TokenType.DOUBLE_BAR, 5)
+          .put(TokenType.EQ, 1).build();
 
   private Exp parseExp() {
     return parseExp(0);
@@ -129,23 +130,40 @@ public class Parser {
 
   private Exp parseFactor() {
     TokenType tt = token.type();
-    if (tt == TokenType.OPAREN) {
-      advance();
-      Exp innerExp = parseExp();
-      expect(TokenType.CPAREN);
-      return innerExp;
-    }
-    if (UNARY_TOKENS.contains(tt)) {
-      advance();
-      Exp innerExp = parseFactor();
-      return new UnaryExp(tt, innerExp);
-    }
+    switch (tt) {
+      case IDENTIFIER -> {
+        String variableName = token.value();
+        advance();
+        return new Var(variableName);
+      }
 
-    // Int literal
-    String valueAsString = token.value();
-    expect(TokenType.INT_LITERAL);
-    int value = Integer.parseInt(valueAsString);
-    return new Constant<Integer>(value);
+      case OPAREN -> {
+        advance();
+        Exp innerExp = parseExp();
+        expect(TokenType.CPAREN);
+        return innerExp;
+      }
+
+      case INT_LITERAL -> {
+        // Int literal
+        String valueAsString = token.value();
+        expect(TokenType.INT_LITERAL);
+        int value = Integer.parseInt(valueAsString);
+        return new Constant<Integer>(value);
+      }
+
+      case MINUS, TWIDDLE, BANG -> {
+        // Unary
+        advance();
+        Exp innerExp = parseFactor();
+        return new UnaryExp(tt, innerExp);
+      }
+
+      default -> {
+        error("Unexpected token " + tt.name() + "; expected INT, unary operator or identifier");
+        return null;
+      }
+    }
   }
 
   private static void error(String message) {
