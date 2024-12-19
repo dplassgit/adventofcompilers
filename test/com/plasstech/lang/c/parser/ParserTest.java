@@ -21,13 +21,9 @@ public class ParserTest {
     FunctionDef fn = prog.functionDef();
     assertThat(fn.name()).isEqualTo("main");
     BlockItem statement = fn.body().get(0);
-    assertThat(statement).isInstanceOf(Return.class);
     Return returnStmt = (Return) statement;
     Exp expr = returnStmt.exp();
-    assertThat(expr).isInstanceOf(Constant.class);
-    @SuppressWarnings("unchecked")
-    Constant<Integer> constant = (Constant<Integer>) expr;
-    assertThat(constant.value()).isEqualTo(1);
+    assertThat(expr).isEqualTo(Constant.of(1));
   }
 
   @Test
@@ -86,7 +82,13 @@ public class ParserTest {
         """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
-    p.parse();
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.name()).isEqualTo("main");
+    BlockItem statement = fn.body().get(0);
+    Return returnStmt = (Return) statement;
+    Exp expr = returnStmt.exp();
+    assertThat(expr).isEqualTo(Constant.of(1));
   }
 
   @Test
@@ -187,20 +189,14 @@ public class ParserTest {
     BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
-    assertThat(exp).isInstanceOf(BinExp.class);
-    BinExp bin = (BinExp) exp;
-    Exp left = bin.left();
-    assertThat(left).isInstanceOf(Constant.class);
-    assertThat(bin.operator()).isEqualTo(TokenType.PLUS);
-    Exp right = bin.right();
-    assertThat(right).isInstanceOf(Constant.class);
+    assertThat(exp).isEqualTo(new BinExp(Constant.of(3), TokenType.PLUS, Constant.of(4)));
   }
 
   @Test
   public void chapter3BinExpAndFactor() {
     String input = """
         int main(void) {
-          return (3+4)-(6+7);
+          return (3+4)-(6*7);
         }
         """;
     Scanner s = new Scanner(input);
@@ -210,13 +206,12 @@ public class ParserTest {
     BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
-    assertThat(exp).isInstanceOf(BinExp.class);
     BinExp bin = (BinExp) exp;
     Exp left = bin.left();
-    assertThat(left).isInstanceOf(BinExp.class);
+    assertThat(left).isEqualTo(new BinExp(Constant.of(3), TokenType.PLUS, Constant.of(4)));
     assertThat(bin.operator()).isEqualTo(TokenType.MINUS);
     Exp right = bin.right();
-    assertThat(right).isInstanceOf(BinExp.class);
+    assertThat(right).isEqualTo(new BinExp(Constant.of(6), TokenType.STAR, Constant.of(7)));
   }
 
   @Test
@@ -233,13 +228,13 @@ public class ParserTest {
     BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
-    assertThat(exp).isInstanceOf(BinExp.class);
     BinExp bin = (BinExp) exp;
     Exp left = bin.left();
-    assertThat(left).isInstanceOf(BinExp.class);
+    assertThat(left)
+        .isEqualTo(new BinExp(Constant.of(1), TokenType.STAR, Constant.of(2)));
     assertThat(bin.operator()).isEqualTo(TokenType.MINUS);
     Exp right = bin.right();
-    assertThat(right).isInstanceOf(Constant.class);
+    assertThat(right).isEqualTo(Constant.of(3));
   }
 
   @Test
@@ -256,9 +251,7 @@ public class ParserTest {
     BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
-    assertThat(exp).isInstanceOf(UnaryExp.class);
-    UnaryExp unary = (UnaryExp) exp;
-    assertThat(unary.operator()).isEqualTo(TokenType.BANG);
+    assertThat(exp).isEqualTo(new UnaryExp(TokenType.BANG, Constant.of(1)));
   }
 
   @Test
@@ -278,12 +271,10 @@ public class ParserTest {
     assertThat(exp).isInstanceOf(BinExp.class);
     BinExp bin = (BinExp) exp;
     Exp left = bin.left();
-    assertThat(left).isInstanceOf(Constant.class);
     assertThat(bin.operator()).isEqualTo(TokenType.GT);
+    assertThat(left).isEqualTo(Constant.of(1));
     Exp right = bin.right();
-    assertThat(right).isInstanceOf(BinExp.class);
-    BinExp rightBin = (BinExp) right;
-    assertThat(rightBin.operator()).isEqualTo(TokenType.MINUS);
+    assertThat(right).isEqualTo(new BinExp(Constant.of(2), TokenType.MINUS, Constant.of(3)));
   }
 
   @Test
@@ -304,7 +295,7 @@ public class ParserTest {
   }
 
   @Test
-  public void initializedDeclaration() {
+  public void initializedDeclarationConstant() {
     String input = """
         int main(void) {
           int i = 1;
@@ -318,7 +309,26 @@ public class ParserTest {
     assertThat(statement).isInstanceOf(Declaration.class);
     Declaration d = (Declaration) statement;
     assertThat(d.identifier()).isEqualTo("i");
-    assertThat(d.init()).hasValue(new Constant<Integer>(1));
+    assertThat(d.init()).hasValue(Constant.of(1));
+  }
+
+  @Test
+  public void initializedDeclaration() {
+    String input = """
+        int main(void) {
+          int i = a+b;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    assertThat(statement).isInstanceOf(Declaration.class);
+    Declaration d = (Declaration) statement;
+    assertThat(d.identifier()).isEqualTo("i");
+    BinExp expected = new BinExp(new Var("a"), TokenType.PLUS, new Var("b"));
+    assertThat(d.init()).hasValue(expected);
   }
 
   @Test
@@ -383,5 +393,68 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     p.parse();
+  }
+
+  @Test
+  public void assignment() {
+    String input = """
+        int main(void) {
+          a=b+c;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    Expression exp = (Expression) statement;
+    Assignment assn = (Assignment) exp.exp();
+    assertThat(assn.lvalue()).isEqualTo(new Var("a"));
+    BinExp rvalue = (BinExp) assn.rvalue();
+    assertThat(rvalue.left()).isEqualTo(new Var("b"));
+    assertThat(rvalue.operator()).isEqualTo(TokenType.PLUS);
+    assertThat(rvalue.right()).isEqualTo(new Var("c"));
+  }
+
+  @Test
+  public void rightAssocAssignment() {
+    String input = """
+        int main(void) {
+          a=b=c;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    Expression exp = (Expression) statement;
+    Assignment assn = (Assignment) exp.exp();
+    assertThat(assn.lvalue()).isEqualTo(new Var("a"));
+    Assignment rvalue = (Assignment) assn.rvalue();
+    assertThat(rvalue.lvalue()).isEqualTo(new Var("b"));
+    assertThat(rvalue.rvalue()).isEqualTo(new Var("c"));
+  }
+
+  @Test
+  public void rightAssocAssignmentWithAndWithoutParens() {
+    String input = """
+        int main(void) {
+          a=b=c;
+        }
+        """;
+    String withParens = """
+        int main(void) {
+          a=(b=c);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog1 = p.parse();
+
+    Scanner s2 = new Scanner(withParens);
+    Parser p2 = new Parser(s2);
+    Program prog2 = p2.parse();
+    assertThat(prog1).isEqualTo(prog2);
   }
 }

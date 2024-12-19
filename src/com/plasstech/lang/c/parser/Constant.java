@@ -3,6 +3,10 @@ package com.plasstech.lang.c.parser;
 import com.google.common.base.Preconditions;
 
 public record Constant<T>(T value) implements Exp {
+  public static Constant<Integer> of(int value) {
+    return new Constant<Integer>(value);
+  }
+
   @Override
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);

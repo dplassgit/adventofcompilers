@@ -122,8 +122,14 @@ public class Parser {
     while (PRECEDENCES.containsKey(token.type()) && PRECEDENCES.get(token.type()) >= minPrec) {
       TokenType tt = token.type();
       advance();
-      Exp right = parseExp(PRECEDENCES.get(tt) + 1);
-      left = new BinExp(left, tt, right);
+      if (tt == TokenType.EQ) {
+        // Stay same precedence
+        Exp right = parseExp(PRECEDENCES.get(tt));
+        left = new Assignment(left, right);
+      } else {
+        Exp right = parseExp(PRECEDENCES.get(tt) + 1);
+        left = new BinExp(left, tt, right);
+      }
     }
     return left;
   }
