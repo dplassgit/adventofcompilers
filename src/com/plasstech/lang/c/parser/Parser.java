@@ -3,10 +3,8 @@ package com.plasstech.lang.c.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableSet;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
@@ -14,8 +12,6 @@ import com.plasstech.lang.c.lex.TokenType;
 public class Parser {
   private final Scanner scanner;
   private Token token;
-  private static final Set<TokenType> UNARY_TOKENS =
-      ImmutableSet.of(TokenType.MINUS, TokenType.TWIDDLE, TokenType.BANG);
 
   public Parser(Scanner scanner) {
     this.scanner = scanner;
@@ -48,7 +44,6 @@ public class Parser {
   }
 
   private List<BlockItem> parseStatements() {
-    // return exp ;
     List<BlockItem> statements = new ArrayList<>();
     while (token.type() != TokenType.CBRACE) {
       BlockItem item = switch (token.type()) {
