@@ -16,8 +16,7 @@ gcc -E -P $base.c -o $base.i
 
 # if --lex or --parse, do not generate .s
 CLASSPATH=/mnt/c/Users/dplas/dev/adventofcompilers/bin:/mnt/c/Users/dplas/dev/adventofcompilers/lib/guava-33.0.0-jre.jar
-if [[ $1 == '--lex' || $1 == '--parse' || $1 == '--prettyprint' || $1 == '--codegen' || $1 == '--tacky' ]]; then
-	#java -classpath /mnt/c/Users/dplas/dev/adventofcompilers/bin;/mnt/c/Users/dplas/dev/adventofcompilers/lib com.plasstech.lang.c.driver.Driver -- $1 < $base.i;
+if [[ $1 == '--lex' || $1 == '--parse' || $1 == '--prettyprint' || $1 == '--codegen' || $1 == '--tacky' || $1 == '--validate' ]]; then
 	java -classpath $CLASSPATH com.plasstech.lang.c.driver.Driver -- $1 < $base.i
 else
 	java -classpath $CLASSPATH com.plasstech.lang.c.driver.Driver < $base.i > $base.s
@@ -25,6 +24,8 @@ else
 	if [[ $rv == '0' ]]; then
 		gcc $base.s -o $base
 	fi
-	rm -f $base.s
+	if [[ $1 != '-S' ]]; then 
+		rm -f $base.s
+	fi
 	exit $rv
 fi

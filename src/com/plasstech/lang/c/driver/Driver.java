@@ -20,6 +20,7 @@ import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.ParserException;
 import com.plasstech.lang.c.parser.PrettyPrinter;
 import com.plasstech.lang.c.parser.Program;
+import com.plasstech.lang.c.typecheck.Resolver;
 
 public class Driver {
 
@@ -44,10 +45,13 @@ public class Driver {
       Scanner s = new Scanner(input);
       if (args.length > 1) {
         if (args[1].equals("--lex")) {
-          justLex(s);
+          scan(s);
         }
         if (args[1].equals("--parse")) {
-          justParse(s);
+          parse(s);
+        }
+        if (args[1].equals("--validate")) {
+          validate(s);
         }
         if (args[1].equals("--codegen")) {
           codeGen(s);
@@ -74,35 +78,42 @@ public class Driver {
   }
 
   private static void tackyCodeGen(Scanner s) {
-    Program program = justParse(s);
+    Program program = validate(s);
     // This throws on error, doesn't really generate anything
     new TackyCodeGen().generate(program);
   }
 
   private static List<String> generateAsm(Scanner s) {
-    Program prog = justParse(s);
+    Program prog = validate(s);
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     return new AsmCodeGen().generate(an);
   }
 
   private static AsmProgramNode codeGen(Scanner s) {
-    Program program = justParse(s);
+    Program program = validate(s);
+    // This only does chapter 1. Not sure if it ever should be run after chapter 1...
     return new CodeGen().generate(program);
   }
 
   private static void prettyPrint(Scanner s) {
-    Program program = justParse(s);
+    Program program = parse(s);
     new PrettyPrinter().prettyPrint(program);
   }
 
-  private static Program justParse(Scanner s) {
+  private static Program validate(Scanner s) {
+    Parser p = new Parser(s);
+    Program program = p.parse();
+    return new Resolver().validate(program);
+  }
+
+  private static Program parse(Scanner s) {
     Parser p = new Parser(s);
     return p.parse();
   }
 
-  private static void justLex(Scanner s) {
-    // Run the lexer
+  private static void scan(Scanner s) {
+    // Run the scanner
     Token t = s.nextToken();
     while (t.type() != TokenType.EOF) {
       t = s.nextToken();
