@@ -9,26 +9,27 @@ import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.TokenType;
 
 public class ParserTest {
-
   @Test
   public void chapter1Parser() {
     String input = "int main(void) { return 1; }";
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
 
-    // This is a bit of a change detector test but it works.
     Program prog = p.parse();
     FunctionDef fn = prog.functionDef();
     assertThat(fn.name()).isEqualTo("main");
     BlockItem statement = fn.body().get(0);
     Return returnStmt = (Return) statement;
-    Exp expr = returnStmt.exp();
-    assertThat(expr).isEqualTo(Constant.of(1));
+    assertThat(returnStmt.exp()).isEqualTo(Constant.of(1));
   }
 
   @Test
   public void chapter1ParserWithCommentsAndNewlines() {
-    String input = """
+    String withoutComments = "int main(void) { return 1; }";
+    Parser p = new Parser(new Scanner(withoutComments));
+    Program programWithoutComments = p.parse();
+
+    String withComments = """
         // This is a comment
         int main(void) {
           /* So is
@@ -36,9 +37,9 @@ public class ParserTest {
           return 1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    p = new Parser(new Scanner(withComments));
+    Program programWithComments = p.parse();
+    assertThat(programWithoutComments).isEqualTo(programWithComments);
   }
 
   @Test
@@ -438,7 +439,7 @@ public class ParserTest {
 
   @Test
   public void rightAssocAssignmentWithAndWithoutParens() {
-    String input = """
+    String withoutParens = """
         int main(void) {
           a=b=c;
         }
@@ -448,7 +449,7 @@ public class ParserTest {
           a=(b=c);
         }
         """;
-    Scanner s = new Scanner(input);
+    Scanner s = new Scanner(withoutParens);
     Parser p = new Parser(s);
     Program prog1 = p.parse();
 
