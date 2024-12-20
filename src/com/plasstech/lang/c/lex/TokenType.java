@@ -5,6 +5,8 @@ public enum TokenType {
   INT(true),
   RETURN(true),
   VOID(true),
+  IF(true),
+  ELSE(true),
   IDENTIFIER,
   //  STRING_LITERAL,
   INT_LITERAL,
@@ -34,6 +36,8 @@ public enum TokenType {
   LEQ("<=", true),
   NEQ("!=", true),
   EQ("="), // note, not conditional!
+  QUESTION("?"),
+  COLON(":"),
   SEMICOLON(";");
 
   public final String text;

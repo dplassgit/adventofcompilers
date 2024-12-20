@@ -51,12 +51,14 @@ public class ScannerTest {
 
   @Test
   public void nextTokenKeywords() {
-    Scanner s = new Scanner("int return void");
+    Scanner s = new Scanner("int return void if else");
     Token t = s.nextToken();
     assertThat(t.type()).isEqualTo(TokenType.INT);
     assertThat(t.isKeyword()).isTrue();
     assertThat(s.nextToken().type()).isEqualTo(TokenType.RETURN);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.VOID);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.IF);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.ELSE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
@@ -99,7 +101,8 @@ public class ScannerTest {
 
   @Test
   public void nextTokenSymbol() {
-    Scanner s = new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / % && & || | ! != < <= == > >= =");
+    Scanner s =
+        new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / % && & || | ! != < <= == > >= = ? :");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OPAREN);
@@ -123,6 +126,8 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.GT);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.GEQ);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EQ);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.QUESTION);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.COLON);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
