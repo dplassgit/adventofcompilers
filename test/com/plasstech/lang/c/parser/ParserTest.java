@@ -458,4 +458,80 @@ public class ParserTest {
     Program prog2 = p2.parse();
     assertThat(prog1).isEqualTo(prog2);
   }
+
+  @Test
+  public void parseIf() {
+    String input = """
+        int main(void) {
+          int a = 3;
+          if (a == 3)
+            a = a + 1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(1);
+    assertThat(statement).isInstanceOf(If.class);
+  }
+
+  @Test
+  public void parseIfElse() {
+    String input = """
+        int main(void) {
+          int a = 3;
+          if (a == 3)
+            a = a + 1;
+          else
+            a = a - 1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(1);
+    assertThat(statement).isInstanceOf(If.class);
+  }
+
+  @Test
+  public void parseIfElseIf() {
+    String input = """
+        int main(void) {
+          int a = 3;
+          if (a == 3)
+            a = a + 1;
+          else if (a == 4)
+            a = a - 1;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(1);
+    assertThat(statement).isInstanceOf(If.class);
+  }
+
+  @Test
+  public void parseIfElseIfElse() {
+    String input = """
+        int main(void) {
+          int a = 3;
+          if (a == 3)
+            a = a + 1;
+          else if (a == 4)
+            a = a - 1;
+          else
+            a = a + 2;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(1);
+    assertThat(statement).isInstanceOf(If.class);
+  }
 }

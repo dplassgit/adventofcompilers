@@ -3,6 +3,7 @@ package com.plasstech.lang.c.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.google.common.collect.ImmutableMap;
 import com.plasstech.lang.c.lex.Scanner;
@@ -46,18 +47,44 @@ public class Parser {
   private List<BlockItem> parseStatements() {
     List<BlockItem> statements = new ArrayList<>();
     while (token.type() != TokenType.CBRACE) {
-      BlockItem item = switch (token.type()) {
-        case RETURN -> parseReturn();
-        case INT -> parseDeclaration();
-        case SEMICOLON -> {
-          advance();
-          yield new NullStatement();
-        }
-        default -> parseExpAsStatement();
-      };
+      BlockItem item = parseBlockItem();
       statements.add(item);
     }
     return statements;
+  }
+
+  private BlockItem parseBlockItem() {
+    if (token.type() == TokenType.INT) {
+      return parseDeclaration();
+    }
+    return parseStatement();
+  }
+
+  private Statement parseStatement() {
+    Statement item = switch (token.type()) {
+      case RETURN -> parseReturn();
+      case SEMICOLON -> {
+        advance();
+        yield new NullStatement();
+      }
+      case IF -> parseIf();
+      default -> parseExpAsStatement();
+    };
+    return item;
+  }
+
+  private If parseIf() {
+    expect(TokenType.IF);
+    expect(TokenType.OPAREN);
+    Exp exp = parseExp();
+    expect(TokenType.CPAREN);
+    Statement then = parseStatement();
+    Optional<Statement> elseStmt = Optional.empty();
+    if (token.type() == TokenType.ELSE) {
+      advance();
+      elseStmt = Optional.of(parseStatement());
+    }
+    return new If(exp, then, elseStmt);
   }
 
   private Expression parseExpAsStatement() {

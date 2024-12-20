@@ -2,9 +2,21 @@ package com.plasstech.lang.c.parser;
 
 public interface AstNode {
   interface Visitor<R> {
+    R visit(Assignment n);
+
+    R visit(BinExp binExp);
+
     <T> R visit(Constant<T> n);
 
+    R visit(Declaration n);
+
+    R visit(Expression n);
+
     R visit(FunctionDef n);
+
+    R visit(If n);
+
+    R visit(NullStatement n);
 
     R visit(Program n);
 
@@ -12,17 +24,7 @@ public interface AstNode {
 
     R visit(UnaryExp n);
 
-    R visit(BinExp binExp);
-
     R visit(Var n);
-
-    R visit(Assignment n);
-
-    R visit(Expression n);
-
-    R visit(NullStatement n);
-
-    R visit(Declaration n);
   }
 
   /** Visitor pattern. */
