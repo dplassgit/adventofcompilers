@@ -10,6 +10,7 @@ import com.google.common.base.Joiner;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
+import com.plasstech.lang.c.typecheck.Resolver;
 
 public class TackyCodeGenTest {
 
@@ -86,6 +87,43 @@ public class TackyCodeGenTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
+    TackyCodeGen cg = new TackyCodeGen();
+    TackyProgram tp = cg.generate(prog);
+    assertThat(tp).isNotNull();
+    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    System.out.println(Joiner.on("\n").join(instructions));
+  }
+
+  @Test
+  public void generateDeclaration() {
+    String input = "int main(void) { int a = 3; return a; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    prog = new Resolver().validate(prog);
+    TackyCodeGen cg = new TackyCodeGen();
+    TackyProgram tp = cg.generate(prog);
+    assertThat(tp).isNotNull();
+    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    System.out.println(Joiner.on("\n").join(instructions));
+  }
+
+  @Test
+  public void generateDeclarationWithAndWithoutInit() {
+    String input = """
+        int main(void) {
+          int b;
+          int a = 10 + 1;
+          b = a * 2;
+          return b;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    prog = new Resolver().validate(prog);
     TackyCodeGen cg = new TackyCodeGen();
     TackyProgram tp = cg.generate(prog);
     assertThat(tp).isNotNull();

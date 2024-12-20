@@ -19,8 +19,12 @@ import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
 
-public class Resolver {
+/**
+ * Resolver for renaming variables and making sure there aren't duplicated declarations, and that
+ * all used variables are declared. Based on Chapter 5, page 103ff.
+ */
 
+public class Resolver {
   // Maps from old to new name
   private final Map<String, String> variableMap = new HashMap<>();
 
@@ -64,6 +68,7 @@ public class Resolver {
   }
 
   private Exp resolveExp(Exp e) {
+    // Java 21 FTW
     return switch (e) {
       case Assignment a -> resolveAssignment(a);
       case BinExp b -> new BinExp(resolveExp(b.left()), b.operator(), resolveExp(b.right()));
