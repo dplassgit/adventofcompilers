@@ -8,14 +8,17 @@ import java.util.Optional;
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.BlockItem;
+import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.Declaration;
 import com.plasstech.lang.c.parser.Exp;
 import com.plasstech.lang.c.parser.Expression;
 import com.plasstech.lang.c.parser.FunctionDef;
+import com.plasstech.lang.c.parser.If;
 import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
+import com.plasstech.lang.c.parser.Statement;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
 
@@ -41,18 +44,33 @@ public class Resolver {
   private BlockItem resolve(BlockItem item) {
     return switch (item) {
       case Declaration d -> resolveDeclaration(d);
+      case Statement s -> resolve(s);
+      default -> throw new IllegalArgumentException("Unexpected value: " + item);
+    };
+  }
+
+  private Statement resolve(Statement item) {
+    return switch (item) {
       case Expression e -> resolveExpression(e);
       case Return r -> resolveReturn(r);
+      case If i -> resolveIf(i);
       case NullStatement n -> n;
       default -> throw new IllegalArgumentException("Unexpected value: " + item);
     };
   }
 
-  private BlockItem resolveExpression(Expression e) {
+  private Statement resolveIf(If i) {
+    Exp cond = resolveExp(i.condition());
+    Statement then = resolve(i.then());
+    Optional<Statement> elseStmt = i.elseStmt().map(stmt -> resolve(stmt));
+    return new If(cond, then, elseStmt);
+  }
+
+  private Statement resolveExpression(Expression e) {
     return new Expression(resolveExp(e.exp()));
   }
 
-  private BlockItem resolveReturn(Return r) {
+  private Statement resolveReturn(Return r) {
     return new Return(resolveExp(r.exp()));
   }
 
@@ -75,6 +93,8 @@ public class Resolver {
       case Constant<?> c -> c;
       case UnaryExp u -> new UnaryExp(u.operator(), resolveExp(u.exp()));
       case Var v -> resolveVar(v);
+      case Conditional c ->
+        new Conditional(resolveExp(c.condition()), resolveExp(c.left()), resolveExp(c.right()));
       default -> throw new IllegalArgumentException("Unexpected value: " + e);
     };
   }

@@ -100,4 +100,61 @@ public class ResolverTest {
     Program program = parse(input);
     resolver.validate(program);
   }
+
+  @Test
+  public void cond() {
+    String input = """
+        int main(void) {
+          int b = 1?2:3;
+        }
+        """;
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void ifStmt() {
+    String input = """
+        int main(void) {
+          int a=0;
+          if (a == 0)
+            a=a+1;
+          else if (a == 1)
+            a = a - 1;
+          else
+            a = 2;
+          return a;
+        }
+        """;
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void ternaryAssign() {
+    String input = """
+        int main(void) {
+            int a = 2;
+            int b = 1;
+            a > b ? a = 1 : a = 0;
+            return a;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void undeclaredVarInIf() {
+    String input = """
+        int main(void) {
+            if (c == 0) return 1;
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
 }
