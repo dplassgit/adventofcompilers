@@ -60,4 +60,9 @@ public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   public R visit(If n) {
     return null;
   }
+
+  @Override
+  public R visit(Conditional n) {
+    return null;
+  }
 }

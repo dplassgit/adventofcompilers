@@ -460,7 +460,7 @@ public class ParserTest {
   }
 
   @Test
-  public void parseIf() {
+  public void chapter6If() {
     String input = """
         int main(void) {
           int a = 3;
@@ -477,7 +477,7 @@ public class ParserTest {
   }
 
   @Test
-  public void parseIfElse() {
+  public void chapter6IfElse() {
     String input = """
         int main(void) {
           int a = 3;
@@ -496,7 +496,7 @@ public class ParserTest {
   }
 
   @Test
-  public void parseIfElseIf() {
+  public void chapter6IfElseIf() {
     String input = """
         int main(void) {
           int a = 3;
@@ -515,7 +515,7 @@ public class ParserTest {
   }
 
   @Test
-  public void parseIfElseIfElse() {
+  public void chapter6IfElseIfElse() {
     String input = """
         int main(void) {
           int a = 3;
@@ -533,5 +533,57 @@ public class ParserTest {
     FunctionDef fn = prog.functionDef();
     BlockItem statement = fn.body().get(1);
     assertThat(statement).isInstanceOf(If.class);
+  }
+
+  @Test
+  public void chapter6Conditional() {
+    String input = """
+        int main(void) {
+          return 3?1:4;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    Return returnStmt = (Return) statement;
+    Exp exp = returnStmt.exp();
+    assertThat(exp).isEqualTo(new Conditional(Constant.of(3), Constant.of(1), Constant.of(4)));
+  }
+
+  @Test
+  public void chapter6ConditionalPrecedenceAboveAssignment() {
+    String input = """
+        int main(void) {
+          int a=3?1:4;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    Declaration a = (Declaration) statement;
+    Exp exp = a.init().get();
+    assertThat(exp).isEqualTo(new Conditional(Constant.of(3), Constant.of(1), Constant.of(4)));
+  }
+
+  @Test
+  public void chapter6ConditionalPrecedence() {
+    String input = """
+        int main(void) {
+          int a= 1||2 ? 3 : 4;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    BlockItem statement = fn.body().get(0);
+    Declaration a = (Declaration) statement;
+    Exp exp = a.init().get();
+    assertThat(exp).isInstanceOf(Conditional.class);
+    System.err.println(exp);
   }
 }

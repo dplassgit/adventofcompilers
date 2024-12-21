@@ -133,6 +133,7 @@ public class Parser {
           .put(TokenType.NEQ, 30)
           .put(TokenType.DOUBLE_AMP, 10)
           .put(TokenType.DOUBLE_BAR, 5)
+          .put(TokenType.QUESTION, 3)
           .put(TokenType.EQ, 1).build();
 
   private Exp parseExp() {
@@ -148,12 +149,23 @@ public class Parser {
         // Stay same precedence
         Exp right = parseExp(PRECEDENCES.get(tt));
         left = new Assignment(left, right);
+      } else if (tt == TokenType.QUESTION) {
+        Exp middle = parseConditionalMiddle();
+        Exp right = parseExp(PRECEDENCES.get(tt));
+        left = new Conditional(left, middle, right);
       } else {
         Exp right = parseExp(PRECEDENCES.get(tt) + 1);
         left = new BinExp(left, tt, right);
       }
     }
     return left;
+  }
+
+  private Exp parseConditionalMiddle() {
+    // we already have the condition
+    Exp exp = parseExp();
+    expect(TokenType.COLON);
+    return exp;
   }
 
   private Exp parseFactor() {

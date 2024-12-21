@@ -125,7 +125,19 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
 
   @Override
   public Void visit(Declaration n) {
-    throw new UnsupportedOperationException();
+    System.out.printf("%sDeclaration: (\n", spaces());
+
+    indentation += 2;
+    System.out.printf("%svariable: %s\n", spaces(), n.identifier());
+    if (n.init().isPresent()) {
+      System.out.printf("%sinit:\n", spaces());
+      indentation += 2;
+      n.init().get().accept(this);
+      indentation -= 2;
+    }
+    indentation -= 2;
+    System.out.printf("%s)\n", spaces());
+    return null;
   }
 
   @Override
@@ -151,6 +163,31 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
     } else {
       indentation -= 4;
     }
+    System.out.printf("%s)\n", spaces());
+    return null;
+  }
+
+  @Override
+  public Void visit(Conditional n) {
+    System.out.printf("%sConditional (\n", spaces());
+
+    indentation += 2;
+    System.out.printf("%scondition:\n", spaces());
+    indentation += 2;
+    n.condition().accept(this);
+
+    indentation -= 2;
+    System.out.printf("%sleft:\n", spaces());
+    indentation += 2;
+    n.left().accept(this);
+
+    indentation -= 2;
+    System.out.printf("%sright:\n", spaces());
+    indentation += 2;
+    n.right().accept(this);
+
+    indentation -= 4;
+
     System.out.printf("%s)\n", spaces());
     return null;
   }

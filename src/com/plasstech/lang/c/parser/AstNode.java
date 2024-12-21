@@ -4,7 +4,9 @@ public interface AstNode {
   interface Visitor<R> {
     R visit(Assignment n);
 
-    R visit(BinExp binExp);
+    R visit(BinExp n);
+
+    R visit(Conditional n);
 
     <T> R visit(Constant<T> n);
 
