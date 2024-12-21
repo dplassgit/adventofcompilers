@@ -5,13 +5,16 @@ import java.util.List;
 
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Assignment;
+import com.plasstech.lang.c.parser.AstNode;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.BlockItem;
+import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.Declaration;
 import com.plasstech.lang.c.parser.Expression;
 import com.plasstech.lang.c.parser.FunctionDef;
-import com.plasstech.lang.c.parser.GenericNodeVisitor;
+import com.plasstech.lang.c.parser.If;
+import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.UnaryExp;
@@ -22,17 +25,11 @@ import com.plasstech.lang.c.parser.Var;
  * <p>
  * Output: TackyProgram (Tacky AST)
  */
-public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
+public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   private static final TackyVal ONE = new TackyIntConstant(1);
   private static final TackyVal ZERO = new TackyIntConstant(0);
 
   private List<TackyInstruction> instructions = new ArrayList<>();
-
-  private static int id = 0;
-
-  private static String makeUnique(String prefix) {
-    return String.format("%s.%d", prefix, id++);
-  }
 
   public TackyProgram generate(Program program) {
     return new TackyProgram(generate(program.functionDef()));
@@ -86,8 +83,7 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
   @Override
   public TackyVal visit(UnaryExp n) {
     TackyVal src = n.exp().accept(this);
-    String destName = makeUnique("unaryexp");
-    TackyVar dst = new TackyVar(destName);
+    TackyVar dst = newTemp("unaryexp_result");
     instructions.add(new TackyUnary(dst, n.operator(), src));
     return dst;
   }
@@ -95,7 +91,7 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
   @Override
   public TackyVal visit(BinExp n) {
     TackyVal src1 = n.left().accept(this);
-    TackyVar dst = new TackyVar(makeUnique("binexp_result"));
+    TackyVar dst = newTemp("binexp_result");
     if (n.operator() == TokenType.DOUBLE_AMP) {
       // Short circuit
       String falseLabel = makeUnique("and_false");
@@ -131,5 +127,57 @@ public class TackyCodeGen extends GenericNodeVisitor<TackyVal> {
     TackyVal dst = n.exp().accept(this);
     instructions.add(new TackyReturn(dst));
     return dst;
+  }
+
+  @Override
+  public TackyVal visit(Conditional n) {
+    // evaluate conditional. if false, jump to "else".
+    TackyVar result = newTemp("cond_result");
+    String falseLabel = makeUnique("cond_false");
+    String endLabel = makeUnique("cond_end");
+
+    TackyVal condDest = n.condition().accept(this);
+    instructions.add(new TackyJumpZero(condDest, falseLabel));
+    TackyVal leftVal = n.left().accept(this);
+    instructions.add(new TackyCopy(leftVal, result));
+    instructions.add(new TackyJump(endLabel));
+
+    instructions.add(new TackyLabel(falseLabel));
+    TackyVal rightVal = n.right().accept(this);
+    instructions.add(new TackyCopy(rightVal, result));
+
+    instructions.add(new TackyLabel(endLabel));
+    return result;
+  }
+
+  @Override
+  public TackyVal visit(If n) {
+    throw new UnsupportedOperationException(
+        "Not implemented yet " + n.getClass().getCanonicalName());
+  }
+
+  private static int id = 0;
+
+  private static String makeUnique(String prefix) {
+    return String.format("%s.%d", prefix, id++);
+  }
+
+  private static TackyVar newTemp(String prefix) {
+    return new TackyVar(makeUnique(prefix));
+  }
+
+  @Override
+  public TackyVal visit(NullStatement n) {
+    return null;
+  }
+
+  @Override
+  public TackyVal visit(FunctionDef n) {
+    throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
+  }
+
+  @Override
+  public TackyVal visit(Program n) {
+    throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
   }
 }
