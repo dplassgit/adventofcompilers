@@ -152,8 +152,28 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(If n) {
-    throw new UnsupportedOperationException(
-        "Not implemented yet " + n.getClass().getCanonicalName());
+    TackyVal condDest = n.condition().accept(this);
+    String endLabel = makeUnique("if_end");
+    String elseLabel = makeUnique("else");
+    if (n.elseStmt().isPresent()) {
+      instructions.add(new TackyJumpZero(condDest, elseLabel));
+    } else {
+      instructions.add(new TackyJumpZero(condDest, endLabel));
+    }
+    n.then().accept(this);
+    if (n.elseStmt().isPresent()) {
+      // Jump past the 'else"
+      instructions.add(new TackyJump(endLabel));
+      instructions.add(new TackyLabel(elseLabel));
+      n.elseStmt().get().accept(this);
+    }
+    instructions.add(new TackyLabel(endLabel));
+    return condDest;
+  }
+
+  @Override
+  public TackyVal visit(NullStatement n) {
+    return null;
   }
 
   private static int id = 0;
@@ -164,11 +184,6 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   private static TackyVar newTemp(String prefix) {
     return new TackyVar(makeUnique(prefix));
-  }
-
-  @Override
-  public TackyVal visit(NullStatement n) {
-    return null;
   }
 
   @Override

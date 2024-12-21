@@ -130,4 +130,50 @@ public class TackyCodeGenTest {
     List<TackyInstruction> instructions = tp.functionDef().instructions();
     System.out.println(Joiner.on("\n").join(instructions));
   }
+
+  @Test
+  public void generateIf() {
+    String input = """
+        int main(void) {
+          int a = 1;
+          if (a == 1)
+            a = a + 1;
+          return a;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    prog = new Resolver().validate(prog);
+    TackyCodeGen cg = new TackyCodeGen();
+    TackyProgram tp = cg.generate(prog);
+    assertThat(tp).isNotNull();
+    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    System.out.println(Joiner.on("\n").join(instructions));
+  }
+
+  @Test
+  public void generateIfElse() {
+    String input = """
+        int main(void) {
+          int a = 1;
+          if (a == 1)
+            a = a + 1;
+          else
+            a = a - 1;
+          return a;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    prog = new Resolver().validate(prog);
+    TackyCodeGen cg = new TackyCodeGen();
+    TackyProgram tp = cg.generate(prog);
+    assertThat(tp).isNotNull();
+    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    System.out.println(Joiner.on("\n").join(instructions));
+  }
 }
