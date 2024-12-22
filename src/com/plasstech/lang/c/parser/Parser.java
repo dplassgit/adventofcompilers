@@ -37,14 +37,19 @@ public class Parser {
     expect(TokenType.OPAREN);
     expect(TokenType.VOID);
     expect(TokenType.CPAREN);
-    expect(TokenType.OBRACE);
-    List<BlockItem> statements = parseStatements();
-    expect(TokenType.CBRACE);
+    Block block = parseBlock();
 
-    return new FunctionDef(functionName, statements);
+    return new FunctionDef(functionName, block);
   }
 
-  private List<BlockItem> parseStatements() {
+  private Block parseBlock() {
+    expect(TokenType.OBRACE);
+    List<BlockItem> items = parseBlockItems();
+    expect(TokenType.CBRACE);
+    return new Block(items);
+  }
+
+  private List<BlockItem> parseBlockItems() {
     List<BlockItem> statements = new ArrayList<>();
     while (token.type() != TokenType.CBRACE) {
       BlockItem item = parseBlockItem();
@@ -68,6 +73,7 @@ public class Parser {
         yield new NullStatement();
       }
       case IF -> parseIf();
+      case OBRACE -> new Compound(parseBlock());
       default -> parseExpAsStatement();
     };
     return item;

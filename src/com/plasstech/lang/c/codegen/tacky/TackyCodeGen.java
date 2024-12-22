@@ -7,7 +7,9 @@ import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.AstNode;
 import com.plasstech.lang.c.parser.BinExp;
+import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
+import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.Declaration;
@@ -36,7 +38,23 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   }
 
   private TackyFunctionDef generate(FunctionDef functionDef) {
-    return new TackyFunctionDef(functionDef.name(), generate(functionDef.body()));
+    functionDef.body().accept(this);
+    return new TackyFunctionDef(functionDef.name(), instructions);
+  }
+
+  //  private List<TackyInstruction> generate(Block body) {
+  //    return generate(body.items());
+  //  }
+
+  @Override
+  public TackyVal visit(Block n) {
+    generate(n.items());
+    return null;
+  }
+
+  @Override
+  public TackyVal visit(Compound n) {
+    return n.block().accept(this);
   }
 
   private List<TackyInstruction> generate(List<BlockItem> body) {

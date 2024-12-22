@@ -63,9 +63,7 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
     System.out.printf("%sname: \"%s\"\n", spaces(), n.name());
     System.out.printf("%sbody:\n", spaces());
     indentation += 2;
-    for (BlockItem item : n.body()) {
-      item.accept(this);
-    }
+    n.body().accept(this);
     indentation -= 4;
     System.out.printf("%s)\n", spaces());
     return null;
@@ -190,5 +188,15 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
 
     System.out.printf("%s)\n", spaces());
     return null;
+  }
+
+  @Override
+  public Void visit(Compound compond) {
+    throw new UnsupportedOperationException("Cannot prettyprint block yet");
+  }
+
+  @Override
+  public Void visit(Block block) {
+    throw new UnsupportedOperationException("Cannot prettyprint block yet");
   }
 }

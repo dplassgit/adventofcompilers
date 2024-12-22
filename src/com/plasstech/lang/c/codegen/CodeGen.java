@@ -22,7 +22,7 @@ public class CodeGen {
   }
 
   private AsmFunctionNode generate(FunctionDef functionDef) {
-    BlockItem body = functionDef.body().get(0);
+    BlockItem body = functionDef.body().items().get(0);
     StatementVisitor sv = new StatementVisitor();
     List<Instruction> instructions = body.accept(sv);
     return new AsmFunctionNode(functionDef.name(), ImmutableList.copyOf(instructions));

@@ -27,6 +27,10 @@ public interface AstNode {
     R visit(UnaryExp n);
 
     R visit(Var n);
+
+    R visit(Block n);
+
+    R visit(Compound n);
   }
 
   /** Visitor pattern. */

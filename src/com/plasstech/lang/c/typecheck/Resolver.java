@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
+import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
@@ -37,8 +38,8 @@ public class Resolver {
   }
 
   private FunctionDef validate(FunctionDef functionDef) {
-    List<BlockItem> resolvedBody = functionDef.body().stream().map(this::resolve).toList();
-    return new FunctionDef(functionDef.name(), resolvedBody);
+    List<BlockItem> resolvedBody = functionDef.body().items().stream().map(this::resolve).toList();
+    return new FunctionDef(functionDef.name(), new Block(resolvedBody));
   }
 
   private BlockItem resolve(BlockItem item) {
