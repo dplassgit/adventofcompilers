@@ -51,7 +51,7 @@ public class ScannerTest {
 
   @Test
   public void nextTokenKeywords() {
-    Scanner s = new Scanner("int return void if else");
+    Scanner s = new Scanner("int return void if else do while for break continue");
     Token t = s.nextToken();
     assertThat(t.type()).isEqualTo(TokenType.INT);
     assertThat(t.isKeyword()).isTrue();
@@ -59,6 +59,11 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.VOID);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.IF);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.ELSE);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DO);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.WHILE);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.FOR);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.BREAK);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.CONTINUE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
