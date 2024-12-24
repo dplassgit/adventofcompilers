@@ -9,18 +9,25 @@ import com.plasstech.lang.c.parser.AstNode;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
+import com.plasstech.lang.c.parser.Break;
 import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
+import com.plasstech.lang.c.parser.Continue;
 import com.plasstech.lang.c.parser.Declaration;
+import com.plasstech.lang.c.parser.DoWhile;
 import com.plasstech.lang.c.parser.Expression;
+import com.plasstech.lang.c.parser.For;
 import com.plasstech.lang.c.parser.FunctionDef;
 import com.plasstech.lang.c.parser.If;
+import com.plasstech.lang.c.parser.InitDecl;
+import com.plasstech.lang.c.parser.InitExp;
 import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
+import com.plasstech.lang.c.parser.While;
 
 /**
  * Input: Program (Parse AST)
@@ -208,5 +215,40 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(Program n) {
     throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
+  }
+
+  @Override
+  public TackyVal visit(Break n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TackyVal visit(Continue n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TackyVal visit(DoWhile n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TackyVal visit(For n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TackyVal visit(While n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TackyVal visit(InitDecl n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public TackyVal visit(InitExp n) {
+    throw new UnsupportedOperationException();
   }
 }

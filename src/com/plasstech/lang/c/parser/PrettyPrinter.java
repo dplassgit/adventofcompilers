@@ -199,4 +199,39 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
   public Void visit(Block block) {
     throw new UnsupportedOperationException("Cannot prettyprint block yet");
   }
+
+  @Override
+  public Void visit(Break n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(Continue n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(DoWhile n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(For n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(While n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(InitDecl n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public Void visit(InitExp n) {
+    throw new UnsupportedOperationException();
+  }
 }

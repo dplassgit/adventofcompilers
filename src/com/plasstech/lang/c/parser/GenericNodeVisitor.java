@@ -75,4 +75,40 @@ public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   public R visit(Compound n) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public R visit(Break n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(Continue n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(DoWhile n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(For n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(While n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(InitDecl n) {
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(InitExp n) {
+    // TODO Auto-generated method stub
+    return null;
+  }
 }

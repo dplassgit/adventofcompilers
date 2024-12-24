@@ -31,6 +31,20 @@ public interface AstNode {
     R visit(Block n);
 
     R visit(Compound n);
+
+    R visit(Break n);
+
+    R visit(Continue n);
+
+    R visit(DoWhile n);
+
+    R visit(For n);
+
+    R visit(While n);
+
+    R visit(InitDecl n);
+
+    R visit(InitExp n);
   }
 
   /** Visitor pattern. */
