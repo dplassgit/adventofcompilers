@@ -157,4 +157,57 @@ public class ResolverTest {
     Program program = parse(input);
     assertThrows(ResolverException.class, () -> resolver.validate(program));
   }
+
+  @Test
+  public void shadowedBlockOk() {
+    String input = """
+        int main(void) {
+            int c = 0;
+            if (c == 0) {
+              int c = 1;
+            }
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void shadowedArbitraryBlock() {
+    // Example from p 138
+    String input = """
+        int main(void) {
+          int x = 1;
+          {
+            int x = 2;
+            if (x > 1) {
+              x = 3;
+              int x = 4;
+            }
+            return x;
+          }
+          return x;
+        }
+        """;
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void shadowedBlockError() {
+    String input = """
+        int main(void) {
+            int c = 0;
+            if (c == 0) {
+              int c = 1;
+              int c = 2;
+            }
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
 }

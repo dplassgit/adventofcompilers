@@ -39,12 +39,9 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   private TackyFunctionDef generate(FunctionDef functionDef) {
     functionDef.body().accept(this);
+    instructions.add(new TackyReturn(ZERO));
     return new TackyFunctionDef(functionDef.name(), instructions);
   }
-
-  //  private List<TackyInstruction> generate(Block body) {
-  //    return generate(body.items());
-  //  }
 
   @Override
   public TackyVal visit(Block n) {
@@ -61,7 +58,6 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     for (BlockItem item : body) {
       item.accept(this);
     }
-    instructions.add(new TackyReturn(ZERO));
     return instructions;
   }
 
