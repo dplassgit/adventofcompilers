@@ -13,6 +13,7 @@ import com.plasstech.lang.c.lex.TokenType;
 public class Parser {
   private final Scanner scanner;
   private Token token;
+  private int loopIndex;
 
   public Parser(Scanner scanner) {
     this.scanner = scanner;
@@ -73,10 +74,57 @@ public class Parser {
         yield new NullStatement();
       }
       case IF -> parseIf();
+      case CONTINUE -> parseContinue();
+      case BREAK -> parseBreak();
+      case WHILE -> parseWhile();
+      case DO -> parseDo();
       case OBRACE -> new Compound(parseBlock());
       default -> parseExpAsStatement();
     };
     return item;
+  }
+
+  private DoWhile parseDo() {
+    expect(TokenType.DO);
+    loopIndex++;
+    Statement body = parseStatement();
+    loopIndex--;
+    expect(TokenType.WHILE);
+    expect(TokenType.OPAREN);
+    Exp exp = parseExp();
+    expect(TokenType.CPAREN);
+    expect(TokenType.SEMICOLON);
+
+    return new DoWhile(body, exp);
+  }
+
+  private While parseWhile() {
+    expect(TokenType.WHILE);
+    expect(TokenType.OPAREN);
+    Exp exp = parseExp();
+    expect(TokenType.CPAREN);
+    loopIndex++;
+    Statement body = parseStatement();
+    loopIndex--;
+    return new While(exp, body);
+  }
+
+  private Break parseBreak() {
+    if (loopIndex == 0) {
+      error("Cannot break outside a loop");
+    }
+    expect(TokenType.BREAK);
+    expect(TokenType.SEMICOLON);
+    return new Break();
+  }
+
+  private Continue parseContinue() {
+    if (loopIndex == 0) {
+      error("Cannot break outside a loop");
+    }
+    expect(TokenType.CONTINUE);
+    expect(TokenType.SEMICOLON);
+    return new Continue();
   }
 
   private If parseIf() {

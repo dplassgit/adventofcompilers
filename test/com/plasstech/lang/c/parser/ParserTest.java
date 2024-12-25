@@ -629,4 +629,181 @@ public class ParserTest {
     Parser p = new Parser(s);
     p.parse();
   }
+
+  @Test
+  public void chapter8Break() {
+    String input = "int main(void) { break; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter8Continue() {
+    String input = "int main(void) { continue; }";
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter8WhileNull() {
+    String input = """
+        int main(void) {
+          while (0) ;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem inner = fn.body().items().get(0);
+    assertThat(inner).isInstanceOf(While.class);
+  }
+
+  @Test
+  public void chapter8WhileBreak() {
+    String input = """
+        int main(void) {
+          while (0) break;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem stmt = fn.body().items().get(0);
+    assertThat(stmt).isInstanceOf(While.class);
+    While whileLoop = (While) stmt;
+    assertThat(whileLoop.body()).isInstanceOf(Break.class);
+  }
+
+  @Test
+  public void chapter8WhileContinue() {
+    String input = """
+        int main(void) {
+          while (0) continue;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem stmt = fn.body().items().get(0);
+    assertThat(stmt).isInstanceOf(While.class);
+    While whileLoop = (While) stmt;
+    assertThat(whileLoop.body()).isInstanceOf(Continue.class);
+  }
+
+  @Test
+  public void chapter8WhileBreakAndContinue() {
+    String input = """
+        int main(void) {
+          while (0) {
+            continue;
+            break;
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    System.err.println(p.parse());
+  }
+
+  @Test
+  public void chapter8WhileBlockContinue() {
+    String input = """
+        int main(void) {
+          while (0) {
+            continue;
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem stmt = fn.body().items().get(0);
+    assertThat(stmt).isInstanceOf(While.class);
+    While whileLoop = (While) stmt;
+    assertThat(whileLoop.body()).isInstanceOf(Compound.class);
+  }
+
+  @Test
+  public void chapter8DoWhileNull() {
+    String input = """
+        int main(void) {
+          do ; while (0);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem inner = fn.body().items().get(0);
+    assertThat(inner).isInstanceOf(DoWhile.class);
+  }
+
+  @Test
+  public void chapter8DoWhileBreak() {
+    String input = """
+        int main(void) {
+          do break; while (0);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem inner = fn.body().items().get(0);
+    assertThat(inner).isInstanceOf(DoWhile.class);
+  }
+
+  @Test
+  public void chapter8DoWhileContinue() {
+    String input = """
+        int main(void) {
+          do continue; while (0);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    Program prog = p.parse();
+    FunctionDef fn = prog.functionDef();
+    assertThat(fn.body().items()).hasSize(1);
+    BlockItem inner = fn.body().items().get(0);
+    assertThat(inner).isInstanceOf(DoWhile.class);
+  }
+
+  @Test
+  public void chapter8DoWhileBreakAndContinue() {
+    String input = """
+        int main(void) {
+          do {
+            break;
+            continue;
+          } while (0);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    System.err.println(p.parse());
+  }
 }

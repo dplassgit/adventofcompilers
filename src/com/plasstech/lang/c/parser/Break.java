@@ -5,4 +5,9 @@ public record Break() implements Statement {
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public final String toString() {
+    return "break";
+  }
 }
