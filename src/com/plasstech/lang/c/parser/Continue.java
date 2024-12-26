@@ -1,6 +1,10 @@
 package com.plasstech.lang.c.parser;
 
-public record Continue() implements Statement {
+public record Continue(String label) implements Statement {
+  public Continue() {
+    this("defaultLabel");
+  }
+
   @Override
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);
@@ -8,6 +12,6 @@ public record Continue() implements Statement {
 
   @Override
   public final String toString() {
-    return "continue";
+    return String.format("continue (%s)", label);
   }
 }

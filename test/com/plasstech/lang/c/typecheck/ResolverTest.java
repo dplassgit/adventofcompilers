@@ -48,7 +48,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -61,7 +61,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -73,7 +73,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -86,7 +86,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -143,7 +143,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -155,7 +155,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -208,7 +208,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -221,7 +221,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -263,7 +263,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -275,7 +275,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test
@@ -321,7 +321,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    assertThrows(ResolverException.class, () -> resolver.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 
   @Test

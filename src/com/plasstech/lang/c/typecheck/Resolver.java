@@ -173,6 +173,6 @@ public class Resolver implements Validator {
   }
 
   private static void error(String message) {
-    throw new ResolverException(message);
+    throw new SemanticAnalyzerException(message);
   }
 }
