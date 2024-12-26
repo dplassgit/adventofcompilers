@@ -36,10 +36,11 @@ import com.plasstech.lang.c.parser.While;
  * Resolver for renaming variables and making sure there aren't duplicated declarations, and that
  * all used variables are declared. Based on Chapter 5, page 103ff, Chapter 7, page 136ff
  */
-public class Resolver {
+public class Resolver implements Validator {
   private record ScopedVariable(String variable, boolean sameScope) {
   }
 
+  @Override
   public Program validate(Program input) {
     FunctionDef functionDef = input.functionDef();
     return new Program(validate(functionDef));

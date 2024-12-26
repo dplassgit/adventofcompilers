@@ -20,7 +20,7 @@ import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.ParserException;
 import com.plasstech.lang.c.parser.PrettyPrinter;
 import com.plasstech.lang.c.parser.Program;
-import com.plasstech.lang.c.typecheck.Resolver;
+import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
 
 public class Driver {
 
@@ -104,7 +104,7 @@ public class Driver {
   private static Program validate(Scanner s) {
     Parser p = new Parser(s);
     Program program = p.parse();
-    return new Resolver().validate(program);
+    return new SemanticAnalyzer().validate(program);
   }
 
   private static Program parse(Scanner s) {
