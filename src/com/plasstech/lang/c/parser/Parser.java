@@ -13,7 +13,6 @@ import com.plasstech.lang.c.lex.TokenType;
 public class Parser {
   private final Scanner scanner;
   private Token token;
-  private int loopIndex;
 
   public Parser(Scanner scanner) {
     this.scanner = scanner;
@@ -78,17 +77,46 @@ public class Parser {
       case BREAK -> parseBreak();
       case WHILE -> parseWhile();
       case DO -> parseDo();
+      case FOR -> parseFor();
       case OBRACE -> new Compound(parseBlock());
       default -> parseExpAsStatement();
     };
     return item;
   }
 
+  private ForInit parseForInit() {
+    // Is there a better way to do this? I fear...
+    if (token.type() == TokenType.INT) {
+      return new InitDecl(parseDeclaration());
+    }
+    return new InitExp(parseOptionalExp(TokenType.SEMICOLON));
+  }
+
+  private Optional<Exp> parseOptionalExp(TokenType separator) {
+    Optional<Exp> maybeExp = Optional.empty();
+    if (token.type() != separator) {
+      maybeExp = Optional.of(parseExp());
+    }
+    expect(separator);
+    return maybeExp;
+  }
+
+  // for(for-init [exp] ; [exp] ) statement. Page 150
+  private For parseFor() {
+    expect(TokenType.FOR);
+    expect(TokenType.OPAREN);
+
+    ForInit forInit = parseForInit();
+    Optional<Exp> condition = parseOptionalExp(TokenType.SEMICOLON);
+    Optional<Exp> post = parseOptionalExp(TokenType.CPAREN);
+    Statement body = parseStatement();
+
+    return new For(forInit, condition, post, body);
+  }
+
   private DoWhile parseDo() {
     expect(TokenType.DO);
-    loopIndex++;
     Statement body = parseStatement();
-    loopIndex--;
     expect(TokenType.WHILE);
     expect(TokenType.OPAREN);
     Exp exp = parseExp();
@@ -103,25 +131,17 @@ public class Parser {
     expect(TokenType.OPAREN);
     Exp exp = parseExp();
     expect(TokenType.CPAREN);
-    loopIndex++;
     Statement body = parseStatement();
-    loopIndex--;
     return new While(exp, body);
   }
 
   private Break parseBreak() {
-    if (loopIndex == 0) {
-      error("Cannot break outside a loop");
-    }
     expect(TokenType.BREAK);
     expect(TokenType.SEMICOLON);
     return new Break();
   }
 
   private Continue parseContinue() {
-    if (loopIndex == 0) {
-      error("Cannot break outside a loop");
-    }
     expect(TokenType.CONTINUE);
     expect(TokenType.SEMICOLON);
     return new Continue();

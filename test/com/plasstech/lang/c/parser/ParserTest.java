@@ -636,7 +636,7 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
 
-    assertThrows(ParserException.class, () -> p.parse());
+    System.err.println(p.parse());
   }
 
   @Test
@@ -645,7 +645,7 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
 
-    assertThrows(ParserException.class, () -> p.parse());
+    System.err.println(p.parse());
   }
 
   @Test
@@ -804,6 +804,105 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
 
+    p.parse();
+  }
+
+  @Test
+  public void chapter8ForMinimal() {
+    String input = """
+        int main(void) {
+          for (; ;) ;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    p.parse();
+  }
+
+  @Test
+  public void chapter8ForFull() {
+    String input = """
+        int main(void) {
+          for (int i = 0; i < 10; i=i+1) {
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
     System.err.println(p.parse());
+  }
+
+  @Test
+  public void chapter8ForBreak() {
+    String input = """
+        int main(void) {
+          for (int i = 0; i < 10; i=i+1) {
+            break;
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    System.err.println(p.parse());
+  }
+
+  @Test
+  public void chapter8ForContinue() {
+    String input = """
+        int main(void) {
+          for (int i = 0; i < 10; i=i+1) {
+            continue;
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    System.err.println(p.parse());
+  }
+
+  @Test
+  public void chapter8ForNoDecl() {
+    String input = """
+        int main(void) {
+          for (i; i < 10; i=i+1) {
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    System.err.println(p.parse());
+  }
+
+  @Test
+  public void chapter8ForMissingPost() {
+    String input = """
+        int main(void) {
+          for (int i = 0; i < 10) {
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter8ForExtraExpr() {
+    String input = """
+        int main(void) {
+          for (int i = 0; i < 10; i = i + 1; j = j + 1) {
+          }
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
   }
 }
