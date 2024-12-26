@@ -9,20 +9,28 @@ import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
+import com.plasstech.lang.c.parser.Break;
 import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
+import com.plasstech.lang.c.parser.Continue;
 import com.plasstech.lang.c.parser.Declaration;
+import com.plasstech.lang.c.parser.DoWhile;
 import com.plasstech.lang.c.parser.Exp;
 import com.plasstech.lang.c.parser.Expression;
+import com.plasstech.lang.c.parser.For;
+import com.plasstech.lang.c.parser.ForInit;
 import com.plasstech.lang.c.parser.FunctionDef;
 import com.plasstech.lang.c.parser.If;
+import com.plasstech.lang.c.parser.InitDecl;
+import com.plasstech.lang.c.parser.InitExp;
 import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
+import com.plasstech.lang.c.parser.While;
 
 /**
  * Resolver for renaming variables and making sure there aren't duplicated declarations, and that
@@ -65,12 +73,45 @@ public class Resolver {
       case If i -> resolveIf(i, variableMap);
       case NullStatement n -> n;
       case Compound c -> new Compound(resolveBlock(c.block(), copy(variableMap)));
+      case For f -> resolveFor(f, variableMap);
+      case While w -> resolveWhile(w, variableMap);
+      case DoWhile dw -> resolveDoWhile(dw, variableMap);
+      case Break b -> b;
+      case Continue c -> c;
       default -> throw new IllegalArgumentException("Unexpected statement type: " + statement);
     };
   }
 
+  private DoWhile resolveDoWhile(DoWhile dw, Map<String, ScopedVariable> variableMap) {
+    // Do we need to create a new scope?!
+    return new DoWhile(resolveStatement(dw.body(), variableMap),
+        resolveExp(dw.condition(), variableMap));
+  }
+
+  private While resolveWhile(While w, Map<String, ScopedVariable> variableMap) {
+    return new While(resolveExp(w.condition(), variableMap),
+        resolveStatement(w.body(), variableMap));
+  }
+
+  private For resolveFor(For f, Map<String, ScopedVariable> variableMap) {
+    Map<String, ScopedVariable> newMap = copy(variableMap);
+    return new For(
+        resolveForInit(f.init(), newMap),
+        f.condition().map(c -> resolveExp(c, newMap)),
+        f.post().map(p -> resolveExp(p, newMap)),
+        resolveStatement(f.body(), newMap));
+  }
+
+  private ForInit resolveForInit(ForInit init, Map<String, ScopedVariable> newMap) {
+    return switch (init) {
+      case InitDecl id -> new InitDecl(resolveDeclaration(id.decl(), newMap));
+      case InitExp ie -> new InitExp(ie.exp().map(e -> resolveExp(e, newMap)));
+      default -> throw new IllegalArgumentException("Unexpected value: " + init);
+    };
+  }
+
   private static Map<String, ScopedVariable> copy(Map<String, ScopedVariable> variableMap) {
-    // Copy variable map with the from curent block flag set to false. Page 139
+    // Copy variable map with the from current block flag set to false. Page 139
     Map<String, ScopedVariable> copy = new HashMap<>();
     for (Map.Entry<String, ScopedVariable> entry : variableMap.entrySet()) {
       copy.put(entry.getKey(), new ScopedVariable(entry.getValue().variable, false));

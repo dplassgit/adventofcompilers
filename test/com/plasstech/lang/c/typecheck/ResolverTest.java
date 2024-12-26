@@ -36,7 +36,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -110,7 +110,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -129,7 +129,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -170,7 +170,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -192,7 +192,7 @@ public class ResolverTest {
         """;
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -209,5 +209,161 @@ public class ResolverTest {
     Resolver resolver = new Resolver();
     Program program = parse(input);
     assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void forBlockError() {
+    String input = """
+        int main(void) {
+            for (int i = 0; i < 10; i=i+1) {}
+            int j = i;
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void forRedeclOk() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            for (int i = 0; i < 10; i=i+1) {
+              return i;
+            }
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void forNotRedeclOk() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            for (i = 0; i < 10; i=i+1) {
+              return i;
+            }
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void forBadCond() {
+    String input = """
+        int main(void) {
+            for (int i = 0; j < 10; ) {}
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void forBadPost() {
+    String input = """
+        int main(void) {
+            for (int i = 0; ; j =j+1) {}
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void whileOk() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            while (i == 0) {
+              return i;
+            }
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void whileBlockReDeclOk() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            while (i == 0) {
+              int i = 1;
+              int j = i;
+            }
+            return i;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void whileBlocknotOk() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            while (i == 0) {
+              int j = 0;
+            }
+            return j;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(ResolverException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void doWhileOk() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            do { } while (i == 0);
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void doWhileBreak() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            do {
+              break;
+            } while (i == 0);
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    resolver.validate(program);
+  }
+
+  @Test
+  public void doWhileContinue() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            do {
+              continue;
+            } while (i == 0);
+            return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    resolver.validate(program);
   }
 }
