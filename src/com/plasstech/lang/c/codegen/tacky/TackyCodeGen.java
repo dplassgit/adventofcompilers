@@ -3,6 +3,7 @@ package com.plasstech.lang.c.codegen.tacky;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.plasstech.lang.c.common.UniqueId;
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.AstNode;
@@ -115,23 +116,23 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     TackyVar dst = newTemp("binexp_result");
     if (n.operator() == TokenType.DOUBLE_AMP) {
       // Short circuit
-      String falseLabel = makeUnique("and_false");
+      String falseLabel = UniqueId.makeUnique("and_false");
       instructions.add(new TackyJumpZero(src1, falseLabel));
       TackyVal src2 = n.right().accept(this);
       instructions.add(new TackyJumpZero(src2, falseLabel));
       instructions.add(new TackyCopy(ONE, dst));
-      String endLabel = makeUnique("and_end");
+      String endLabel = UniqueId.makeUnique("and_end");
       instructions.add(new TackyJump(endLabel));
       instructions.add(new TackyLabel(falseLabel));
       instructions.add(new TackyCopy(ZERO, dst));
       instructions.add(new TackyLabel(endLabel));
     } else if (n.operator() == TokenType.DOUBLE_BAR) {
-      String trueLabel = makeUnique("or_true");
+      String trueLabel = UniqueId.makeUnique("or_true");
       instructions.add(new TackyJumpNotZero(src1, trueLabel));
       TackyVal src2 = n.right().accept(this);
       instructions.add(new TackyJumpNotZero(src2, trueLabel));
       instructions.add(new TackyCopy(ZERO, dst));
-      String endLabel = makeUnique("or_end");
+      String endLabel = UniqueId.makeUnique("or_end");
       instructions.add(new TackyJump(endLabel));
       instructions.add(new TackyLabel(trueLabel));
       instructions.add(new TackyCopy(ONE, dst));
@@ -154,8 +155,8 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(Conditional n) {
     // evaluate conditional. if false, jump to "else".
     TackyVar result = newTemp("cond_result");
-    String falseLabel = makeUnique("cond_false");
-    String endLabel = makeUnique("cond_end");
+    String falseLabel = UniqueId.makeUnique("cond_false");
+    String endLabel = UniqueId.makeUnique("cond_end");
 
     TackyVal condDest = n.condition().accept(this);
     instructions.add(new TackyJumpZero(condDest, falseLabel));
@@ -174,8 +175,8 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(If n) {
     TackyVal condDest = n.condition().accept(this);
-    String endLabel = makeUnique("if_end");
-    String elseLabel = makeUnique("else");
+    String endLabel = UniqueId.makeUnique("if_end");
+    String elseLabel = UniqueId.makeUnique("else");
     if (n.elseStmt().isPresent()) {
       instructions.add(new TackyJumpZero(condDest, elseLabel));
     } else {
@@ -197,14 +198,8 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     return null;
   }
 
-  private static int id = 0;
-
-  private static String makeUnique(String prefix) {
-    return String.format("%s.%d", prefix, id++);
-  }
-
   private static TackyVar newTemp(String prefix) {
-    return new TackyVar(makeUnique(prefix));
+    return new TackyVar(UniqueId.makeUnique(prefix));
   }
 
   @Override

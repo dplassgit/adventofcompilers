@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.plasstech.lang.c.common.UniqueId;
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
@@ -133,7 +134,7 @@ public class Resolver implements Validator {
     if (variable != null && variable.sameScope()) {
       error("Duplicate variable definition " + name);
     }
-    String unique = makeTemp(name);
+    String unique = UniqueId.makeUnique("resolver" + name);
     variableMap.put(name, new ScopedVariable(unique, true));
     Optional<Exp> init = d.init().map(exp -> resolveExp(exp, variableMap));
     return new Declaration(unique, init);
@@ -173,11 +174,5 @@ public class Resolver implements Validator {
 
   private static void error(String message) {
     throw new ResolverException(message);
-  }
-
-  private static int id;
-
-  private static String makeTemp(String in) {
-    return String.format("resolver.%s.%d", in, id++);
   }
 }
