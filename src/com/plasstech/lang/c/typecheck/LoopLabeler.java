@@ -21,7 +21,7 @@ import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
 import com.plasstech.lang.c.parser.While;
 
-public class LoopLabeler implements Validator {
+class LoopLabeler implements Validator {
 
   @Override
   public Program validate(Program input) {

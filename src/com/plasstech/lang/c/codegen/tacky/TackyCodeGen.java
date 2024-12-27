@@ -46,9 +46,13 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     return new TackyProgram(generate(program.functionDef()));
   }
 
+  private void emit(TackyInstruction ti) {
+    instructions.add(ti);
+  }
+
   private TackyFunctionDef generate(FunctionDef functionDef) {
     functionDef.body().accept(this);
-    instructions.add(new TackyReturn(ZERO));
+    emit(new TackyReturn(ZERO));
     return new TackyFunctionDef(functionDef.name(), instructions);
   }
 
@@ -84,7 +88,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(Assignment n) {
     TackyVal result = n.rvalue().accept(this);
     TackyVar dst = (TackyVar) n.lvalue().accept(this);
-    instructions.add(new TackyCopy(result, dst));
+    emit(new TackyCopy(result, dst));
     return dst;
   }
 
@@ -93,7 +97,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     TackyVar dst = new TackyVar(n.identifier());
     if (n.init().isPresent()) {
       TackyVal result = n.init().get().accept(this);
-      instructions.add(new TackyCopy(result, dst));
+      emit(new TackyCopy(result, dst));
     }
     return dst;
   }
@@ -107,7 +111,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(UnaryExp n) {
     TackyVal src = n.exp().accept(this);
     TackyVar dst = newTemp("unaryexp_result");
-    instructions.add(new TackyUnary(dst, n.operator(), src));
+    emit(new TackyUnary(dst, n.operator(), src));
     return dst;
   }
 
@@ -118,29 +122,29 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     if (n.operator() == TokenType.DOUBLE_AMP) {
       // Short circuit
       String falseLabel = UniqueId.makeUnique("and_false");
-      instructions.add(new TackyJumpZero(src1, falseLabel));
+      emit(new TackyJumpZero(src1, falseLabel));
       TackyVal src2 = n.right().accept(this);
-      instructions.add(new TackyJumpZero(src2, falseLabel));
-      instructions.add(new TackyCopy(ONE, dst));
+      emit(new TackyJumpZero(src2, falseLabel));
+      emit(new TackyCopy(ONE, dst));
       String endLabel = UniqueId.makeUnique("and_end");
-      instructions.add(new TackyJump(endLabel));
-      instructions.add(new TackyLabel(falseLabel));
-      instructions.add(new TackyCopy(ZERO, dst));
-      instructions.add(new TackyLabel(endLabel));
+      emit(new TackyJump(endLabel));
+      emit(new TackyLabel(falseLabel));
+      emit(new TackyCopy(ZERO, dst));
+      emit(new TackyLabel(endLabel));
     } else if (n.operator() == TokenType.DOUBLE_BAR) {
       String trueLabel = UniqueId.makeUnique("or_true");
-      instructions.add(new TackyJumpNotZero(src1, trueLabel));
+      emit(new TackyJumpNotZero(src1, trueLabel));
       TackyVal src2 = n.right().accept(this);
-      instructions.add(new TackyJumpNotZero(src2, trueLabel));
-      instructions.add(new TackyCopy(ZERO, dst));
+      emit(new TackyJumpNotZero(src2, trueLabel));
+      emit(new TackyCopy(ZERO, dst));
       String endLabel = UniqueId.makeUnique("or_end");
-      instructions.add(new TackyJump(endLabel));
-      instructions.add(new TackyLabel(trueLabel));
-      instructions.add(new TackyCopy(ONE, dst));
-      instructions.add(new TackyLabel(endLabel));
+      emit(new TackyJump(endLabel));
+      emit(new TackyLabel(trueLabel));
+      emit(new TackyCopy(ONE, dst));
+      emit(new TackyLabel(endLabel));
     } else {
       TackyVal src2 = n.right().accept(this);
-      instructions.add(new TackyBinary(dst, src1, n.operator(), src2));
+      emit(new TackyBinary(dst, src1, n.operator(), src2));
     }
     return dst;
   }
@@ -148,7 +152,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(Return n) {
     TackyVal dst = n.exp().accept(this);
-    instructions.add(new TackyReturn(dst));
+    emit(new TackyReturn(dst));
     return dst;
   }
 
@@ -160,16 +164,16 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     String endLabel = UniqueId.makeUnique("cond_end");
 
     TackyVal condDest = n.condition().accept(this);
-    instructions.add(new TackyJumpZero(condDest, falseLabel));
+    emit(new TackyJumpZero(condDest, falseLabel));
     TackyVal leftVal = n.left().accept(this);
-    instructions.add(new TackyCopy(leftVal, result));
-    instructions.add(new TackyJump(endLabel));
+    emit(new TackyCopy(leftVal, result));
+    emit(new TackyJump(endLabel));
 
-    instructions.add(new TackyLabel(falseLabel));
+    emit(new TackyLabel(falseLabel));
     TackyVal rightVal = n.right().accept(this);
-    instructions.add(new TackyCopy(rightVal, result));
+    emit(new TackyCopy(rightVal, result));
 
-    instructions.add(new TackyLabel(endLabel));
+    emit(new TackyLabel(endLabel));
     return result;
   }
 
@@ -179,18 +183,18 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     String endLabel = UniqueId.makeUnique("if_end");
     String elseLabel = UniqueId.makeUnique("else");
     if (n.elseStmt().isPresent()) {
-      instructions.add(new TackyJumpZero(condDest, elseLabel));
+      emit(new TackyJumpZero(condDest, elseLabel));
     } else {
-      instructions.add(new TackyJumpZero(condDest, endLabel));
+      emit(new TackyJumpZero(condDest, endLabel));
     }
     n.then().accept(this);
     if (n.elseStmt().isPresent()) {
       // Jump past the 'else"
-      instructions.add(new TackyJump(endLabel));
-      instructions.add(new TackyLabel(elseLabel));
+      emit(new TackyJump(endLabel));
+      emit(new TackyLabel(elseLabel));
       n.elseStmt().get().accept(this);
     }
-    instructions.add(new TackyLabel(endLabel));
+    emit(new TackyLabel(endLabel));
     return condDest;
   }
 
@@ -213,52 +217,74 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
   }
 
-  private static String beforeLabel(Labelled node) {
-    return "before_" + node.label();
+  private static String startLabel(Labelled node) {
+    return "start_" + node.label();
   }
 
-  private static String afterLabel(Labelled node) {
-    return "after_" + node.label();
+  private String breakLabel(Labelled n) {
+    return "break_" + n.label();
+  }
+
+  private String continueLabel(Labelled n) {
+    return "continue_" + n.label();
   }
 
   @Override
   public TackyVal visit(Break n) {
-    instructions.add(new TackyJump(afterLabel(n)));
+    emit(new TackyJump(breakLabel(n)));
     return null;
   }
 
   @Override
   public TackyVal visit(Continue n) {
-    instructions.add(new TackyJump(beforeLabel(n)));
+    emit(new TackyJump(continueLabel(n)));
     return null;
   }
 
   @Override
   public TackyVal visit(DoWhile n) {
-    String beforeLabel = beforeLabel(n);
-    instructions.add(new TackyLabel(beforeLabel));
+    String startLabel = startLabel(n);
+    emit(new TackyLabel(startLabel));
     n.body().accept(this);
+    emit(new TackyLabel(continueLabel(n)));
     TackyVal cond = n.condition().accept(this);
-    instructions.add(new TackyJumpNotZero(cond, beforeLabel));
-    instructions.add(new TackyLabel(afterLabel(n)));
+    emit(new TackyJumpNotZero(cond, startLabel));
+    emit(new TackyLabel(breakLabel(n)));
     return null;
   }
 
   @Override
   public TackyVal visit(For n) {
-    throw new UnsupportedOperationException();
+    n.init().accept(this);
+    String startLabel = startLabel(n);
+    emit(new TackyLabel(startLabel));
+
+    String breakLabel = breakLabel(n);
+    if (n.condition().isPresent()) {
+      TackyVal cond = n.condition().get().accept(this);
+      emit(new TackyJumpZero(cond, breakLabel));
+    }
+    n.body().accept(this);
+    emit(new TackyLabel(continueLabel(n)));
+    if (n.post().isPresent()) {
+      n.post().get().accept(this);
+    }
+    emit(new TackyJump(startLabel));
+
+    emit(new TackyLabel(breakLabel));
+    return null;
   }
 
   @Override
   public TackyVal visit(While n) {
-    String beforeLabel = beforeLabel(n);
-    String afterLabel = afterLabel(n);
-    instructions.add(new TackyLabel(beforeLabel));
+    String continueLabel = continueLabel(n);
+    emit(new TackyLabel(continueLabel));
     TackyVal cond = n.condition().accept(this);
-    instructions.add(new TackyJumpZero(cond, afterLabel));
+    String breakLabel = breakLabel(n);
+    emit(new TackyJumpZero(cond, breakLabel));
     n.body().accept(this);
-    instructions.add(new TackyJump(beforeLabel));
-    instructions.add(new TackyLabel(afterLabel));
+    emit(new TackyJump(continueLabel));
+    emit(new TackyLabel(breakLabel));
     return null;
   }
 
