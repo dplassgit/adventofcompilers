@@ -25,22 +25,43 @@ public class Parser {
   }
 
   public Program parse() {
-    FunDecl fun = parseFunction();
+    List<FunDecl> funDecls = new ArrayList<>();
+    while (token.type() != TokenType.EOF) {
+      funDecls.add(parseFunDecl());
+
+    }
     expect(TokenType.EOF);
-    return new Program(ImmutableList.of(fun));
+    return new Program(funDecls);
   }
 
-  private FunDecl parseFunction() {
-    // expect int identifier ( void ) { statements }
-    expect(TokenType.INT);
-    String functionName = token.value();
-    expect(TokenType.IDENTIFIER);
-    expect(TokenType.OPAREN);
-    expect(TokenType.VOID);
-    expect(TokenType.CPAREN);
-    Block block = parseBlock();
-
-    return new FunDecl(functionName, block);
+  private List<String> parseParamList() {
+    return switch (token.type()) {
+      case VOID -> {
+        expect(TokenType.VOID);
+        yield ImmutableList.of();
+      }
+      case INT -> {
+        // parse list of params. Eventually this will be a list of pairs, shrug.
+        List<String> params = new ArrayList<>();
+        while (token.type() != TokenType.EOF) {
+          if (params.size() > 0) {
+            expect(TokenType.COMMA);
+          }
+          expect(TokenType.INT);
+          if (token.type() != TokenType.IDENTIFIER) {
+            error("Expected identifier, saw " + token);
+            break;
+          }
+          params.add(token.value());
+          expect(TokenType.IDENTIFIER);
+          if (token.type() != TokenType.COMMA) {
+            break;
+          }
+        }
+        yield params;
+      }
+      default -> throw new IllegalArgumentException("Unexpected value: " + token.type());
+    };
   }
 
   private Block parseBlock() {
@@ -88,7 +109,7 @@ public class Parser {
   private ForInit parseForInit() {
     // Is there a better way to do this? I fear...
     if (token.type() == TokenType.INT) {
-      return new InitDecl(parseDeclaration());
+      return new InitDecl(parseVarDeclaration());
     }
     return new InitExp(parseOptionalExp(TokenType.SEMICOLON));
   }
@@ -168,8 +189,48 @@ public class Parser {
     return new Expression(exp);
   }
 
+  private Declaration parseDeclaration() {
+    expect(TokenType.INT);
+    String varName = token.value();
+    expect(TokenType.IDENTIFIER);
+    if (token.type() == TokenType.SEMICOLON) {
+      advance();
+      return new VarDecl(varName);
+    }
+    if (token.type() == TokenType.EQ) {
+      //  Declaration with initialization
+      expect(TokenType.EQ);
+      Exp init = parseExp();
+      expect(TokenType.SEMICOLON);
+      return new VarDecl(varName, init);
+    }
+    return parseFunDeclAfterName(varName);
+  }
+
+  private FunDecl parseFunDeclAfterName(String functionName) {
+    expect(TokenType.OPAREN);
+    List<String> params = parseParamList();
+    expect(TokenType.CPAREN);
+    Optional<Block> block = Optional.empty();
+    if (token.type() != TokenType.SEMICOLON) {
+      block = Optional.of(parseBlock());
+    } else {
+      expect(TokenType.SEMICOLON);
+    }
+
+    return new FunDecl(functionName, params, block);
+  }
+
+  private FunDecl parseFunDecl() {
+    // expect int identifier ( void ) { statements }
+    expect(TokenType.INT);
+    String functionName = token.value();
+    expect(TokenType.IDENTIFIER);
+    return parseFunDeclAfterName(functionName);
+  }
+
   // int var [ = exp] ;
-  private VarDecl parseDeclaration() {
+  private VarDecl parseVarDeclaration() {
     expect(TokenType.INT);
     String varName = token.value();
     expect(TokenType.IDENTIFIER);
@@ -245,18 +306,14 @@ public class Parser {
 
   private Exp parseFactor() {
     TokenType tt = token.type();
-    switch (tt) {
-      case IDENTIFIER -> {
-        String variableName = token.value();
-        advance();
-        return new Var(variableName);
-      }
+    return switch (tt) {
+      case IDENTIFIER -> parseVarOrFnCall();
 
       case OPAREN -> {
         advance();
         Exp innerExp = parseExp();
         expect(TokenType.CPAREN);
-        return innerExp;
+        yield innerExp;
       }
 
       case INT_LITERAL -> {
@@ -264,21 +321,41 @@ public class Parser {
         String valueAsString = token.value();
         expect(TokenType.INT_LITERAL);
         int value = Integer.parseInt(valueAsString);
-        return new Constant<Integer>(value);
+        yield new Constant<Integer>(value);
       }
 
       case MINUS, TWIDDLE, BANG -> {
         // Unary
         advance();
         Exp innerExp = parseFactor();
-        return new UnaryExp(tt, innerExp);
+        yield new UnaryExp(tt, innerExp);
       }
 
       default -> {
         error("Unexpected token " + tt.name() + "; expected INT, unary operator or identifier");
-        return null;
+        yield null;
       }
+    };
+  }
+
+  private Exp parseVarOrFnCall() {
+    String variableName = token.value();
+    advance();
+    if (token.type() != TokenType.OPAREN) {
+      return new Var(variableName);
     }
+
+    // function call
+    expect(TokenType.OPAREN);
+    List<Exp> args = new ArrayList<>();
+    while (token.type() != TokenType.CPAREN && token.type() != TokenType.EOF) {
+      if (args.size() > 0) {
+        expect(TokenType.COMMA);
+      }
+      args.add(parseExp());
+    }
+    expect(TokenType.CPAREN);
+    return new FunctionCall(variableName, args);
   }
 
   private static void error(String message) {

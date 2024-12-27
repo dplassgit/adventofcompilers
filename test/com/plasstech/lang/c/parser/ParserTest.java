@@ -905,4 +905,179 @@ public class ParserTest {
 
     assertThrows(ParserException.class, () -> p.parse());
   }
+
+  @Test
+  public void chapter9MultipleFns() {
+    String input = """
+        int main1(void) {}
+        int main2(void) {}
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    p.parse();
+  }
+
+  @Test
+  public void chapter9Extern() {
+    String input = """
+        int main1(void);
+        int main2(void) {}
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    p.parse();
+  }
+
+  @Test
+  public void chapter9FnWithParams() {
+    String input = """
+        int main2(int a, int b) {}
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    p.parse();
+  }
+
+  @Test
+  public void chapter9FnMissingParam() {
+    String input = """
+        int main2(int a, ) {}
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9FnMissingParamName() {
+    String input = """
+        int main2(int) {}
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9FnExtraVoid() {
+    String input = """
+        int main2(void, void) {}
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9FnCall() {
+    String input = """
+        int main2(int a, int b) {
+          return main2(a+b, b*a+3);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter9FnCallVoid() {
+    String input = """
+        int main2(void) {
+          return main2();
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
+
+  @Test
+  public void chapter9FnCallEof() {
+    String input = """
+        int main2(void) {
+          return main2(
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9BadFnCallArgs() {
+    String input = """
+        int main2(int a, int b) {
+          return main2(a+b b*a+3);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9FnCallTrailingComma() {
+    String input = """
+        int main2(int a, int b) {
+          return main2(a,b,);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9FnDeclTrailingComma() {
+    String input = """
+        int main2(int a,) {
+          return main2(a,b);
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9BadTopLevelFnCall() {
+    String input = """
+        main2(a+b b*a+3);
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter9NestedFnDecl() {
+    String input = """
+        int main(void) {
+          int foo(void);
+
+          int x = foo();
+          if (x > 0) {
+             int foo  = 3;
+             x = x + foo;
+          }
+          return x;
+        }
+
+        int foo(void) {
+             return 4;
+        }
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    p.parse();
+  }
 }
