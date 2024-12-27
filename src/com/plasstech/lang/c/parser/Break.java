@@ -1,6 +1,8 @@
 package com.plasstech.lang.c.parser;
 
-public record Break(String label) implements Statement {
+import com.plasstech.lang.c.common.Labelled;
+
+public record Break(String label) implements Statement, Labelled {
   public Break() {
     this("defaultLabel");
   }

@@ -1,6 +1,8 @@
 package com.plasstech.lang.c.parser;
 
-public record DoWhile(String label, Statement body, Exp condition) implements Statement {
+import com.plasstech.lang.c.common.Labelled;
+
+public record DoWhile(String label, Statement body, Exp condition) implements Statement, Labelled {
   public DoWhile(Statement body, Exp condition) {
     this("defaultLabel", body, condition);
   }

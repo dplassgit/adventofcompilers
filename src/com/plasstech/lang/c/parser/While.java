@@ -1,6 +1,8 @@
 package com.plasstech.lang.c.parser;
 
-public record While(String label, Exp condition, Statement body) implements Statement {
+import com.plasstech.lang.c.common.Labelled;
+
+public record While(String label, Exp condition, Statement body) implements Statement, Labelled {
   public While(Exp condition, Statement body) {
     this("defaultLabel", condition, body);
   }

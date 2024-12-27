@@ -1,6 +1,8 @@
 package com.plasstech.lang.c.parser;
 
-public record Continue(String label) implements Statement {
+import com.plasstech.lang.c.common.Labelled;
+
+public record Continue(String label) implements Statement, Labelled {
   public Continue() {
     this("defaultLabel");
   }

@@ -3,6 +3,7 @@ package com.plasstech.lang.c.codegen.tacky;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.plasstech.lang.c.common.Labelled;
 import com.plasstech.lang.c.common.UniqueId;
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Assignment;
@@ -212,19 +213,35 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
   }
 
+  private static String beforeLabel(Labelled node) {
+    return "before_" + node.label();
+  }
+
+  private static String afterLabel(Labelled node) {
+    return "after_" + node.label();
+  }
+
   @Override
   public TackyVal visit(Break n) {
-    throw new UnsupportedOperationException();
+    instructions.add(new TackyJump(afterLabel(n)));
+    return null;
   }
 
   @Override
   public TackyVal visit(Continue n) {
-    throw new UnsupportedOperationException();
+    instructions.add(new TackyJump(beforeLabel(n)));
+    return null;
   }
 
   @Override
   public TackyVal visit(DoWhile n) {
-    throw new UnsupportedOperationException();
+    String beforeLabel = beforeLabel(n);
+    instructions.add(new TackyLabel(beforeLabel));
+    n.body().accept(this);
+    TackyVal cond = n.condition().accept(this);
+    instructions.add(new TackyJumpNotZero(cond, beforeLabel));
+    instructions.add(new TackyLabel(afterLabel(n)));
+    return null;
   }
 
   @Override
@@ -234,16 +251,27 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(While n) {
-    throw new UnsupportedOperationException();
+    String beforeLabel = beforeLabel(n);
+    String afterLabel = afterLabel(n);
+    instructions.add(new TackyLabel(beforeLabel));
+    TackyVal cond = n.condition().accept(this);
+    instructions.add(new TackyJumpZero(cond, afterLabel));
+    n.body().accept(this);
+    instructions.add(new TackyJump(beforeLabel));
+    instructions.add(new TackyLabel(afterLabel));
+    return null;
   }
 
   @Override
   public TackyVal visit(InitDecl n) {
-    throw new UnsupportedOperationException();
+    return n.decl().accept(this);
   }
 
   @Override
   public TackyVal visit(InitExp n) {
-    throw new UnsupportedOperationException();
+    if (n.exp().isPresent()) {
+      return n.exp().get().accept(this);
+    }
+    return null;
   }
 }
