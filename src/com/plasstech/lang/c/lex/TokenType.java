@@ -21,7 +21,7 @@ public enum TokenType {
   CPAREN(")"),
   //  OBRACK("["),
   //  CBRACK("]"),
-  //  COMMA(","),
+  COMMA(","),
   STAR("*"),
   PLUS("+"),
   MINUS("-"),

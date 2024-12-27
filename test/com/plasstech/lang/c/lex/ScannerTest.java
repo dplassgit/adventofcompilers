@@ -107,7 +107,7 @@ public class ScannerTest {
   @Test
   public void nextTokenSymbol() {
     Scanner s =
-        new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / % && & || | ! != < <= == > >= = ? :");
+        new Scanner("{} /* {} */ ( ) //\n;\n - ~ + * / % && & || | ! != < <= == > >= = ? : ,");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CBRACE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.OPAREN);
@@ -133,6 +133,7 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EQ);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.QUESTION);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.COLON);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.COMMA);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
