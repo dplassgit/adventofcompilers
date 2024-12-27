@@ -10,11 +10,11 @@ public interface AstNode {
 
     <T> R visit(Constant<T> n);
 
-    R visit(Declaration n);
+    R visit(VarDecl n);
 
     R visit(Expression n);
 
-    R visit(FunctionDef n);
+    R visit(FunDecl n);
 
     R visit(If n);
 
@@ -45,6 +45,8 @@ public interface AstNode {
     R visit(InitDecl n);
 
     R visit(InitExp n);
+
+    R visit(FunctionCall n);
   }
 
   /** Visitor pattern. */

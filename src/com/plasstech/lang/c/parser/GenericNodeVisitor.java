@@ -7,7 +7,7 @@ public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   }
 
   @Override
-  public R visit(FunctionDef n) {
+  public R visit(FunDecl n) {
     throw new UnsupportedOperationException();
   }
 
@@ -52,7 +52,7 @@ public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   }
 
   @Override
-  public R visit(Declaration n) {
+  public R visit(VarDecl n) {
     throw new UnsupportedOperationException();
   }
 
@@ -108,7 +108,11 @@ public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
 
   @Override
   public R visit(InitExp n) {
-    // TODO Auto-generated method stub
-    return null;
+    throw new UnsupportedOperationException();
+  }
+
+  @Override
+  public R visit(FunctionCall n) {
+    throw new UnsupportedOperationException();
   }
 }

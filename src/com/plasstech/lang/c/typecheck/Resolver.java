@@ -21,7 +21,7 @@ import com.plasstech.lang.c.parser.Exp;
 import com.plasstech.lang.c.parser.Expression;
 import com.plasstech.lang.c.parser.For;
 import com.plasstech.lang.c.parser.ForInit;
-import com.plasstech.lang.c.parser.FunctionDef;
+import com.plasstech.lang.c.parser.FunDecl;
 import com.plasstech.lang.c.parser.If;
 import com.plasstech.lang.c.parser.InitDecl;
 import com.plasstech.lang.c.parser.InitExp;
@@ -31,6 +31,7 @@ import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
+import com.plasstech.lang.c.parser.VarDecl;
 import com.plasstech.lang.c.parser.While;
 
 /**
@@ -43,15 +44,15 @@ class Resolver implements Validator {
 
   @Override
   public Program validate(Program input) {
-    FunctionDef functionDef = input.functionDef();
-    return new Program(validate(functionDef));
+    return new Program(input.funDecls().stream()
+        .map(fd -> validate(fd)).toList());
   }
 
-  private FunctionDef validate(FunctionDef functionDef) {
+  private FunDecl validate(FunDecl functionDef) {
     // Maps from old to new name
     Map<String, ScopedVariable> variableMap = new HashMap<>();
-    Block resolvedBlock = resolveBlock(functionDef.body(), variableMap);
-    return new FunctionDef(functionDef.name(), resolvedBlock);
+    Block resolvedBlock = resolveBlock(functionDef.body().get(), variableMap);
+    return new FunDecl(functionDef.name(), resolvedBlock);
   }
 
   private Block resolveBlock(Block block, Map<String, ScopedVariable> variableMap) {
@@ -128,16 +129,18 @@ class Resolver implements Validator {
     return new If(cond, then, elseStmt);
   }
 
-  private Declaration resolveDeclaration(Declaration d, Map<String, ScopedVariable> variableMap) {
-    String name = d.identifier();
+  private VarDecl resolveDeclaration(Declaration d, Map<String, ScopedVariable> variableMap) {
+    // TEMPORARY (!?)
+    VarDecl vd = (VarDecl) d;
+    String name = vd.identifier();
     ScopedVariable variable = variableMap.get(name);
     if (variable != null && variable.sameScope()) {
       error("Duplicate variable definition " + name);
     }
     String unique = UniqueId.makeUnique("resolver" + name);
     variableMap.put(name, new ScopedVariable(unique, true));
-    Optional<Exp> init = d.init().map(exp -> resolveExp(exp, variableMap));
-    return new Declaration(unique, init);
+    Optional<Exp> init = vd.init().map(exp -> resolveExp(exp, variableMap));
+    return new VarDecl(unique, init);
   }
 
   private Exp resolveExp(Exp e, Map<String, ScopedVariable> variableMap) {

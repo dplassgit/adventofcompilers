@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.Token;
@@ -24,12 +25,12 @@ public class Parser {
   }
 
   public Program parse() {
-    FunctionDef fun = parseFunction();
+    FunDecl fun = parseFunction();
     expect(TokenType.EOF);
-    return new Program(fun);
+    return new Program(ImmutableList.of(fun));
   }
 
-  private FunctionDef parseFunction() {
+  private FunDecl parseFunction() {
     // expect int identifier ( void ) { statements }
     expect(TokenType.INT);
     String functionName = token.value();
@@ -39,7 +40,7 @@ public class Parser {
     expect(TokenType.CPAREN);
     Block block = parseBlock();
 
-    return new FunctionDef(functionName, block);
+    return new FunDecl(functionName, block);
   }
 
   private Block parseBlock() {
@@ -168,19 +169,19 @@ public class Parser {
   }
 
   // int var [ = exp] ;
-  private Declaration parseDeclaration() {
+  private VarDecl parseDeclaration() {
     expect(TokenType.INT);
     String varName = token.value();
     expect(TokenType.IDENTIFIER);
     if (token.type() == TokenType.SEMICOLON) {
       advance();
-      return new Declaration(varName);
+      return new VarDecl(varName);
     }
     // Declaration with initialization
     expect(TokenType.EQ);
     Exp init = parseExp();
     expect(TokenType.SEMICOLON);
-    return new Declaration(varName, init);
+    return new VarDecl(varName, init);
   }
 
   // return exp;

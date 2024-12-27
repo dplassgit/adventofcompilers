@@ -7,7 +7,7 @@ import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Constant;
-import com.plasstech.lang.c.parser.FunctionDef;
+import com.plasstech.lang.c.parser.FunDecl;
 import com.plasstech.lang.c.parser.GenericNodeVisitor;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
@@ -17,12 +17,13 @@ import com.plasstech.lang.c.parser.Return;
  */
 public class CodeGen {
   public AsmProgramNode generate(Program program) {
-    AsmFunctionNode function = generate(program.functionDef());
+    // TODO: this needs to generate multiple fun decls
+    AsmFunctionNode function = generate(program.funDecls().get(0));
     return new AsmProgramNode(function);
   }
 
-  private AsmFunctionNode generate(FunctionDef functionDef) {
-    BlockItem body = functionDef.body().items().get(0);
+  private AsmFunctionNode generate(FunDecl functionDef) {
+    BlockItem body = functionDef.body().get().items().get(0);
     StatementVisitor sv = new StatementVisitor();
     List<Instruction> instructions = body.accept(sv);
     return new AsmFunctionNode(functionDef.name(), ImmutableList.copyOf(instructions));

@@ -13,7 +13,7 @@ import com.plasstech.lang.c.parser.Declaration;
 import com.plasstech.lang.c.parser.DoWhile;
 import com.plasstech.lang.c.parser.Expression;
 import com.plasstech.lang.c.parser.For;
-import com.plasstech.lang.c.parser.FunctionDef;
+import com.plasstech.lang.c.parser.FunDecl;
 import com.plasstech.lang.c.parser.If;
 import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
@@ -25,13 +25,13 @@ class LoopLabeler implements Validator {
 
   @Override
   public Program validate(Program input) {
-    FunctionDef functionDef = input.functionDef();
-    return new Program(labelFunction(functionDef));
+    return new Program(input.funDecls().stream()
+        .map(fd -> labelFunction(fd)).toList());
   }
 
-  private FunctionDef labelFunction(FunctionDef functionDef) {
-    Block labeldBlock = labelBlock(functionDef.body());
-    return new FunctionDef(functionDef.name(), labeldBlock);
+  private FunDecl labelFunction(FunDecl functionDef) {
+    Block labeledBlock = labelBlock(functionDef.body().get());
+    return new FunDecl(functionDef.name(), labeledBlock);
   }
 
   private Block labelBlock(Block block) {

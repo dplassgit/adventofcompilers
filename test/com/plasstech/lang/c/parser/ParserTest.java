@@ -18,9 +18,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
+    FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.name()).isEqualTo("main");
-    BlockItem statement = fn.body().items().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     assertThat(returnStmt.exp()).isEqualTo(Constant.of(1));
   }
@@ -86,9 +86,9 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
+    FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.name()).isEqualTo("main");
-    BlockItem statement = fn.body().items().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp expr = returnStmt.exp();
     assertThat(expr).isEqualTo(Constant.of(1));
@@ -188,8 +188,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isEqualTo(new BinExp(Constant.of(3), TokenType.PLUS, Constant.of(4)));
@@ -205,8 +205,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     BinExp bin = (BinExp) exp;
@@ -227,8 +227,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     BinExp bin = (BinExp) exp;
@@ -250,8 +250,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isEqualTo(new UnaryExp(TokenType.BANG, Constant.of(1)));
@@ -267,8 +267,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isInstanceOf(BinExp.class);
@@ -290,10 +290,10 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
-    assertThat(statement).isInstanceOf(Declaration.class);
-    Declaration d = (Declaration) statement;
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    VarDecl d = (VarDecl) (Declaration) statement;
     assertThat(d.identifier()).isEqualTo("i");
   }
 
@@ -307,10 +307,10 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
-    assertThat(statement).isInstanceOf(Declaration.class);
-    Declaration d = (Declaration) statement;
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    VarDecl d = (VarDecl) statement;
     assertThat(d.identifier()).isEqualTo("i");
     assertThat(d.init()).hasValue(Constant.of(1));
   }
@@ -325,10 +325,10 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
-    assertThat(statement).isInstanceOf(Declaration.class);
-    Declaration d = (Declaration) statement;
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    VarDecl d = (VarDecl) statement;
     assertThat(d.identifier()).isEqualTo("i");
     BinExp expected = new BinExp(new Var("a"), TokenType.PLUS, new Var("b"));
     assertThat(d.init()).hasValue(expected);
@@ -346,10 +346,10 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    List<BlockItem> items = fn.body().items();
+    FunDecl fn = prog.funDecls().get(0);
+    List<BlockItem> items = fn.body().get().items();
     assertThat(items).hasSize(3);
-    assertThat(items.get(0)).isInstanceOf(Declaration.class);
+    assertThat(items.get(0)).isInstanceOf(VarDecl.class);
     assertThat(items.get(1)).isInstanceOf(NullStatement.class);
     assertThat(items.get(2)).isInstanceOf(Return.class);
   }
@@ -364,8 +364,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(Expression.class);
   }
 
@@ -379,8 +379,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Expression exp = (Expression) statement;
     Var var = (Var) exp.exp();
     assertThat(var.identifier()).isEqualTo("a");
@@ -408,8 +408,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Expression exp = (Expression) statement;
     Assignment assn = (Assignment) exp.exp();
     assertThat(assn.lvalue()).isEqualTo(new Var("a"));
@@ -429,8 +429,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Expression exp = (Expression) statement;
     Assignment assn = (Assignment) exp.exp();
     assertThat(assn.lvalue()).isEqualTo(new Var("a"));
@@ -473,8 +473,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(1);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
   }
 
@@ -492,8 +492,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(1);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
   }
 
@@ -511,8 +511,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(1);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
   }
 
@@ -532,8 +532,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(1);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
   }
 
@@ -547,8 +547,8 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
     Exp exp = returnStmt.exp();
     assertThat(exp).isEqualTo(new Conditional(Constant.of(3), Constant.of(1), Constant.of(4)));
@@ -564,9 +564,9 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
-    Declaration a = (Declaration) statement;
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    VarDecl a = (VarDecl) statement;
     Exp exp = a.init().get();
     assertThat(exp).isEqualTo(new Conditional(Constant.of(3), Constant.of(1), Constant.of(4)));
   }
@@ -581,9 +581,9 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    BlockItem statement = fn.body().items().get(0);
-    Declaration a = (Declaration) statement;
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    VarDecl a = (VarDecl) statement;
     Exp exp = a.init().get();
     assertThat(exp).isInstanceOf(Conditional.class);
     System.err.println(exp);
@@ -605,9 +605,9 @@ public class ParserTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(2);
-    BlockItem inner = fn.body().items().get(1);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(2);
+    BlockItem inner = fn.body().get().items().get(1);
     assertThat(inner).isInstanceOf(Compound.class);
   }
 
@@ -659,9 +659,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem inner = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem inner = fn.body().get().items().get(0);
     assertThat(inner).isInstanceOf(While.class);
   }
 
@@ -676,9 +676,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem stmt = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem stmt = fn.body().get().items().get(0);
     assertThat(stmt).isInstanceOf(While.class);
     While whileLoop = (While) stmt;
     assertThat(whileLoop.body()).isInstanceOf(Break.class);
@@ -695,9 +695,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem stmt = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem stmt = fn.body().get().items().get(0);
     assertThat(stmt).isInstanceOf(While.class);
     While whileLoop = (While) stmt;
     assertThat(whileLoop.body()).isInstanceOf(Continue.class);
@@ -732,9 +732,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem stmt = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem stmt = fn.body().get().items().get(0);
     assertThat(stmt).isInstanceOf(While.class);
     While whileLoop = (While) stmt;
     assertThat(whileLoop.body()).isInstanceOf(Compound.class);
@@ -751,9 +751,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem inner = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem inner = fn.body().get().items().get(0);
     assertThat(inner).isInstanceOf(DoWhile.class);
   }
 
@@ -768,9 +768,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem inner = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem inner = fn.body().get().items().get(0);
     assertThat(inner).isInstanceOf(DoWhile.class);
   }
 
@@ -785,9 +785,9 @@ public class ParserTest {
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    FunctionDef fn = prog.functionDef();
-    assertThat(fn.body().items()).hasSize(1);
-    BlockItem inner = fn.body().items().get(0);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.body().get().items()).hasSize(1);
+    BlockItem inner = fn.body().get().items().get(0);
     assertThat(inner).isInstanceOf(DoWhile.class);
   }
 

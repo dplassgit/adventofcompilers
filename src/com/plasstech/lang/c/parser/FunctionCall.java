@@ -1,6 +1,8 @@
 package com.plasstech.lang.c.parser;
 
-public record InitDecl(VarDecl decl) implements ForInit {
+import java.util.List;
+
+public record FunctionCall(String identifier, List<Exp> args) implements Exp {
   @Override
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);

@@ -2,7 +2,7 @@ package com.plasstech.lang.c.parser;
 
 import com.google.common.base.Strings;
 
-public class PrettyPrinter implements AstNode.Visitor<Void> {
+public class PrettyPrinter extends GenericNodeVisitor<Void> {
   private int indentation;
 
   public Void prettyPrint(Program p) {
@@ -14,7 +14,7 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
   public Void visit(Program n) {
     System.out.println("Program (");
     indentation += 2;
-    n.functionDef().accept(this);
+    n.funDecls().stream().forEach(fd -> fd.accept(this));
     System.out.println(")");
     indentation -= 2;
     return null;
@@ -57,13 +57,13 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
   }
 
   @Override
-  public Void visit(FunctionDef n) {
+  public Void visit(FunDecl n) {
     System.out.printf("%sFunction (\n", spaces());
     indentation += 2;
     System.out.printf("%sname: \"%s\"\n", spaces(), n.name());
     System.out.printf("%sbody:\n", spaces());
     indentation += 2;
-    n.body().accept(this);
+    n.body().get().accept(this);
     indentation -= 4;
     System.out.printf("%s)\n", spaces());
     return null;
@@ -122,7 +122,7 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
   }
 
   @Override
-  public Void visit(Declaration n) {
+  public Void visit(VarDecl n) {
     System.out.printf("%sDeclaration: (\n", spaces());
 
     indentation += 2;
@@ -188,50 +188,5 @@ public class PrettyPrinter implements AstNode.Visitor<Void> {
 
     System.out.printf("%s)\n", spaces());
     return null;
-  }
-
-  @Override
-  public Void visit(Compound compond) {
-    throw new UnsupportedOperationException("Cannot prettyprint block yet");
-  }
-
-  @Override
-  public Void visit(Block block) {
-    throw new UnsupportedOperationException("Cannot prettyprint block yet");
-  }
-
-  @Override
-  public Void visit(Break n) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Void visit(Continue n) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Void visit(DoWhile n) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Void visit(For n) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Void visit(While n) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Void visit(InitDecl n) {
-    throw new UnsupportedOperationException();
-  }
-
-  @Override
-  public Void visit(InitExp n) {
-    throw new UnsupportedOperationException();
   }
 }

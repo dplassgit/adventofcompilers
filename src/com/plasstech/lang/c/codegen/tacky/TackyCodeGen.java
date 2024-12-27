@@ -16,11 +16,11 @@ import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.Continue;
-import com.plasstech.lang.c.parser.Declaration;
 import com.plasstech.lang.c.parser.DoWhile;
 import com.plasstech.lang.c.parser.Expression;
 import com.plasstech.lang.c.parser.For;
-import com.plasstech.lang.c.parser.FunctionDef;
+import com.plasstech.lang.c.parser.FunDecl;
+import com.plasstech.lang.c.parser.FunctionCall;
 import com.plasstech.lang.c.parser.If;
 import com.plasstech.lang.c.parser.InitDecl;
 import com.plasstech.lang.c.parser.InitExp;
@@ -29,6 +29,7 @@ import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
+import com.plasstech.lang.c.parser.VarDecl;
 import com.plasstech.lang.c.parser.While;
 
 /**
@@ -43,15 +44,16 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   private List<TackyInstruction> instructions = new ArrayList<>();
 
   public TackyProgram generate(Program program) {
-    return new TackyProgram(generate(program.functionDef()));
+    // TODO: update TackyProgram to take a list of TackyFunctionDefsa
+    return new TackyProgram(generate(program.funDecls().get(0)));
   }
 
   private void emit(TackyInstruction ti) {
     instructions.add(ti);
   }
 
-  private TackyFunctionDef generate(FunctionDef functionDef) {
-    functionDef.body().accept(this);
+  private TackyFunctionDef generate(FunDecl functionDef) {
+    functionDef.body().get().accept(this);
     emit(new TackyReturn(ZERO));
     return new TackyFunctionDef(functionDef.name(), instructions);
   }
@@ -93,7 +95,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   }
 
   @Override
-  public TackyVal visit(Declaration n) {
+  public TackyVal visit(VarDecl n) {
     TackyVar dst = new TackyVar(n.identifier());
     if (n.init().isPresent()) {
       TackyVal result = n.init().get().accept(this);
@@ -208,7 +210,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   }
 
   @Override
-  public TackyVal visit(FunctionDef n) {
+  public TackyVal visit(FunDecl n) {
     throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
   }
 
@@ -298,6 +300,11 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     if (n.exp().isPresent()) {
       return n.exp().get().accept(this);
     }
+    return null;
+  }
+
+  @Override
+  public TackyVal visit(FunctionCall n) {
     return null;
   }
 }
