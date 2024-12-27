@@ -22,7 +22,11 @@ else
 	java -classpath $CLASSPATH com.plasstech.lang.c.driver.Driver < $base.i > $base.s
 	rv=$?
 	if [[ $rv == '0' ]]; then
-		gcc $base.s -o $base
+		if [[ $1 == '-c' ]]; then
+			gcc -c $base.s -o $base.o
+		else
+			gcc $base.s -o $base
+		fi
 	fi
 	if [[ $1 != '-S' ]]; then 
 		rm -f $base.s
