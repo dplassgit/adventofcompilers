@@ -14,7 +14,7 @@ public class LoopLabelerTest {
     return new Parser(new Scanner(program)).parse();
   }
 
-  private LoopLabeler validator = new LoopLabeler();
+  private Validator validator = new LoopLabeler();
 
   @Test
   public void noLoopsOk() {
@@ -144,7 +144,7 @@ public class LoopLabelerTest {
         }
         """;
     Program program = parse(input);
-    System.err.println(validator.validate(program));
+    validator.validate(program);
   }
 
   @Test
@@ -159,7 +159,7 @@ public class LoopLabelerTest {
         }
         """;
     Program program = parse(input);
-    System.err.println(validator.validate(program));
+    validator.validate(program);
   }
 
   @Test
@@ -174,6 +174,30 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
+    Program program = parse(input);
+    validator.validate(program);
+  }
+
+  @Test
+  public void externalFunCall() {
+    String input = """
+        int decl(int a);
+        int main(void) {
+          return decl(1);
+        }""";
+    Program program = parse(input);
+    validator.validate(program);
+  }
+
+  @Test
+  public void internalFunCall() {
+    String input = """
+        int decl(int a) {
+          return 1;
+        }
+        int main(void) {
+          return decl(1);
+        }""";
     Program program = parse(input);
     System.err.println(validator.validate(program));
   }

@@ -236,7 +236,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -251,7 +251,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -290,7 +290,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -306,7 +306,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -334,7 +334,7 @@ public class ResolverTest {
         }""";
     Resolver resolver = new Resolver();
     Program program = parse(input);
-    System.err.println(resolver.validate(program));
+    resolver.validate(program);
   }
 
   @Test
@@ -365,5 +365,118 @@ public class ResolverTest {
     Resolver resolver = new Resolver();
     Program program = parse(input);
     resolver.validate(program);
+  }
+
+  @Test
+  public void recursiveFnCall() {
+    String input = """
+        int main(void) {
+          return main();
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void fnCallNotAFn() {
+    // This is allowed by the resolver, but will be rejected by the type checker.
+    String input = """
+        int main(void) {
+          int var = 0;
+          return var();
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    System.err.println(resolver.validate(program));
+  }
+
+  @Test
+  public void fnCallUndeclared() {
+    String input = """
+        int main(void) {
+          undeclared();
+          return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void internalFnDeclThenCall() {
+    String input = """
+        int main(void) {
+          int decl(void);
+          decl();
+          return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    resolver.validate(program);
+  }
+
+  @Test
+  public void nestedFnDecl() {
+    String input = """
+        int main(void) {
+          int decl(void) {
+            return 0;
+          }
+          decl();
+          return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void externalFnDeclThenCall() {
+    String input = """
+        int decl(void);
+        int main(void) {
+          decl();
+          return 0;
+        }""";
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    resolver.validate(program);
+  }
+
+  @Test
+  public void duplicateExternalDecl() {
+    // This is legal because they have the same signature. But really, the
+    // resolver won't catch this anyway.
+    String input = """
+        int decl(void);
+        int decl(void);
+        """;
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    resolver.validate(program);
+  }
+
+  @Test
+  public void duplicateParamDecl() {
+    String input = """
+        int decl(int a, int a);
+        """;
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
+  }
+
+  @Test
+  public void paramAndVarDecl() {
+    String input = """
+        int decl(int a) {
+          int a = 3;
+          return a;
+        }
+        """;
+    Resolver resolver = new Resolver();
+    Program program = parse(input);
+    assertThrows(SemanticAnalyzerException.class, () -> resolver.validate(program));
   }
 }
