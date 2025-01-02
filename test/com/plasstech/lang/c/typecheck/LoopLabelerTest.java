@@ -10,11 +10,11 @@ import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
 
 public class LoopLabelerTest {
-  private static Program parse(String program) {
-    return new Parser(new Scanner(program)).parse();
-  }
-
   private Validator validator = new LoopLabeler();
+
+  private Program validate(String input) {
+    return validator.validate(new Parser(new Scanner(input)).parse());
+  }
 
   @Test
   public void noLoopsOk() {
@@ -23,7 +23,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
+    Program program = new Parser(new Scanner(input)).parse();
     assertThat(validator.validate(program)).isEqualTo(program);
   }
 
@@ -35,8 +35,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    assertThrows(SemanticAnalyzerException.class, () -> validator.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
   }
 
   @Test
@@ -47,8 +46,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    assertThrows(SemanticAnalyzerException.class, () -> validator.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
   }
 
   @Test
@@ -60,8 +58,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    assertThrows(SemanticAnalyzerException.class, () -> validator.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
   }
 
   @Test
@@ -73,8 +70,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    assertThrows(SemanticAnalyzerException.class, () -> validator.validate(program));
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
   }
 
   @Test
@@ -85,8 +81,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -99,8 +94,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -113,8 +107,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -128,8 +121,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -143,8 +135,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -158,8 +149,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -174,8 +164,7 @@ public class LoopLabelerTest {
           return -1;
         }
         """;
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -185,8 +174,7 @@ public class LoopLabelerTest {
         int main(void) {
           return decl(1);
         }""";
-    Program program = parse(input);
-    validator.validate(program);
+    validate(input);
   }
 
   @Test
@@ -198,7 +186,6 @@ public class LoopLabelerTest {
         int main(void) {
           return decl(1);
         }""";
-    Program program = parse(input);
-    System.err.println(validator.validate(program));
+    System.err.println(validate(input));
   }
 }

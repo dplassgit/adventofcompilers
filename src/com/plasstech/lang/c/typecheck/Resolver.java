@@ -223,8 +223,4 @@ class Resolver implements Validator {
     error("Undeclared variable " + v.identifier());
     return null;
   }
-
-  private static void error(String message) {
-    throw new SemanticAnalyzerException(message);
-  }
 }

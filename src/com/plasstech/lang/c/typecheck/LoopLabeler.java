@@ -110,8 +110,4 @@ class LoopLabeler implements Validator {
     Optional<Statement> elseStmt = i.elseStmt().map(stmt -> labelStatement(stmt));
     return new If(i.condition(), then, elseStmt);
   }
-
-  private static void error(String message) {
-    throw new SemanticAnalyzerException(message);
-  }
 }
