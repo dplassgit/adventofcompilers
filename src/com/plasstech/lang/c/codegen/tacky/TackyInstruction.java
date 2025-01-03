@@ -20,6 +20,8 @@ interface TackyInstruction {
     R visit(TackyLabel op);
 
     R visit(TackyReturn op);
+
+    R visit(TackyFunCall op);
   }
 
   <R> R accept(Visitor<R> visitor);

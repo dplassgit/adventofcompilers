@@ -13,95 +13,70 @@ import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
 
 public class TackyCodeGenTest {
+  private TackyCodeGen cg = new TackyCodeGen();
 
-  @Test
-  public void generate() {
-    String input = "int main(void) { return 1; }";
+  private TackyProgram generate(String input) {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    TackyCodeGen cg = new TackyCodeGen();
+    prog = new SemanticAnalyzer().validate(prog);
     TackyProgram tp = cg.generate(prog);
+    return tp;
+  }
+
+  @Test
+  public void generate() {
+    String input = "int main(void) { return 1; }";
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
   }
 
   @Test
   public void generateUnary() {
     String input = "int main(void) { return -1; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
   }
 
   @Test
   public void generateMultipleUnary() {
     String input = "int main(void) { return -(~(-1)); }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
   }
 
   @Test
   public void generateBinary() {
     String input = "int main(void) { return 1+2*3; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
   }
 
   @Test
   public void generateAndAnd() {
     String input = "int main(void) { return (1+2*3)&&(3+4>5); }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
   @Test
   public void generateOrOr() {
     String input = "int main(void) { return 1||3; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
   @Test
   public void generateDeclaration() {
     String input = "int main(void) { int a = 3; return a; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    prog = new SemanticAnalyzer().validate(prog);
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -115,15 +90,9 @@ public class TackyCodeGenTest {
           return b;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    prog = new SemanticAnalyzer().validate(prog);
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -137,15 +106,9 @@ public class TackyCodeGenTest {
           return a;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    prog = new SemanticAnalyzer().validate(prog);
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -161,15 +124,9 @@ public class TackyCodeGenTest {
           return a;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
-    prog = new SemanticAnalyzer().validate(prog);
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
+    TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -189,14 +146,53 @@ public class TackyCodeGenTest {
             return sum == 5 && counter == 10;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
+    TackyProgram tp = generate(input);
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    assertThat(instructions.size()).isGreaterThan(1);
+  }
 
-    Program prog = p.parse();
-    prog = new SemanticAnalyzer().validate(prog);
-    TackyCodeGen cg = new TackyCodeGen();
-    TackyProgram tp = cg.generate(prog);
-    List<TackyInstruction> instructions = tp.functionDef().instructions();
+  @Test
+  public void generateFnCall() {
+    String input = """
+        int fact(int a) {
+          if (a <= 1) { return a; }
+          return a * fact(a-1);
+        }
+        """;
+    TackyProgram tp = generate(input);
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    assertThat(instructions.size()).isGreaterThan(1);
     System.out.println(Joiner.on("\n").join(instructions));
+  }
+
+  @Test
+  public void generateFnDeclIsEmpty() {
+    String input = """
+        int fact(int a);
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.functionDefs()).isEmpty();
+  }
+
+  @Test
+  public void variableShadowsFn() {
+    String input = """
+        int main(void) {
+            int foo(void);
+
+            int x = foo();
+            if (x > 0) {
+                int foo  = 3;
+                x = x + foo;
+            }
+            return x;
+        }
+
+        int foo(void) {
+            return 4;
+        }
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.functionDefs()).hasSize(2);
   }
 }

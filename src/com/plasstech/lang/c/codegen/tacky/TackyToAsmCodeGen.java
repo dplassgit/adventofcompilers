@@ -36,7 +36,8 @@ import com.plasstech.lang.c.codegen.Stack;
  */
 public class TackyToAsmCodeGen {
   public AsmProgramNode generate(TackyProgram program) {
-    AsmFunctionNode functionNode = generate(program.functionDef());
+    // TODO: generate multiple functiondefs. Page 200
+    AsmFunctionNode functionNode = generate(program.functionDefs().get(0));
     return new AsmProgramNode(functionNode);
   }
 

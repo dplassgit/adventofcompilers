@@ -44,8 +44,12 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   private List<TackyInstruction> instructions = new ArrayList<>();
 
   public TackyProgram generate(Program program) {
-    // TODO: update TackyProgram to take a list of TackyFunctionDefsa
-    return new TackyProgram(generate(program.funDecls().get(0)));
+    List<TackyFunctionDef> functionDefs =
+        program.funDecls().stream()
+            // Only generate Tacky instructoins for functions with bodies. Page 182.
+            .filter(fd -> fd.body().isPresent())
+            .map(fd -> generate(fd)).toList();
+    return new TackyProgram(functionDefs);
   }
 
   private void emit(TackyInstruction ti) {
@@ -211,7 +215,8 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(FunDecl n) {
-    throw new IllegalStateException("Should not codegen " + n.getClass().getCanonicalName());
+    assert (n.body().isEmpty());
+    return null;
   }
 
   @Override
@@ -305,6 +310,11 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(FunctionCall n) {
-    return null;
+    // Page 183, listing 9-24
+    List<TackyVal> args = n.args().stream().map(arg -> arg.accept(this)).toList();
+    // Unclear if this is right...
+    TackyVar result = newTemp("fun_call_" + n.identifier());
+    emit(new TackyFunCall(n.identifier(), args, result));
+    return result;
   }
 }

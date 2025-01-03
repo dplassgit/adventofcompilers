@@ -1,4 +1,6 @@
 package com.plasstech.lang.c.codegen.tacky;
 
-public record TackyProgram(TackyFunctionDef functionDef) {
+import java.util.List;
+
+public record TackyProgram(List<TackyFunctionDef> functionDefs) {
 }

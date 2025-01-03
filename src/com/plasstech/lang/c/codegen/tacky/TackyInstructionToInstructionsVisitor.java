@@ -147,4 +147,9 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   public List<Instruction> visit(TackyLabel op) {
     return ImmutableList.of(new Label(op.target()));
   }
+
+  @Override
+  public List<Instruction> visit(TackyFunCall op) {
+    return null;
+  }
 }
