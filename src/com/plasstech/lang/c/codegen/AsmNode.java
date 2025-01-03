@@ -29,6 +29,12 @@ public interface AsmNode {
     R visit(AllocateStack n);
 
     R visit(Ret n);
+
+    R visit(DeallocateStack n);
+
+    R visit(Push n);
+
+    R visit(Call n);
   }
 
   <R> R accept(Visitor<R> visitor);

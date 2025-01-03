@@ -17,6 +17,7 @@ import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Operand;
+import com.plasstech.lang.c.codegen.Pseudo;
 import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.codegen.Ret;
@@ -31,15 +32,21 @@ import com.plasstech.lang.c.lex.TokenType;
  * Output: List<Instruction>
  */
 class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<List<Instruction>> {
+  private static final Imm ZERO = new Imm(0);
 
-  private static final Imm ZERO = new Imm("0");
-  private final TackyValToOperandVisitor valVisitor = new TackyValToOperandVisitor();
+  private static Operand toOperand(TackyVal val) {
+    return switch (val) {
+      case TackyVar v -> new Pseudo(v.identifier());
+      case TackyIntConstant ic -> new Imm(ic.val());
+      default -> throw new IllegalArgumentException("Unexpected value: " + val);
+    };
+  }
 
   @Override
   public List<Instruction> visit(TackyUnary op) {
     List<Instruction> instructions = new ArrayList<>();
-    Operand src = op.src().accept(valVisitor);
-    Operand dst = op.dst().accept(valVisitor);
+    Operand src = toOperand(op.src());
+    Operand dst = toOperand(op.dst());
     if (op.operator() == TokenType.BANG) {
       // Page 86
       instructions.add(new Cmp(ZERO, src));
@@ -55,9 +62,9 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   @Override
   public List<Instruction> visit(TackyBinary op) {
     List<Instruction> instructions = new ArrayList<>();
-    Operand src1 = op.src1().accept(valVisitor);
-    Operand src2 = op.src2().accept(valVisitor);
-    Operand dst = op.dst().accept(valVisitor);
+    Operand src1 = toOperand(op.src1());
+    Operand src2 = toOperand(op.src2());
+    Operand dst = toOperand(op.dst());
     TokenType operator = op.operator();
     switch (operator) {
       case SLASH:
@@ -107,7 +114,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   @Override
   public List<Instruction> visit(TackyReturn tackyReturn) {
-    Operand operand = tackyReturn.val().accept(valVisitor);
+    Operand operand = toOperand(tackyReturn.val());
     return ImmutableList.of(
         new Mov(operand, new RegisterOperand(Register.AX)),
         new Ret());
@@ -115,8 +122,8 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   @Override
   public List<Instruction> visit(TackyCopy op) {
-    Operand src = op.src().accept(valVisitor);
-    Operand dst = op.dst().accept(valVisitor);
+    Operand src = toOperand(op.src());
+    Operand dst = toOperand(op.dst());
     return ImmutableList.of(new Mov(src, dst));
   }
 
@@ -128,7 +135,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   @Override
   public List<Instruction> visit(TackyJumpZero op) {
     // Page 86
-    Operand operand = op.condition().accept(valVisitor);
+    Operand operand = toOperand(op.condition());
     return ImmutableList.of(
         new Cmp(ZERO, operand),
         new JmpCC(CondCode.E, op.target()));
@@ -137,7 +144,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   @Override
   public List<Instruction> visit(TackyJumpNotZero op) {
     // Page 86
-    Operand operand = op.condition().accept(valVisitor);
+    Operand operand = toOperand(op.condition());
     return ImmutableList.of(
         new Cmp(ZERO, operand),
         new JmpCC(CondCode.NE, op.target()));
@@ -150,6 +157,6 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   @Override
   public List<Instruction> visit(TackyFunCall op) {
-    return null;
+    throw new UnsupportedOperationException("Cannot mumble something TackyFunCall");
   }
 }

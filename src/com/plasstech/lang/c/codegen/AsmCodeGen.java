@@ -128,4 +128,19 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     emitted.add(String.format(".L%s:", n.label()));
     return null;
   }
+
+  @Override
+  public Void visit(DeallocateStack n) {
+    return null;
+  }
+
+  @Override
+  public Void visit(Push n) {
+    return null;
+  }
+
+  @Override
+  public Void visit(Call n) {
+    return null;
+  }
 }

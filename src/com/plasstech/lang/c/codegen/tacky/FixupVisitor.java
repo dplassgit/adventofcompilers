@@ -9,8 +9,10 @@ import com.plasstech.lang.c.codegen.AsmFunctionNode;
 import com.plasstech.lang.c.codegen.AsmNode;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.codegen.AsmUnary;
+import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
+import com.plasstech.lang.c.codegen.DeallocateStack;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -19,6 +21,7 @@ import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Operand;
+import com.plasstech.lang.c.codegen.Push;
 import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.codegen.Ret;
@@ -145,6 +148,21 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(Label n) {
+    return ImmutableList.of(n);
+  }
+
+  @Override
+  public List<Instruction> visit(DeallocateStack n) {
+    return ImmutableList.of(n);
+  }
+
+  @Override
+  public List<Instruction> visit(Push n) {
+    return ImmutableList.of(n);
+  }
+
+  @Override
+  public List<Instruction> visit(Call n) {
     return ImmutableList.of(n);
   }
 }

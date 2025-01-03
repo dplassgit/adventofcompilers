@@ -3,7 +3,12 @@ package com.plasstech.lang.c.codegen;
 public record RegisterOperand(Register register) implements Operand {
   public enum Register {
     AX("al", "eax"),
+    CX("cl", "ecx"),
     DX("dl", "edx"),
+    DI("dil", "edi"),
+    SI("sil", "esi"),
+    R8("r8b", "r8d"),
+    R9("r9b", "r98d"),
     R10("r10b", "r10d"),
     R11("r11b", "r11d");
 
