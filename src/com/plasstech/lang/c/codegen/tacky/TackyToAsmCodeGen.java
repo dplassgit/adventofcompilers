@@ -82,37 +82,22 @@ public class TackyToAsmCodeGen {
     return offset;
   }
 
-  private class PseudoRegisterRemapper implements Operand.Visitor<Operand> {
-    @Override
-    public Operand visit(Imm imm) {
-      return imm;
-    }
-
-    @Override
-    public Operand visit(RegisterOperand ro) {
-      return ro;
-    }
-
-    @Override
-    public Operand visit(Pseudo p) {
-      int offset = getOffset(p.identifier());
-      return new Stack(offset);
-    }
-
-    @Override
-    public Operand visit(Stack s) {
-      return s;
-    }
+  private Operand remap(Operand input) {
+    return switch (input) {
+      case Imm imm -> imm;
+      case RegisterOperand ro -> ro;
+      case Stack s -> s;
+      case Pseudo p -> new Stack(getOffset(p.identifier()));
+      default -> throw new IllegalArgumentException("Unexpected value: " + input);
+    };
   }
 
   /** Replace pseudo operands to stack references. See page 42. */
   private class PseudoToStackInstructionVisitor implements AsmNode.Visitor<Instruction> {
-    private final Operand.Visitor<Operand> operandRemapper = new PseudoRegisterRemapper();
-
     @Override
     public Instruction visit(Mov n) {
-      Operand newSrc = n.src().accept(operandRemapper);
-      Operand newDest = n.dest().accept(operandRemapper);
+      Operand newSrc = remap(n.src());
+      Operand newDest = remap(n.dest());
       return new Mov(newSrc, newDest);
     }
 
@@ -123,14 +108,14 @@ public class TackyToAsmCodeGen {
 
     @Override
     public Instruction visit(AsmUnary u) {
-      Operand newSrc = u.operand().accept(operandRemapper);
+      Operand newSrc = remap(u.operand());
       return new AsmUnary(u.operator(), newSrc);
     }
 
     @Override
     public Instruction visit(AsmBinary n) {
-      Operand newLeft = n.left().accept(operandRemapper);
-      Operand newRight = n.right().accept(operandRemapper);
+      Operand newLeft = remap(n.left());
+      Operand newRight = remap(n.right());
       return new AsmBinary(n.operator(), newLeft, newRight);
     }
 
@@ -141,7 +126,7 @@ public class TackyToAsmCodeGen {
 
     @Override
     public Instruction visit(Idiv n) {
-      Operand newOperand = n.operand().accept(operandRemapper);
+      Operand newOperand = remap(n.operand());
       return new Idiv(newOperand);
     }
 
@@ -152,8 +137,8 @@ public class TackyToAsmCodeGen {
 
     @Override
     public Instruction visit(Cmp n) {
-      Operand newLeft = n.left().accept(operandRemapper);
-      Operand newRight = n.right().accept(operandRemapper);
+      Operand newLeft = remap(n.left());
+      Operand newRight = remap(n.right());
       return new Cmp(newLeft, newRight);
     }
 
@@ -169,7 +154,7 @@ public class TackyToAsmCodeGen {
 
     @Override
     public Instruction visit(SetCC n) {
-      Operand newOperand = n.dest().accept(operandRemapper);
+      Operand newOperand = remap(n.dest());
       return new SetCC(n.cc(), newOperand);
     }
 

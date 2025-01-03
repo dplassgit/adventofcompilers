@@ -37,9 +37,4 @@ public record RegisterOperand(Register register) implements Operand {
   public String toString(int bytes) {
     return register.toString(bytes);
   }
-
-  @Override
-  public <R> R accept(Visitor<R> visitor) {
-    return visitor.visit(this);
-  }
 }

@@ -9,9 +9,4 @@ public record Imm(String value) implements Operand {
   public String toString() {
     return String.format("$%s", value);
   }
-
-  @Override
-  public <R> R accept(Visitor<R> visitor) {
-    return visitor.visit(this);
-  }
 }
