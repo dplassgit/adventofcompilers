@@ -58,7 +58,7 @@ public class TackyCodeGenTest {
     String input = "int main(void) { return (1+2*3)&&(3+4>5); }";
     TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -67,7 +67,7 @@ public class TackyCodeGenTest {
     String input = "int main(void) { return 1||3; }";
     TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -76,7 +76,7 @@ public class TackyCodeGenTest {
     String input = "int main(void) { int a = 3; return a; }";
     TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -92,7 +92,7 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -108,7 +108,7 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -126,7 +126,7 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp).isNotNull();
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -147,7 +147,7 @@ public class TackyCodeGenTest {
         }
         """;
     TackyProgram tp = generate(input);
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
   }
 
@@ -160,9 +160,8 @@ public class TackyCodeGenTest {
         }
         """;
     TackyProgram tp = generate(input);
-    List<TackyInstruction> instructions = tp.functionDefs().get(0).instructions();
+    List<TackyInstruction> instructions = tp.functionDefs().get(0).body();
     assertThat(instructions.size()).isGreaterThan(1);
-    System.out.println(Joiner.on("\n").join(instructions));
   }
 
   @Test
@@ -194,5 +193,10 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp.functionDefs()).hasSize(2);
+    for (var fn : tp.functionDefs()) {
+      List<TackyInstruction> instructions = fn.body();
+      assertThat(instructions.size()).isGreaterThan(1);
+      System.out.println(Joiner.on("\n").join(instructions));
+    }
   }
 }

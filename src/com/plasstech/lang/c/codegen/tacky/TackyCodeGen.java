@@ -3,6 +3,7 @@ package com.plasstech.lang.c.codegen.tacky;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.common.Labelled;
 import com.plasstech.lang.c.common.UniqueId;
 import com.plasstech.lang.c.lex.TokenType;
@@ -41,12 +42,12 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   private static final TackyVal ONE = new TackyIntConstant(1);
   private static final TackyVal ZERO = new TackyIntConstant(0);
 
-  private List<TackyInstruction> instructions = new ArrayList<>();
+  private final List<TackyInstruction> instructions = new ArrayList<>();
 
   public TackyProgram generate(Program program) {
     List<TackyFunctionDef> functionDefs =
         program.funDecls().stream()
-            // Only generate Tacky instructoins for functions with bodies. Page 182.
+            // Only generate Tacky instructions for functions with bodies. Page 182.
             .filter(fd -> fd.body().isPresent())
             .map(fd -> generate(fd)).toList();
     return new TackyProgram(functionDefs);
@@ -57,27 +58,26 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   }
 
   private TackyFunctionDef generate(FunDecl functionDef) {
+    instructions.clear(); // otherwise things will grow out of control
+
     functionDef.body().get().accept(this);
     emit(new TackyReturn(ZERO));
-    return new TackyFunctionDef(functionDef.name(), instructions);
+    // Must make a copy, otherwise we will have our successors list of instructions too.
+    return new TackyFunctionDef(functionDef.name(), ImmutableList.copyOf(functionDef.params()),
+        ImmutableList.copyOf(instructions));
   }
 
   @Override
   public TackyVal visit(Block n) {
-    generate(n.items());
+    for (BlockItem item : n.items()) {
+      item.accept(this);
+    }
     return null;
   }
 
   @Override
   public TackyVal visit(Compound n) {
     return n.block().accept(this);
-  }
-
-  private List<TackyInstruction> generate(List<BlockItem> body) {
-    for (BlockItem item : body) {
-      item.accept(this);
-    }
-    return instructions;
   }
 
   @Override

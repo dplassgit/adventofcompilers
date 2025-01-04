@@ -1,14 +1,18 @@
 package com.plasstech.lang.c.codegen;
 
+import java.util.List;
+
+import com.google.common.collect.ImmutableList;
+
 public record RegisterOperand(Register register) implements Operand {
-  public enum Register {
-    AX("al", "eax"),
-    CX("cl", "ecx"),
-    DX("dl", "edx"),
-    DI("dil", "edi"),
-    SI("sil", "esi"),
+  private enum Register {
+    RAX("al", "eax"),
+    RCX("cl", "ecx"),
+    RDX("dl", "edx"),
+    RDI("dil", "edi"),
+    RSI("sil", "esi"),
     R8("r8b", "r8d"),
-    R9("r9b", "r98d"),
+    R9("r9b", "r9d"),
     R10("r10b", "r10d"),
     R11("r11b", "r11d");
 
@@ -24,9 +28,26 @@ public record RegisterOperand(Register register) implements Operand {
       if (bytes == 1) {
         return string1;
       }
-      return string4;
+      if (bytes == 4) {
+        return string4;
+      }
+      // 8 bytes
+      return name();
     }
   }
+
+  public static RegisterOperand RAX = new RegisterOperand(Register.RAX);
+  public static RegisterOperand RCX = new RegisterOperand(Register.RCX);
+  public static RegisterOperand RDX = new RegisterOperand(Register.RDX);
+  public static RegisterOperand RDI = new RegisterOperand(Register.RDI);
+  public static RegisterOperand RSI = new RegisterOperand(Register.RSI);
+  public static RegisterOperand R8 = new RegisterOperand(Register.R8);
+  public static RegisterOperand R9 = new RegisterOperand(Register.R9);
+  public static RegisterOperand R10 = new RegisterOperand(Register.R10);
+  public static RegisterOperand R11 = new RegisterOperand(Register.R11);
+
+  public static final List<RegisterOperand> ARG_REGISTERS = ImmutableList.of(
+      RDI, RSI, RDX, RCX, R8, R9);
 
   @Override
   public String toString() {

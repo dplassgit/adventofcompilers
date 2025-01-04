@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.FunDecl;
@@ -17,9 +16,8 @@ import com.plasstech.lang.c.parser.Return;
  */
 public class CodeGen {
   public AsmProgramNode generate(Program program) {
-    // TODO: this needs to generate multiple fun decls
-    AsmFunctionNode function = generate(program.funDecls().get(0));
-    return new AsmProgramNode(function);
+    List<AsmFunctionNode> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
+    return new AsmProgramNode(fns);
   }
 
   private AsmFunctionNode generate(FunDecl functionDef) {
@@ -38,7 +36,7 @@ public class CodeGen {
       Operand op = n.exp().accept(ov);
 
       // Add a "mov" and a "ret"
-      instructions.add(new Mov(op, new RegisterOperand(Register.AX)));
+      instructions.add(new Mov(op, RegisterOperand.RAX));
       instructions.add(new Ret());
       return instructions;
     }

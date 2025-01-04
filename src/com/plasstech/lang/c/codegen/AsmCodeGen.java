@@ -31,7 +31,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
   // Maybe these methods should return List<String>?
   @Override
   public Void visit(AsmProgramNode n) {
-    n.function().accept(this);
+    n.functions().forEach(fn -> fn.accept(this));
     emit(".section .note.GNU-stack,\"\",@progbits");
     return null;
   }
@@ -143,16 +143,24 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(DeallocateStack n) {
-    return null;
+    throw new UnsupportedOperationException("cannot convert DeallocateStack to assembly");
   }
 
   @Override
   public Void visit(Push n) {
+    switch (n.operand()) {
+      case RegisterOperand ro -> emit("pushq %s", ro.toString(8));
+      case Imm imm -> emit("push %s", imm.toString());
+      default ->
+        throw new IllegalArgumentException("Unexpected value: " + n.operand());
+    }
     return null;
   }
 
   @Override
   public Void visit(Call n) {
+    // TODO: mumbls eomthing about external calls?!
+    emit("call %s", n.identifier());
     return null;
   }
 }

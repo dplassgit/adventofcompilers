@@ -20,26 +20,21 @@ import com.plasstech.lang.c.codegen.Jmp;
 import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
-import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Push;
 import com.plasstech.lang.c.codegen.RegisterOperand;
-import com.plasstech.lang.c.codegen.RegisterOperand.Register;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
 
 /** Fix up AsmNode instructions that we've created naively. */
 class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
-  private static final Operand R10_OPERAND = new RegisterOperand(Register.R10);
-  private static final Operand R11_OPERAND = new RegisterOperand(Register.R11);
-
   @Override
   public List<Instruction> visit(Mov n) {
     // Can't mov stack to stack: use r10 as an intermediary. See page 42.
     if (n.src() instanceof Stack && n.dest() instanceof Stack) {
       return ImmutableList.of(
-          new Mov(n.src(), R10_OPERAND),
-          new Mov(R10_OPERAND, n.dest()));
+          new Mov(n.src(), RegisterOperand.R10),
+          new Mov(RegisterOperand.R10, n.dest()));
     }
     return ImmutableList.of(n);
   }
@@ -52,8 +47,8 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
         // Can't add or subtract stack and stack; use r10. See page 64
         if (n.left() instanceof Stack && n.right() instanceof Stack) {
           return ImmutableList.of(
-              new Mov(n.left(), R10_OPERAND),
-              new AsmBinary(n.operator(), R10_OPERAND, n.right()));
+              new Mov(n.left(), RegisterOperand.R10),
+              new AsmBinary(n.operator(), RegisterOperand.R10, n.right()));
         }
         break;
 
@@ -61,9 +56,9 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
         // Can't mul into stack; use r11. See page 65
         if (n.right() instanceof Stack) {
           return ImmutableList.of(
-              new Mov(n.right(), R11_OPERAND), // NOTYPO
-              new AsmBinary(n.operator(), n.left(), R11_OPERAND),
-              new Mov(R11_OPERAND, n.right()));
+              new Mov(n.right(), RegisterOperand.R11), // NOTYPO
+              new AsmBinary(n.operator(), n.left(), RegisterOperand.R11),
+              new Mov(RegisterOperand.R11, n.right()));
         }
         break;
 
@@ -78,8 +73,8 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
     // Can't divide by a constant; use r10 as an intermediary. See page 64
     if (n.operand() instanceof Imm) {
       return ImmutableList.of(
-          new Mov(n.operand(), R10_OPERAND),
-          new Idiv(R10_OPERAND));
+          new Mov(n.operand(), RegisterOperand.R10),
+          new Idiv(RegisterOperand.R10));
     }
     return ImmutableList.of(n);
   }
@@ -119,14 +114,14 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
     // Fix if both operands are in memory; use r10. See page 88
     if (n.left() instanceof Stack && n.right() instanceof Stack) {
       return ImmutableList.of(
-          new Mov(n.left(), R10_OPERAND),
-          new Cmp(R10_OPERAND, n.right()));
+          new Mov(n.left(), RegisterOperand.R10),
+          new Cmp(RegisterOperand.R10, n.right()));
     }
     // Fix if the second operand is a constant. See page 88
     if (n.right() instanceof Imm) {
       return ImmutableList.of(
-          new Mov(n.right(), R11_OPERAND),
-          new Cmp(n.left(), R11_OPERAND));
+          new Mov(n.right(), RegisterOperand.R11),
+          new Cmp(n.left(), RegisterOperand.R11));
     }
     return ImmutableList.of(n);
   }

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
@@ -39,33 +40,50 @@ import com.plasstech.lang.c.codegen.Stack;
  */
 public class TackyToAsmCodeGen {
   public AsmProgramNode generate(TackyProgram program) {
-    // TODO: generate multiple functiondefs. Page 200
-    AsmFunctionNode functionNode = generate(program.functionDefs().get(0));
-    return new AsmProgramNode(functionNode);
+    // Generate multiple functiondefs. Page 194
+    List<AsmFunctionNode> fns = program.functionDefs().stream().map(fn -> generate(fn)).toList();
+    return new AsmProgramNode(fns);
   }
 
   private AsmFunctionNode generate(TackyFunctionDef functionDef) {
+    totalOffset = 0; // so functions don't affect each other. Page 200
+    List<Instruction> instructions = new ArrayList<>();
+    // Page 200, top
+    // Copy input registers to param names.
+    for (int i = 0; i < Math.min(6, functionDef.params().size()); ++i) {
+      instructions.add(new Mov(RegisterOperand.ARG_REGISTERS.get(i),
+          new Pseudo(functionDef.params().get(i))));
+    }
+    // Copy stack to param names.
+    int offset = 16;
+    for (int i = 7; i < functionDef.params().size(); ++i) {
+      instructions.add(new Mov(new Stack(offset), new Pseudo(functionDef.params().get(i))));
+      offset += 8;
+    }
+
     TackyInstruction.Visitor<List<Instruction>> visitor =
         new TackyInstructionToInstructionsVisitor();
     PseudoToStackInstructionVisitor siv = new PseudoToStackInstructionVisitor();
     FixupVisitor mfv = new FixupVisitor();
-    List<Instruction> instructions = functionDef.instructions().stream()
+    List<Instruction> opInstructions = functionDef.body().stream()
         .map(ti -> ti.accept(visitor)) // each tackyinstruction becomes a list of asmnodes
-        .flatMap(List::stream)
+        .flatMap(List::stream).toList();
+
+    instructions.addAll(opInstructions);
+    instructions = instructions.stream()
         // remap from Pseudo -> Stack, and get the total # of bytes.
         .map(asmNode -> asmNode.accept(siv))
         // map mov stack1 stack2 -> mov stack1, r10; mov r10, stack2 etc
         .map(asmNode -> asmNode.accept(mfv)) // returns a list for each instruction
         .flatMap(List::stream)
-        .toList();
+        .collect(Collectors.toList());
 
     // Prepend an AllocateStack with the appropriate number of bytes (if it's > 0)
-    List<Instruction> mutableInstructions = new ArrayList<>(instructions);
     if (totalOffset != 0) {
-      mutableInstructions.add(0, new AllocateStack(totalOffset));
+      instructions.add(0, new AllocateStack(totalOffset));
     }
 
-    return new AsmFunctionNode(functionDef.identifier(), mutableInstructions);
+    return new AsmFunctionNode(functionDef.identifier(), instructions);
   }
 
   private int totalOffset = 0;
@@ -175,17 +193,18 @@ public class TackyToAsmCodeGen {
 
     @Override
     public Instruction visit(DeallocateStack n) {
-      return null;
+      return n;
     }
 
     @Override
     public Instruction visit(Push n) {
-      return null;
+      Operand newOperand = remap(n.operand());
+      return new Push(newOperand);
     }
 
     @Override
     public Instruction visit(Call n) {
-      return null;
+      return n;
     }
   }
 }
