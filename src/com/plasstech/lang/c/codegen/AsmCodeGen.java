@@ -16,20 +16,32 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     return emitted;
   }
 
+  private void emit(String pattern, Object... params) {
+    emit0("  " + pattern, params);
+  }
+
+  private void emit0(String pattern, Object... params) {
+    if (params != null && params.length > 0) {
+      emitted.add(String.format(pattern, params));
+    } else {
+      emitted.add(pattern);
+    }
+  }
+
   // Maybe these methods should return List<String>?
   @Override
   public Void visit(AsmProgramNode n) {
     n.function().accept(this);
-    emitted.add("  .section .note.GNU-stack,\"\",@progbits");
+    emit(".section .note.GNU-stack,\"\",@progbits");
     return null;
   }
 
   @Override
   public Void visit(AsmFunctionNode n) {
-    emitted.add(String.format("  .globl %s", n.name()));
-    emitted.add(String.format("%s:", n.name()));
-    emitted.add("  pushq %rbp");
-    emitted.add("  movq %rsp, %rbp");
+    emit(".globl %s", n.name());
+    emit0("%s:", n.name());
+    emit("pushq %rbp");
+    emit("movq %rsp, %rbp");
     for (Instruction i : n.instructions()) {
       i.accept(this);
     }
@@ -39,15 +51,15 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
   @Override
   public Void visit(Mov n) {
     // I'm not sure I like this... /shrug.
-    emitted.add("  " + n.toString());
+    emit(n.toString());
     return null;
   }
 
   @Override
   public Void visit(Ret n) {
-    emitted.add("  movq %rbp, %rsp");
-    emitted.add("  popq %rbp");
-    emitted.add("  ret");
+    emit("movq %rbp, %rsp");
+    emit("popq %rbp");
+    emit("ret");
     return null;
   }
 
@@ -58,14 +70,14 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
       case TWIDDLE -> "notl";
       default -> throw new IllegalStateException("Bad unary operator " + n.operator());
     };
-    emitted.add(String.format("  %s %s", instruction, n.operand().toString()));
+    emit("%s %s", instruction, n.operand().toString());
     return null;
   }
 
   @Override
   public Void visit(AllocateStack n) {
     if (n.bytes() > 0) {
-      emitted.add(String.format("  subq $%d, %%rsp", n.bytes()));
+      emit("subq $%d, %%rsp", n.bytes());
     }
     return null;
   }
@@ -78,54 +90,54 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
       case STAR -> "imull";
       default -> throw new IllegalStateException("Bad binary operator " + n.operator().name());
     };
-    emitted.add(String.format("  %s %s, %s", instruction, n.left(), n.right()));
+    emit("%s %s, %s", instruction, n.left(), n.right());
     return null;
   }
 
   @Override
   public Void visit(Idiv n) {
-    emitted.add(String.format("  idivl %s", n.operand()));
+    emit("idivl %s", n.operand());
     return null;
   }
 
   @Override
   public Void visit(Cdq n) {
-    emitted.add("  cdq");
+    emit("cdq");
     return null;
   }
 
   @Override
   public Void visit(Cmp n) {
     // Page 89
-    emitted.add(String.format("  cmpl %s, %s", n.left(), n.right()));
+    emit("cmpl %s, %s", n.left(), n.right());
     return null;
   }
 
   @Override
   public Void visit(Jmp n) {
     // Page 89
-    emitted.add(String.format("  jmp .L%s", n.label()));
+    emit("jmp .L%s", n.label());
     return null;
   }
 
   @Override
   public Void visit(JmpCC n) {
     // Page 89
-    emitted.add(String.format("  j%s .L%s", n.cc().name().toLowerCase(), n.label()));
+    emit("j%s .L%s", n.cc().name().toLowerCase(), n.label());
     return null;
   }
 
   @Override
   public Void visit(SetCC n) {
     // Page 89
-    emitted.add(String.format("  set%s %s", n.cc().name().toLowerCase(), n.dest().toString(1)));
+    emit("set%s %s", n.cc().name().toLowerCase(), n.dest().toString(1));
     return null;
   }
 
   @Override
   public Void visit(Label n) {
     // Page 89
-    emitted.add(String.format(".L%s:", n.label()));
+    emit0(".L%s:", n.label());
     return null;
   }
 

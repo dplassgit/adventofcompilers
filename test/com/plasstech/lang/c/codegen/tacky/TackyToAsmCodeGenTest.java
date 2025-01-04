@@ -26,7 +26,7 @@ public class TackyToAsmCodeGenTest {
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
-    System.out.println(an.toString());
+    System.err.println(an.toString());
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
@@ -41,7 +41,7 @@ public class TackyToAsmCodeGenTest {
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
-    System.out.println(an.toString());
+    System.err.println(an.toString());
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
@@ -56,7 +56,7 @@ public class TackyToAsmCodeGenTest {
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
-    System.out.println(an.toString());
+    System.err.println(an.toString());
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
@@ -71,7 +71,7 @@ public class TackyToAsmCodeGenTest {
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
-    System.out.println(an.toString());
+    System.err.println(an.toString());
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
@@ -86,7 +86,7 @@ public class TackyToAsmCodeGenTest {
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
-    System.out.println(an.toString());
+    System.err.println(an.toString());
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
@@ -102,7 +102,7 @@ public class TackyToAsmCodeGenTest {
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
     assertThat(an).isNotNull();
     List<Instruction> instructions = an.function().instructions();
-    System.out.println(Joiner.on("\n").join(instructions));
+    System.err.println(Joiner.on("\n").join(instructions));
     List<String> asm = new AsmCodeGen().generate(an);
     System.out.println(Joiner.on("\n").join(asm));
   }
