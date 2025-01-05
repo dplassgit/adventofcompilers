@@ -56,6 +56,6 @@ public record RegisterOperand(Register register) implements Operand {
 
   @Override
   public String toString(int bytes) {
-    return register.toString(bytes);
+    return "%" + register.toString(bytes);
   }
 }

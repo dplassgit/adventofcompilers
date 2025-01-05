@@ -45,8 +45,9 @@ public class TackyToAsmCodeGen {
     return new AsmProgramNode(fns);
   }
 
+  private int currentProcOffset = 0;
+
   private AsmFunctionNode generate(TackyFunctionDef functionDef) {
-    totalOffset = 0; // so functions don't affect each other. Page 200
     List<Instruction> instructions = new ArrayList<>();
     // Page 200, top
     // Copy input registers to param names.
@@ -56,10 +57,13 @@ public class TackyToAsmCodeGen {
     }
     // Copy stack to param names.
     int offset = 16;
-    for (int i = 7; i < functionDef.params().size(); ++i) {
+    for (int i = 6; i < functionDef.params().size(); ++i) {
+      // It *reads* from 16,24,32, etc.
       instructions.add(new Mov(new Stack(offset), new Pseudo(functionDef.params().get(i))));
       offset += 8;
     }
+    // 4 because they're ints now.
+    currentProcOffset = 4 * functionDef.params().size();
 
     TackyInstruction.Visitor<List<Instruction>> visitor =
         new TackyInstructionToInstructionsVisitor();
@@ -73,28 +77,29 @@ public class TackyToAsmCodeGen {
     instructions = instructions.stream()
         // remap from Pseudo -> Stack, and get the total # of bytes.
         .map(asmNode -> asmNode.accept(siv))
-        // map mov stack1 stack2 -> mov stack1, r10; mov r10, stack2 etc
+        // map mov stack1, stack2 -> mov stack1, r10; mov r10, stack2 etc
         .map(asmNode -> asmNode.accept(mfv)) // returns a list for each instruction
         .flatMap(List::stream)
         .collect(Collectors.toList());
 
     // Prepend an AllocateStack with the appropriate number of bytes (if it's > 0)
-    if (totalOffset != 0) {
-      instructions.add(0, new AllocateStack(totalOffset));
+    if (currentProcOffset != 0) {
+      // Round this up to the nearest 16.
+      currentProcOffset = (int) (Math.ceil(currentProcOffset / 16.0) * 16);
+      instructions.add(0, new AllocateStack(currentProcOffset));
     }
 
     return new AsmFunctionNode(functionDef.identifier(), instructions);
   }
 
-  private int totalOffset = 0;
   // Maps from pseudo register name to offset
   private Map<String, Integer> pseudoMapping = new HashMap<>();
 
   private int getOffset(String name) {
     Integer offset = pseudoMapping.get(name);
     if (offset == null) {
-      totalOffset += 4;
-      offset = -totalOffset;
+      currentProcOffset += 4;
+      offset = -currentProcOffset;
       pseudoMapping.put(name, offset);
     }
     return offset;
