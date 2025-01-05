@@ -2,6 +2,10 @@ package com.plasstech.lang.c.codegen;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+
+import com.google.common.collect.ImmutableMap;
+import com.plasstech.lang.c.typecheck.Symbol;
 
 /**
  * Input: AsmProgramNode (ASM AST)
@@ -10,6 +14,15 @@ import java.util.List;
  */
 public class AsmCodeGen implements AsmNode.Visitor<Void> {
   private final List<String> emitted = new ArrayList<>();
+  private final Map<String, Symbol> symbolTable;
+
+  public AsmCodeGen() {
+    this(ImmutableMap.of());
+  }
+
+  public AsmCodeGen(Map<String, Symbol> symbolTable) {
+    this.symbolTable = symbolTable;
+  }
 
   public List<String> generate(AsmProgramNode program) {
     program.accept(this);
@@ -162,8 +175,12 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Call n) {
-    // TODO: mumbls eomthing about external calls?!
-    emit("call %s", n.identifier());
+    Symbol s = symbolTable.get(n.identifier());
+    boolean external = false;
+    if (s != null) {
+      external = !s.defined();
+    }
+    emit("call %s%s", n.identifier(), external ? "@PLT" : "");
     return null;
   }
 }

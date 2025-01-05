@@ -92,10 +92,11 @@ public class TackyToAsmCodeGenTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    prog = new SemanticAnalyzer().validate(prog);
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+    prog = semanticAnalyzer.validate(prog);
     TackyProgram tp = new TackyCodeGen().generate(prog);
     asmProgramNode = new TackyToAsmCodeGen().generate(tp);
     assertThat(asmProgramNode).isNotNull();
-    return new AsmCodeGen().generate(asmProgramNode);
+    return new AsmCodeGen(semanticAnalyzer.symbolTable()).generate(asmProgramNode);
   }
 }

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
@@ -21,8 +22,11 @@ import com.plasstech.lang.c.parser.ParserException;
 import com.plasstech.lang.c.parser.PrettyPrinter;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
+import com.plasstech.lang.c.typecheck.Symbol;
 
 public class Driver {
+
+  private static Map<String, Symbol> symbolTable;
 
   private static String readStdin() {
     String input = "";
@@ -87,7 +91,7 @@ public class Driver {
     Program prog = validate(s);
     TackyProgram tp = new TackyCodeGen().generate(prog);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
-    return new AsmCodeGen().generate(an);
+    return new AsmCodeGen(symbolTable).generate(an);
   }
 
   private static AsmProgramNode codeGen(Scanner s) {
@@ -104,7 +108,10 @@ public class Driver {
   private static Program validate(Scanner s) {
     Parser p = new Parser(s);
     Program program = p.parse();
-    return new SemanticAnalyzer().validate(program);
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+    Program output = semanticAnalyzer.validate(program);
+    symbolTable = semanticAnalyzer.symbolTable();
+    return output;
   }
 
   private static Program parse(Scanner s) {

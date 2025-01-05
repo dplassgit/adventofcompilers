@@ -18,4 +18,8 @@ public class SemanticAnalyzer implements Validator {
     program = typeChecker.validate(program);
     return program;
   }
+
+  public Map<String, Symbol> symbolTable() {
+    return symbols;
+  }
 }
