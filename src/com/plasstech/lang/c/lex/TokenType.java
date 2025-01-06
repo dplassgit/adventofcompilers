@@ -12,6 +12,8 @@ public enum TokenType {
   FOR(true),
   BREAK(true),
   CONTINUE(true),
+  EXTERN(true),
+  STATIC(true),
   IDENTIFIER,
   //  STRING_LITERAL,
   INT_LITERAL,
