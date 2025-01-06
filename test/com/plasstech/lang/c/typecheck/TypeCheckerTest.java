@@ -3,9 +3,6 @@ package com.plasstech.lang.c.typecheck;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.junit.Test;
 
 import com.plasstech.lang.c.lex.Scanner;
@@ -13,7 +10,7 @@ import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
 
 public class TypeCheckerTest {
-  private Map<String, Symbol> symbols = new HashMap<>();
+  private SymbolTable symbols = new SymbolTable();
   private Validator validator = new TypeChecker(symbols);
 
   private Program validate(String input) {

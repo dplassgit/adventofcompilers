@@ -2,10 +2,9 @@ package com.plasstech.lang.c.codegen;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
-import com.google.common.collect.ImmutableMap;
 import com.plasstech.lang.c.typecheck.Symbol;
+import com.plasstech.lang.c.typecheck.SymbolTable;
 
 /**
  * Input: AsmProgramNode (ASM AST)
@@ -14,14 +13,14 @@ import com.plasstech.lang.c.typecheck.Symbol;
  */
 public class AsmCodeGen implements AsmNode.Visitor<Void> {
   private final List<String> emitted = new ArrayList<>();
-  private final Map<String, Symbol> symbolTable;
+  private final SymbolTable symbols;
 
   public AsmCodeGen() {
-    this(ImmutableMap.of());
+    this(new SymbolTable());
   }
 
-  public AsmCodeGen(Map<String, Symbol> symbolTable) {
-    this.symbolTable = symbolTable;
+  public AsmCodeGen(SymbolTable symbolTable) {
+    this.symbols = symbolTable;
   }
 
   public List<String> generate(AsmProgramNode program) {
@@ -175,7 +174,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Call n) {
-    Symbol s = symbolTable.get(n.identifier());
+    Symbol s = symbols.get(n.identifier());
     boolean external = false;
     if (s != null) {
       external = !s.defined();

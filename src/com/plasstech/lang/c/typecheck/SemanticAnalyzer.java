@@ -1,12 +1,9 @@
 package com.plasstech.lang.c.typecheck;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import com.plasstech.lang.c.parser.Program;
 
 public class SemanticAnalyzer implements Validator {
-  private final Map<String, Symbol> symbols = new HashMap<>();
+  private final SymbolTable symbols = new SymbolTable();
 
   @Override
   public Program validate(Program program) {
@@ -19,7 +16,7 @@ public class SemanticAnalyzer implements Validator {
     return program;
   }
 
-  public Map<String, Symbol> symbolTable() {
+  public SymbolTable symbolTable() {
     return symbols;
   }
 }

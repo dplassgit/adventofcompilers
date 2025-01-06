@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.List;
-import java.util.Map;
 
 import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
@@ -22,11 +21,11 @@ import com.plasstech.lang.c.parser.ParserException;
 import com.plasstech.lang.c.parser.PrettyPrinter;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
-import com.plasstech.lang.c.typecheck.Symbol;
+import com.plasstech.lang.c.typecheck.SymbolTable;
 
 public class Driver {
 
-  private static Map<String, Symbol> symbolTable;
+  private static SymbolTable symbolTable;
 
   private static String readStdin() {
     String input = "";

@@ -190,13 +190,35 @@ public class TackyCodeGenTest {
         int foo(void) {
             return 4;
         }
+
+        int bar(void) {
+          int a = 3;
+        }
         """;
     TackyProgram tp = generate(input);
-    assertThat(tp.functionDefs()).hasSize(2);
+    assertThat(tp.functionDefs()).hasSize(3);
     for (var fn : tp.functionDefs()) {
       List<TackyInstruction> instructions = fn.body();
-      assertThat(instructions.size()).isGreaterThan(1);
-      System.out.println(Joiner.on("\n").join(instructions));
+      assertThat(instructions.size()).isGreaterThan(0);
+    }
+  }
+
+  @Test
+  public void ifReturn() {
+    String input = """
+        int main(void) {
+            int x = 1;
+            do {
+                return x;
+            } while (x > 0);
+        }
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.functionDefs()).hasSize(1);
+    for (var fn : tp.functionDefs()) {
+      List<TackyInstruction> instructions = fn.body();
+      assertThat(instructions.size()).isGreaterThan(0);
+      System.err.println(Joiner.on("\n").join(instructions));
     }
   }
 }

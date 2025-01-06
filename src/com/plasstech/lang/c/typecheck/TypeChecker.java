@@ -1,7 +1,5 @@
 package com.plasstech.lang.c.typecheck;
 
-import java.util.Map;
-
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
@@ -29,9 +27,9 @@ import com.plasstech.lang.c.parser.While;
 /** Finally, a type checker. Starts on page 178. */
 public class TypeChecker implements Validator {
 
-  private final Map<String, Symbol> symbols;
+  private final SymbolTable symbols;
 
-  public TypeChecker(Map<String, Symbol> symbols) {
+  public TypeChecker(SymbolTable symbols) {
     this.symbols = symbols;
   }
 
