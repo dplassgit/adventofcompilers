@@ -189,20 +189,23 @@ public class Parser {
     return new Expression(exp);
   }
 
+  // TODO: right now this only parses block-level function declarations/definitions.
   private Declaration parseDeclaration() {
+    // TODO: get the storage classes
+    StorageClass storageClass = StorageClass.AUTO;
     expect(TokenType.INT);
     String varName = token.value();
     expect(TokenType.IDENTIFIER);
     if (token.type() == TokenType.SEMICOLON) {
       advance();
-      return new VarDecl(varName);
+      return new VarDecl(varName, storageClass);
     }
     if (token.type() == TokenType.EQ) {
       //  Declaration with initialization
       expect(TokenType.EQ);
       Exp init = parseExp();
       expect(TokenType.SEMICOLON);
-      return new VarDecl(varName, init);
+      return new VarDecl(varName, init, storageClass);
     }
     return parseFunDeclAfterName(varName);
   }
@@ -218,7 +221,7 @@ public class Parser {
       expect(TokenType.SEMICOLON);
     }
 
-    return new FunDecl(functionName, params, block);
+    return new FunDecl(functionName, params, block, StorageClass.AUTO);
   }
 
   private FunDecl parseFunDecl() {
@@ -231,18 +234,20 @@ public class Parser {
 
   // int var [ = exp] ;
   private VarDecl parseVarDeclaration() {
+    // TODO: get the storage classes
+    StorageClass storageClass = StorageClass.AUTO;
     expect(TokenType.INT);
     String varName = token.value();
     expect(TokenType.IDENTIFIER);
     if (token.type() == TokenType.SEMICOLON) {
       advance();
-      return new VarDecl(varName);
+      return new VarDecl(varName, storageClass);
     }
     // Declaration with initialization
     expect(TokenType.EQ);
     Exp init = parseExp();
     expect(TokenType.SEMICOLON);
-    return new VarDecl(varName, init);
+    return new VarDecl(varName, init, storageClass);
   }
 
   // return exp;

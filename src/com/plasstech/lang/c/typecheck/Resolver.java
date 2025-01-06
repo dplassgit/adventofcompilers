@@ -67,7 +67,7 @@ class Resolver implements Validator {
     List<String> newParams =
         decl.params().stream().map(param -> resolveParam(param, innerMap)).toList();
     Optional<Block> newBlock = decl.body().map(oldBlock -> resolveBlock(oldBlock, innerMap));
-    return new FunDecl(decl.name(), newParams, newBlock);
+    return new FunDecl(decl.name(), newParams, newBlock, decl.storageClass());
   }
 
   private String resolveParam(String name, Map<String, ScopedIdentifier> identifierMap) {
@@ -162,16 +162,16 @@ class Resolver implements Validator {
     return new If(cond, then, elseStmt);
   }
 
-  private VarDecl resolveVarDecl(VarDecl vd, Map<String, ScopedIdentifier> identifierMap) {
-    String name = vd.identifier();
+  private VarDecl resolveVarDecl(VarDecl decl, Map<String, ScopedIdentifier> identifierMap) {
+    String name = decl.identifier();
     ScopedIdentifier variable = identifierMap.get(name);
     if (variable != null && variable.sameScope()) {
       error("Duplicate variable definition " + name);
     }
     String unique = UniqueId.makeUnique("resolved_var_" + name);
     identifierMap.put(name, new ScopedIdentifier(unique, true));
-    Optional<Exp> init = vd.init().map(exp -> resolveExp(exp, identifierMap));
-    return new VarDecl(unique, init);
+    Optional<Exp> init = decl.init().map(exp -> resolveExp(exp, identifierMap));
+    return new VarDecl(unique, init, decl.storageClass());
   }
 
   private Exp resolveExp(Exp e, Map<String, ScopedIdentifier> identifierMap) {

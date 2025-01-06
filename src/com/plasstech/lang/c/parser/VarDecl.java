@@ -5,13 +5,14 @@ import java.util.Optional;
 /**
  * Declaration of a variable, with an optional initial expression.
  */
-public record VarDecl(String identifier, Optional<Exp> init) implements Declaration {
-  public VarDecl(String identifier) {
-    this(identifier, Optional.empty());
+public record VarDecl(String identifier, Optional<Exp> init, StorageClass storageClass)
+    implements Declaration {
+  public VarDecl(String identifier, StorageClass storageClass) {
+    this(identifier, Optional.empty(), storageClass);
   }
 
-  public VarDecl(String identifier, Exp init) {
-    this(identifier, Optional.of(init));
+  public VarDecl(String identifier, Exp init, StorageClass storageClass) {
+    this(identifier, Optional.of(init), storageClass);
   }
 
   @Override
