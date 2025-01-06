@@ -25,7 +25,7 @@ class LoopLabeler implements Validator {
 
   @Override
   public Program validate(Program input) {
-    return new Program(input.funDecls().stream()
+    return new Program(input.declarations().stream()
         .map(fd -> labelFunction(fd)).toList());
   }
 

@@ -49,7 +49,7 @@ class Resolver implements Validator {
   @Override
   public Program validate(Program input) {
     Map<String, ScopedIdentifier> identifierMap = new HashMap<>();
-    return new Program(input.funDecls().stream()
+    return new Program(input.declarations().stream()
         .map(fd -> resolveFunctionDeclaration(fd, identifierMap)).toList());
   }
 

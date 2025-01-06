@@ -14,7 +14,7 @@ public class PrettyPrinter extends GenericNodeVisitor<Void> {
   public Void visit(Program n) {
     System.out.println("Program (");
     indentation += 2;
-    n.funDecls().stream().forEach(fd -> fd.accept(this));
+    n.declarations().stream().forEach(fd -> fd.accept(this));
     System.out.println(")");
     indentation -= 2;
     return null;
