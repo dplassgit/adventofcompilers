@@ -46,7 +46,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   public TackyProgram generate(Program program) {
     List<TackyFunctionDef> functionDefs =
-        program.declarations().stream()
+        program.funDecls().stream()
             // Only generate Tacky instructions for functions with bodies. Page 182.
             .filter(fd -> fd.body().isPresent())
             .map(fd -> generate(fd)).toList();

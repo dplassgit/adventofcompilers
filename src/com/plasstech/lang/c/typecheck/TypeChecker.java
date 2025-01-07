@@ -35,7 +35,7 @@ public class TypeChecker implements Validator {
 
   @Override
   public Program validate(Program program) {
-    program.declarations().stream().forEach(this::typeCheckFunctionDeclaration);
+    program.funDecls().stream().forEach(this::typeCheckFunctionDeclaration);
     return program;
   }
 

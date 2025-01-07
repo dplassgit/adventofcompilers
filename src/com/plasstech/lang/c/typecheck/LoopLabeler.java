@@ -25,11 +25,12 @@ class LoopLabeler implements Validator {
 
   @Override
   public Program validate(Program input) {
-    return new Program(input.declarations().stream()
-        .map(fd -> labelFunction(fd)).toList());
+    return new Program(input.funDecls().stream()
+        .map(fd -> labelFunction(fd))
+        .toList());
   }
 
-  private FunDecl labelFunction(FunDecl functionDef) {
+  private Declaration labelFunction(FunDecl functionDef) {
     Optional<Block> labeledBlock = functionDef.body().map(block -> labelBlock(block));
     return new FunDecl(functionDef.name(), functionDef.params(), labeledBlock,
         functionDef.storageClass());

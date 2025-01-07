@@ -16,7 +16,7 @@ import com.plasstech.lang.c.parser.Return;
  */
 public class CodeGen {
   public AsmProgramNode generate(Program program) {
-    List<AsmFunctionNode> fns = program.declarations().stream().map(fn -> generate(fn)).toList();
+    List<AsmFunctionNode> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
     return new AsmProgramNode(fns);
   }
 

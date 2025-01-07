@@ -15,6 +15,7 @@ import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.Continue;
+import com.plasstech.lang.c.parser.Declaration;
 import com.plasstech.lang.c.parser.DoWhile;
 import com.plasstech.lang.c.parser.Exp;
 import com.plasstech.lang.c.parser.Expression;
@@ -49,12 +50,12 @@ class Resolver implements Validator {
   @Override
   public Program validate(Program input) {
     Map<String, ScopedIdentifier> identifierMap = new HashMap<>();
-    return new Program(input.declarations().stream()
+    return new Program(input.funDecls().stream()
         .map(fd -> resolveFunctionDeclaration(fd, identifierMap)).toList());
   }
 
   // Page 176
-  private FunDecl resolveFunctionDeclaration(FunDecl decl,
+  private Declaration resolveFunctionDeclaration(FunDecl decl,
       Map<String, ScopedIdentifier> identifierMap) {
     ScopedIdentifier scopedIdentifier = identifierMap.get(decl.name());
     if (scopedIdentifier != null) {

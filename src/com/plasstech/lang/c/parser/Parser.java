@@ -25,7 +25,7 @@ public class Parser {
   }
 
   public Program parse() {
-    List<FunDecl> funDecls = new ArrayList<>();
+    List<Declaration> funDecls = new ArrayList<>();
     while (token.type() != TokenType.EOF) {
       funDecls.add(parseFunDecl());
 
