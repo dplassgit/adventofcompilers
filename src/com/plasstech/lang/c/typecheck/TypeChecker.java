@@ -19,6 +19,7 @@ import com.plasstech.lang.c.parser.InitExp;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
+import com.plasstech.lang.c.parser.StorageClass;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
 import com.plasstech.lang.c.parser.VarDecl;
@@ -35,26 +36,33 @@ public class TypeChecker implements Validator {
 
   @Override
   public Program validate(Program program) {
-    program.funDecls().stream().forEach(this::typeCheckFunctionDeclaration);
+    program.funDecls().stream().forEach(this::typeCheckFunDecl);
+    program.varDecls().stream().forEach(this::typeCheckVarDecl);
     return program;
   }
 
   // Page 180, listing 9-21.
-  private void typeCheckFunctionDeclaration(FunDecl decl) {
-    Type funType = new FunType(decl.params().size());
+  private void typeCheckFunDecl(FunDecl decl) {
     boolean hasBody = decl.body().isPresent();
+    decl.storageClass().ifPresent(sc -> {
+      if (sc == StorageClass.EXTERN && hasBody) {
+        error("Cannot define `extern` function '%s'", decl.name());
+      }
+    });
+
+    Type funType = new FunType(decl.params().size());
     boolean alreadyDefined = false;
     Symbol oldDecl = symbols.get(decl.name());
     if (oldDecl != null) {
       // already defined somehow
       if (!oldDecl.type().equals(funType)) {
-        error("Incompatible function declarations; " + decl.name() + " already defined as "
-            + oldDecl.toString());
+        error("Incompatible function declarations; '%s' already defined as '%s'",
+            decl.name(), oldDecl.toString());
         return;
       }
       alreadyDefined = oldDecl.defined();
       if (alreadyDefined && hasBody) {
-        error("Function " + decl.name() + " defined more than once");
+        error("Function '%s' defined more than once", decl.name());
         return;
       }
     }
@@ -73,7 +81,7 @@ public class TypeChecker implements Validator {
     switch (item) {
       case VarDecl d -> typeCheckVarDecl(d);
       case FunDecl d -> {
-        typeCheckFunctionDeclaration(d);
+        typeCheckFunDecl(d);
       }
       case Statement s -> typeCheckStatement(s);
       default -> {
@@ -126,6 +134,11 @@ public class TypeChecker implements Validator {
   }
 
   private void typeCheckVarDecl(VarDecl decl) {
+    decl.storageClass().ifPresent(sc -> {
+      if (sc == StorageClass.EXTERN && decl.init().isPresent()) {
+        error("Cannot initialize `extern` variable '%s'", decl.identifier());
+      }
+    });
     symbols.put(decl.identifier(), new Symbol(decl.identifier(), Type.Int));
     decl.init().ifPresent(exp -> typeCheckExp(exp));
   }
@@ -165,17 +178,17 @@ public class TypeChecker implements Validator {
   private void typeCheckFunctionCall(FunctionCall fc) {
     Symbol s = symbols.get(fc.identifier());
     if (s == null) {
-      error("Undeclared function " + fc.identifier());
+      error("Undeclared function '%s'", fc.identifier());
       return;
     }
     if (!(s.type() instanceof FunType)) {
-      error("Variable " + fc.identifier() + " called as function");
+      error("Variable '%s' called as function", fc.identifier());
       return;
     }
     FunType ft = (FunType) s.type();
     if (ft.paramCount() != fc.args().size()) {
-      error(String.format("Function %s called with wrong number of params; saw %d, expected %d",
-          fc.identifier(), fc.args().size(), ft.paramCount()));
+      error("Function '%s' called with wrong number of params; saw %d, expected %d",
+          fc.identifier(), fc.args().size(), ft.paramCount());
       return;
     }
     fc.args().stream().forEach(arg -> typeCheckExp(arg));

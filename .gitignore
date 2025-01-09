@@ -27,3 +27,4 @@ lib/*
 
 examples/*
 !examples/*.c
+.classpath

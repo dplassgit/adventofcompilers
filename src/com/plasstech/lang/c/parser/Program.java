@@ -11,4 +11,8 @@ public record Program(List<Declaration> declarations) implements AstNode {
   public List<FunDecl> funDecls() {
     return declarations.stream().filter(d -> d instanceof FunDecl).map(fd -> (FunDecl) fd).toList();
   }
+
+  public List<VarDecl> varDecls() {
+    return declarations.stream().filter(d -> d instanceof VarDecl).map(fd -> (VarDecl) fd).toList();
+  }
 }

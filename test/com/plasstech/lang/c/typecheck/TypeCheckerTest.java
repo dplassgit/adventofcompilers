@@ -163,13 +163,37 @@ public class TypeCheckerTest {
     // Example from p 181
     String input = """
         int main(void) {
-          int foo(int a);
+          int foo(int a, int b);
           return 0;
         }
-        int foo(int a, int b);
+        int foo(int a);
         """;
     SemanticAnalyzerException e =
         assertThrows(SemanticAnalyzerException.class, () -> validate(input));
-    assertThat(e.getMessage()).contains("Incompatible function declarations");
+    assertThat(e.getMessage())
+        .isEqualTo(
+            "Incompatible function declarations; 'foo' already defined as 'int foo(int, int)'");
+  }
+
+  @Test
+  public void cannotInitializeExternVar() {
+    String input = """
+        extern int a = 3;
+        """;
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Cannot initialize `extern` variable 'a'");
+  }
+
+  @Test
+  public void cannotInitializeExternFun() {
+    String input = """
+        extern int fn(void) {
+          return 3;
+        }
+        """;
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Cannot define `extern` function 'fn'");
   }
 }
