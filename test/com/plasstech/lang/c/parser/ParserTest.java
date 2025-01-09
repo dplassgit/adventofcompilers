@@ -975,7 +975,12 @@ public class ParserTest {
   @Test
   public void chapter10TopLevelVarDeclWithInit() {
     String input = "int a = 3;";
-    parse(input);
+    Program p = parse(input);
+    Declaration declaration = p.declarations().get(0);
+    assertThat(declaration).isInstanceOf(VarDecl.class);
+    if (declaration instanceof VarDecl vd) {
+      assertThat(vd.storageClass()).isEmpty();
+    }
   }
 
   @Test
@@ -983,6 +988,45 @@ public class ParserTest {
     Program staticInt = parse("static int a;");
     Program intStatic = parse("int static a;");
     assertThat(staticInt).isEqualTo(intStatic);
+
+    Declaration declaration = staticInt.declarations().get(0);
+    assertThat(declaration).isInstanceOf(VarDecl.class);
+    if (declaration instanceof VarDecl vd) {
+      assertThat(vd.storageClass()).hasValue(StorageClass.STATIC);
+    }
+  }
+
+  @Test
+  public void chapter10FnDeclarationWithStorageClass() {
+    String input = """
+        static int fn(void);
+        """;
+    Program program = parse(input);
+
+    Declaration declaration = program.declarations().get(0);
+    assertThat(declaration).isInstanceOf(FunDecl.class);
+    if (declaration instanceof FunDecl fd) {
+      assertThat(fd.storageClass()).hasValue(StorageClass.STATIC);
+      assertThat(fd.body()).isEmpty();
+    }
+  }
+
+  @Test
+  public void chapter10FnDefinitionWithStorageClass() {
+    // This isn't allowed by the type checker but the parser allows it.
+    String input = """
+        extern  int fn(void) {
+          return 0;
+        }
+        """;
+    Program program = parse(input);
+
+    Declaration declaration = program.declarations().get(0);
+    assertThat(declaration).isInstanceOf(FunDecl.class);
+    if (declaration instanceof FunDecl fd) {
+      assertThat(fd.storageClass()).hasValue(StorageClass.EXTERN);
+      assertThat(fd.body()).isPresent();
+    }
   }
 
   @Test
@@ -990,6 +1034,12 @@ public class ParserTest {
     Program externInt = parse("extern int a;");
     Program intExtern = parse("int extern a;");
     assertThat(externInt).isEqualTo(intExtern);
+
+    Declaration declaration = externInt.declarations().get(0);
+    assertThat(declaration).isInstanceOf(VarDecl.class);
+    if (declaration instanceof VarDecl vd) {
+      assertThat(vd.storageClass()).hasValue(StorageClass.EXTERN);
+    }
   }
 
   @Test
@@ -1062,16 +1112,6 @@ public class ParserTest {
         int main(void) {
           for (int static i = 0; ;) {
           }
-        }
-        """;
-    parse(input);
-  }
-
-  @Test
-  public void chapter10ExternFnWithBodyOk() {
-    String input = """
-        extern int main(void) {
-            return 0;
         }
         """;
     parse(input);

@@ -3,7 +3,6 @@ package com.plasstech.lang.c.parser;
 import com.plasstech.lang.c.lex.TokenType;
 
 public enum StorageClass {
-  NONE,
   STATIC,
   EXTERN;
 

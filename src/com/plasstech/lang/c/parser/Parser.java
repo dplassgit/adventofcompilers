@@ -202,7 +202,14 @@ public class Parser {
     return new Expression(exp);
   }
 
-  private record TypeAndStorageClass(Type type, StorageClass storageClass) {
+  private record TypeAndStorageClass(Type type, Optional<StorageClass> storageClass) {
+    TypeAndStorageClass(Type type, StorageClass storageClass) {
+      this(type, Optional.of(storageClass));
+    }
+
+    TypeAndStorageClass(Type type) {
+      this(type, Optional.empty());
+    }
   }
 
   private TypeAndStorageClass parseTypeAndStorageClass() {
@@ -243,7 +250,7 @@ public class Parser {
       return null;
     }
     if (storageClasses.size() == 0) {
-      storageClasses.add(StorageClass.NONE);
+      return new TypeAndStorageClass(type);
     }
     return new TypeAndStorageClass(type, storageClasses.get(0));
   }
