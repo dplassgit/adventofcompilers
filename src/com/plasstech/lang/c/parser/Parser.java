@@ -7,9 +7,11 @@ import java.util.Optional;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
+import com.plasstech.lang.c.typecheck.Type;
 
 public class Parser {
   private final Scanner scanner;
@@ -25,13 +27,12 @@ public class Parser {
   }
 
   public Program parse() {
-    List<Declaration> funDecls = new ArrayList<>();
+    List<Declaration> fileLevelDecls = new ArrayList<>();
     while (token.type() != TokenType.EOF) {
-      funDecls.add(parseFunDecl());
-
+      fileLevelDecls.add(parseDeclaration());
     }
     expect(TokenType.EOF);
-    return new Program(funDecls);
+    return new Program(fileLevelDecls);
   }
 
   private List<String> parseParamList() {
@@ -80,8 +81,15 @@ public class Parser {
     return statements;
   }
 
+  private static final ImmutableSet<TokenType> DECL_STARTERS = ImmutableSet.of(
+      TokenType.INT,
+      // TokenType.VOID, unclear if this is allowed as of Chapter 10
+      TokenType.EXTERN,
+      TokenType.STATIC);
+
   private BlockItem parseBlockItem() {
-    if (token.type() == TokenType.INT) {
+    // Is there a better way to do this? I fear...
+    if (DECL_STARTERS.contains(token.type())) {
       return parseDeclaration();
     }
     return parseStatement();
@@ -107,9 +115,14 @@ public class Parser {
   }
 
   private ForInit parseForInit() {
-    // Is there a better way to do this? I fear...
-    if (token.type() == TokenType.INT) {
-      return new InitDecl(parseVarDeclaration());
+    if (DECL_STARTERS.contains(token.type())) {
+      Declaration maybeVarDecl = parseDeclaration();
+      if (maybeVarDecl instanceof VarDecl varDecl) {
+        return new InitDecl(varDecl);
+      } else {
+        error("Cannot declare function as `for` init");
+        return null;
+      }
     }
     return new InitExp(parseOptionalExp(TokenType.SEMICOLON));
   }
@@ -189,28 +202,72 @@ public class Parser {
     return new Expression(exp);
   }
 
-  // TODO: right now this only parses block-level function declarations/definitions.
+  private record TypeAndStorageClass(Type type, StorageClass storageClass) {
+  }
+
+  private TypeAndStorageClass parseTypeAndStorageClass() {
+    List<StorageClass> storageClasses = new ArrayList<>();
+    Type type = null;
+    while (token.type() == TokenType.EOF || token.type() == TokenType.INT
+        || token.type() == TokenType.EXTERN || token.type() == TokenType.STATIC) {
+      switch (token.type()) {
+        case EOF:
+          error("Unexpected EOF");
+          return null;
+
+        case INT:
+          if (type != null) {
+            error("Duplicated type 'int'");
+            return null;
+          }
+          type = Type.Int;
+          advance();
+          break;
+
+        case STATIC:
+        case EXTERN:
+          storageClasses.add(StorageClass.of(token.type()));
+          advance();
+          break;
+
+        default:
+          break;
+      }
+    }
+    if (type == null) {
+      error("Missing type specifier");
+      return null;
+    }
+    if (storageClasses.size() > 1) {
+      error(String.format("Too many storage classes: %s", storageClasses.toString()));
+      return null;
+    }
+    if (storageClasses.size() == 0) {
+      storageClasses.add(StorageClass.NONE);
+    }
+    return new TypeAndStorageClass(type, storageClasses.get(0));
+  }
+
+  // int var [ = exp] ;
+  // int var(int a);
+  // int var(int a) { block; }
   private Declaration parseDeclaration() {
-    // TODO: get the storage classes
-    StorageClass storageClass = StorageClass.AUTO;
-    expect(TokenType.INT);
+    // Eats the "int" too.
+    TypeAndStorageClass tasc = parseTypeAndStorageClass();
     String varName = token.value();
     expect(TokenType.IDENTIFIER);
     if (token.type() == TokenType.SEMICOLON) {
       advance();
-      return new VarDecl(varName, storageClass);
+      return new VarDecl(varName, tasc.storageClass);
     }
     if (token.type() == TokenType.EQ) {
       //  Declaration with initialization
       expect(TokenType.EQ);
       Exp init = parseExp();
       expect(TokenType.SEMICOLON);
-      return new VarDecl(varName, init, storageClass);
+      return new VarDecl(varName, init, tasc.storageClass);
     }
-    return parseFunDeclAfterName(varName);
-  }
 
-  private FunDecl parseFunDeclAfterName(String functionName) {
     expect(TokenType.OPAREN);
     List<String> params = parseParamList();
     expect(TokenType.CPAREN);
@@ -221,33 +278,7 @@ public class Parser {
       expect(TokenType.SEMICOLON);
     }
 
-    return new FunDecl(functionName, params, block, StorageClass.AUTO);
-  }
-
-  private FunDecl parseFunDecl() {
-    // expect int identifier ( void ) { statements }
-    expect(TokenType.INT);
-    String functionName = token.value();
-    expect(TokenType.IDENTIFIER);
-    return parseFunDeclAfterName(functionName);
-  }
-
-  // int var [ = exp] ;
-  private VarDecl parseVarDeclaration() {
-    // TODO: get the storage classes
-    StorageClass storageClass = StorageClass.AUTO;
-    expect(TokenType.INT);
-    String varName = token.value();
-    expect(TokenType.IDENTIFIER);
-    if (token.type() == TokenType.SEMICOLON) {
-      advance();
-      return new VarDecl(varName, storageClass);
-    }
-    // Declaration with initialization
-    expect(TokenType.EQ);
-    Exp init = parseExp();
-    expect(TokenType.SEMICOLON);
-    return new VarDecl(varName, init, storageClass);
+    return new FunDecl(varName, params, block, tasc.storageClass);
   }
 
   // return exp;

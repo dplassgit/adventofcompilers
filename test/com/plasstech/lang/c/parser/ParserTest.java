@@ -11,13 +11,17 @@ import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.TokenType;
 
 public class ParserTest {
+
+  private static Program parse(String input) {
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    return p.parse();
+  }
+
   @Test
   public void chapter1Parser() {
     String input = "int main(void) { return 1; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.name()).isEqualTo("main");
     BlockItem statement = fn.body().get().items().get(0);
@@ -28,8 +32,7 @@ public class ParserTest {
   @Test
   public void chapter1ParserWithCommentsAndNewlines() {
     String withoutComments = "int main(void) { return 1; }";
-    Parser p = new Parser(new Scanner(withoutComments));
-    Program programWithoutComments = p.parse();
+    Program programWithoutComments = parse(withoutComments);
 
     String withComments = """
         // This is a comment
@@ -39,8 +42,7 @@ public class ParserTest {
           return 1;
         }
         """;
-    p = new Parser(new Scanner(withComments));
-    Program programWithComments = p.parse();
+    Program programWithComments = parse(withComments);
     assertThat(programWithoutComments).isEqualTo(programWithComments);
   }
 
@@ -55,9 +57,7 @@ public class ParserTest {
   @Test
   public void nullExpr() {
     String input = "int main(void) { ; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -83,9 +83,7 @@ public class ParserTest {
           return (1);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.name()).isEqualTo("main");
     BlockItem statement = fn.body().get().items().get(0);
@@ -101,9 +99,7 @@ public class ParserTest {
           return -1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -113,9 +109,7 @@ public class ParserTest {
           return -(-(1));
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -125,9 +119,7 @@ public class ParserTest {
           return ~1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -137,9 +129,7 @@ public class ParserTest {
           return ~~1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -185,9 +175,7 @@ public class ParserTest {
           return 3+4;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
@@ -202,9 +190,7 @@ public class ParserTest {
           return (3+4)-(6*7);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
@@ -224,9 +210,7 @@ public class ParserTest {
           return 1*2-3;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
@@ -247,9 +231,7 @@ public class ParserTest {
           return !1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
@@ -264,9 +246,7 @@ public class ParserTest {
           return 1>2-3;  // should be 1 > (2-3)
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
@@ -287,9 +267,7 @@ public class ParserTest {
           int i;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(VarDecl.class);
@@ -304,9 +282,7 @@ public class ParserTest {
           int i = 1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(VarDecl.class);
@@ -322,9 +298,7 @@ public class ParserTest {
           int i = a+b;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(VarDecl.class);
@@ -343,9 +317,7 @@ public class ParserTest {
           return 1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     List<BlockItem> items = fn.body().get().items();
     assertThat(items).hasSize(3);
@@ -361,9 +333,7 @@ public class ParserTest {
           1+1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(Expression.class);
@@ -376,9 +346,7 @@ public class ParserTest {
           a;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Expression exp = (Expression) statement;
@@ -393,9 +361,7 @@ public class ParserTest {
           return a+3*c-main>0;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -405,9 +371,7 @@ public class ParserTest {
           a=b+c;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Expression exp = (Expression) statement;
@@ -426,9 +390,7 @@ public class ParserTest {
           a=b=c;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Expression exp = (Expression) statement;
@@ -441,24 +403,19 @@ public class ParserTest {
 
   @Test
   public void rightAssocAssignmentWithAndWithoutParens() {
-    String withoutParens = """
+    String inputWithoutParens = """
         int main(void) {
           a=b=c;
         }
         """;
-    String withParens = """
+    Program withoutParens = parse(inputWithoutParens);
+    String inputWithParens = """
         int main(void) {
           a=(b=c);
         }
         """;
-    Scanner s = new Scanner(withoutParens);
-    Parser p = new Parser(s);
-    Program prog1 = p.parse();
-
-    Scanner s2 = new Scanner(withParens);
-    Parser p2 = new Parser(s2);
-    Program prog2 = p2.parse();
-    assertThat(prog1).isEqualTo(prog2);
+    Program withParens = parse(inputWithParens);
+    assertThat(withoutParens).isEqualTo(withParens);
   }
 
   @Test
@@ -470,9 +427,7 @@ public class ParserTest {
             a = a + 1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
@@ -489,9 +444,7 @@ public class ParserTest {
             a = a - 1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
@@ -508,9 +461,7 @@ public class ParserTest {
             a = a - 1;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
@@ -529,9 +480,7 @@ public class ParserTest {
             a = a + 2;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(1);
     assertThat(statement).isInstanceOf(If.class);
@@ -544,9 +493,7 @@ public class ParserTest {
           return 3?1:4;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     Return returnStmt = (Return) statement;
@@ -561,9 +508,7 @@ public class ParserTest {
           int a=3?1:4;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     VarDecl a = (VarDecl) statement;
@@ -578,15 +523,12 @@ public class ParserTest {
           int a= 1||2 ? 3 : 4;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     BlockItem statement = fn.body().get().items().get(0);
     VarDecl a = (VarDecl) statement;
     Exp exp = a.init().get();
     assertThat(exp).isInstanceOf(Conditional.class);
-    System.err.println(exp);
   }
 
   @Test
@@ -602,9 +544,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(2);
     BlockItem inner = fn.body().get().items().get(1);
@@ -625,27 +565,19 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
   public void chapter8Break() {
     String input = "int main(void) { break; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    parse(input);
   }
 
   @Test
   public void chapter8Continue() {
     String input = "int main(void) { continue; }";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    parse(input);
   }
 
   @Test
@@ -655,10 +587,7 @@ public class ParserTest {
           while (0) ;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem inner = fn.body().get().items().get(0);
@@ -672,10 +601,7 @@ public class ParserTest {
           while (0) break;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem stmt = fn.body().get().items().get(0);
@@ -691,10 +617,7 @@ public class ParserTest {
           while (0) continue;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem stmt = fn.body().get().items().get(0);
@@ -713,10 +636,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    parse(input);
   }
 
   @Test
@@ -728,10 +648,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem stmt = fn.body().get().items().get(0);
@@ -747,10 +664,7 @@ public class ParserTest {
           do ; while (0);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem inner = fn.body().get().items().get(0);
@@ -764,10 +678,7 @@ public class ParserTest {
           do break; while (0);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem inner = fn.body().get().items().get(0);
@@ -781,10 +692,7 @@ public class ParserTest {
           do continue; while (0);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    Program prog = p.parse();
+    Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
     assertThat(fn.body().get().items()).hasSize(1);
     BlockItem inner = fn.body().get().items().get(0);
@@ -801,10 +709,7 @@ public class ParserTest {
           } while (0);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -814,10 +719,7 @@ public class ParserTest {
           for (; ;) ;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -828,10 +730,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    parse(input);
   }
 
   @Test
@@ -843,10 +742,20 @@ public class ParserTest {
           }
         }
         """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter8ForFunctionDecl() {
+    String input = """
+        int main(void) {
+          for (int i(int a, int b); i < 10; i=i+1) {
+          }
+        }
+        """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    assertThrows(ParserException.class, () -> p.parse());
   }
 
   @Test
@@ -858,10 +767,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    parse(input);
   }
 
   @Test
@@ -872,10 +778,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    System.err.println(p.parse());
+    parse(input);
   }
 
   @Test
@@ -888,7 +791,6 @@ public class ParserTest {
         """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
-
     assertThrows(ParserException.class, () -> p.parse());
   }
 
@@ -902,7 +804,6 @@ public class ParserTest {
         """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
-
     assertThrows(ParserException.class, () -> p.parse());
   }
 
@@ -912,10 +813,7 @@ public class ParserTest {
         int main1(void) {}
         int main2(void) {}
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -924,10 +822,7 @@ public class ParserTest {
         int main1(void);
         int main2(void) {}
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -935,10 +830,7 @@ public class ParserTest {
     String input = """
         int main2(int a, int b) {}
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -948,7 +840,6 @@ public class ParserTest {
         """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
-
     assertThrows(ParserException.class, () -> p.parse());
   }
 
@@ -981,9 +872,7 @@ public class ParserTest {
           return main2(a+b, b*a+3);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -993,9 +882,7 @@ public class ParserTest {
           return main2();
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    p.parse();
+    parse(input);
   }
 
   @Test
@@ -1076,8 +963,117 @@ public class ParserTest {
              return 4;
         }
         """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter10TopLevelVarDecl() {
+    String input = "int a;";
+    parse(input);
+  }
+
+  @Test
+  public void chapter10TopLevelVarDeclWithInit() {
+    String input = "int a = 3;";
+    parse(input);
+  }
+
+  @Test
+  public void chapter10TopLevelStaticVarDecl() {
+    Program staticInt = parse("static int a;");
+    Program intStatic = parse("int static a;");
+    assertThat(staticInt).isEqualTo(intStatic);
+  }
+
+  @Test
+  public void chapter10TopLevelExternVarDecl() {
+    Program externInt = parse("extern int a;");
+    Program intExtern = parse("int extern a;");
+    assertThat(externInt).isEqualTo(intExtern);
+  }
+
+  @Test
+  public void chapter10TopLevelVarDeclBadTypes() {
+    String input = """
+        int int a;
+        """;
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
-    p.parse();
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter10TopLevelVarDeclBadClasses() {
+    String input = """
+        int extern static a;
+        """;
+    Scanner s = new Scanner(input);
+    Parser p = new Parser(s);
+    assertThrows(ParserException.class, () -> p.parse());
+  }
+
+  @Test
+  public void chapter10StaticLocal() {
+    String input = """
+        int main(void) {
+             static int i = 2;
+             return 0;
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter10ForBadExternInt() {
+    String input = """
+        int main(void) {
+          for (extern int i = 0; ;) {
+          }
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter10ForBadIntExtern() {
+    String input = """
+        int main(void) {
+          for (int extern i = 0; ;) {
+          }
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter10ForStaticIntOK() {
+    String input = """
+        int main(void) {
+          for (static int i = 0; ;) {
+          }
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter10ForIntStaticOK() {
+    String input = """
+        int main(void) {
+          for (int static i = 0; ;) {
+          }
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter10ExternFnWithBodyOk() {
+    String input = """
+        extern int main(void) {
+            return 0;
+        }
+        """;
+    parse(input);
   }
 }
