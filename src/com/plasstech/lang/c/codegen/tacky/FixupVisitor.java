@@ -5,9 +5,9 @@ import java.util.List;
 import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
-import com.plasstech.lang.c.codegen.AsmFunctionNode;
+import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmNode;
-import com.plasstech.lang.c.codegen.AsmProgramNode;
+import com.plasstech.lang.c.codegen.AsmProgram;
 import com.plasstech.lang.c.codegen.AsmStaticVariable;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Call;
@@ -100,12 +100,12 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   }
 
   @Override
-  public List<Instruction> visit(AsmProgramNode n) {
+  public List<Instruction> visit(AsmProgram n) {
     return null;
   }
 
   @Override
-  public List<Instruction> visit(AsmFunctionNode n) {
+  public List<Instruction> visit(AsmFunction n) {
     return null;
   }
 

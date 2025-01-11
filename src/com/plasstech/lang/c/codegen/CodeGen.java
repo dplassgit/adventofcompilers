@@ -16,17 +16,17 @@ import com.plasstech.lang.c.parser.StorageClass;
  * Input: Program (AST). Output: AsmProgramNode (ASM AST) Mostly obsolete, only used in chapter 1?
  */
 public class CodeGen {
-  public AsmProgramNode generate(Program program) {
-    List<AsmTopLevelNode> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
-    return new AsmProgramNode(fns);
+  public AsmProgram generate(Program program) {
+    List<AsmTopLevel> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
+    return new AsmProgram(fns);
   }
 
-  private AsmTopLevelNode generate(FunDecl functionDef) {
+  private AsmTopLevel generate(FunDecl functionDef) {
     // This is totally bogus
     BlockItem body = functionDef.body().get().items().get(0);
     StatementVisitor sv = new StatementVisitor();
     List<Instruction> instructions = body.accept(sv);
-    return new AsmFunctionNode(functionDef.name(),
+    return new AsmFunction(functionDef.name(),
         !functionDef.hasStorageClass(StorageClass.STATIC), ImmutableList.copyOf(instructions));
   }
 

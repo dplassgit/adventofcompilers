@@ -8,11 +8,11 @@ import java.util.stream.Collectors;
 
 import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
-import com.plasstech.lang.c.codegen.AsmFunctionNode;
+import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmNode;
-import com.plasstech.lang.c.codegen.AsmProgramNode;
+import com.plasstech.lang.c.codegen.AsmProgram;
 import com.plasstech.lang.c.codegen.AsmStaticVariable;
-import com.plasstech.lang.c.codegen.AsmTopLevelNode;
+import com.plasstech.lang.c.codegen.AsmTopLevel;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
@@ -53,9 +53,9 @@ public class TackyToAsmCodeGen {
     this.symbolTable = symbolTable;
   }
 
-  public AsmProgramNode generate(TackyProgram program) {
+  public AsmProgram generate(TackyProgram program) {
     // Generate multiple functiondefs. Page 194
-    List<AsmTopLevelNode> fns = program.topLevelDefinitions().stream()
+    List<AsmTopLevel> fns = program.topLevelDefinitions().stream()
         .map(tln -> {
           return switch (tln) {
             case TackyFunction fn -> generateFn(fn);
@@ -64,12 +64,12 @@ public class TackyToAsmCodeGen {
             default -> throw new IllegalArgumentException("Unexpected value: " + tln);
           };
         }).toList();
-    return new AsmProgramNode(fns);
+    return new AsmProgram(fns);
   }
 
   private int currentProcOffset = 0;
 
-  private AsmTopLevelNode generateFn(TackyFunction function) {
+  private AsmTopLevel generateFn(TackyFunction function) {
     List<Instruction> instructions = new ArrayList<>();
     // Page 200, top
     // Copy input registers to param names.
@@ -111,7 +111,7 @@ public class TackyToAsmCodeGen {
       instructions.add(0, new AllocateStack(currentProcOffset));
     }
 
-    return new AsmFunctionNode(function.identifier(), function.global(), instructions);
+    return new AsmFunction(function.identifier(), function.global(), instructions);
   }
 
   // Maps from pseudo register name to offset
@@ -221,12 +221,12 @@ public class TackyToAsmCodeGen {
     }
 
     @Override
-    public Instruction visit(AsmProgramNode n) {
+    public Instruction visit(AsmProgram n) {
       return null;
     }
 
     @Override
-    public Instruction visit(AsmFunctionNode n) {
+    public Instruction visit(AsmFunction n) {
       return null;
     }
 

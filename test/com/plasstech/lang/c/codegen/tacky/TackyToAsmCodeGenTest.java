@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
-import com.plasstech.lang.c.codegen.AsmProgramNode;
+import com.plasstech.lang.c.codegen.AsmProgram;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
@@ -16,7 +16,7 @@ import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
 
 public class TackyToAsmCodeGenTest {
 
-  private AsmProgramNode asmProgramNode;
+  private AsmProgram asmProgramNode;
 
   @Test
   public void generate() {

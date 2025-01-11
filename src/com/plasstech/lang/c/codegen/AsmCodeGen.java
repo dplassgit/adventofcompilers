@@ -25,7 +25,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     this.symbols = symbolTable;
   }
 
-  public List<String> generate(AsmProgramNode program) {
+  public List<String> generate(AsmProgram program) {
     program.accept(this);
     return emitted;
   }
@@ -44,14 +44,14 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   // Maybe these methods should return List<String>?
   @Override
-  public Void visit(AsmProgramNode n) {
+  public Void visit(AsmProgram n) {
     n.topLevelNodes().forEach(fn -> fn.accept(this));
     emit(".section .note.GNU-stack,\"\",@progbits");
     return null;
   }
 
   @Override
-  public Void visit(AsmFunctionNode n) {
+  public Void visit(AsmFunction n) {
     emit(".globl %s", n.name());
     emit0("%s:", n.name());
     emit("pushq %rbp");

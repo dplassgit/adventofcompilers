@@ -18,7 +18,7 @@ public class CodeGenTest {
 
     Program prog = p.parse();
     CodeGen cg = new CodeGen();
-    AsmProgramNode node = cg.generate(prog);
+    AsmProgram node = cg.generate(prog);
     assertThat(node).isNotNull();
   }
 }
