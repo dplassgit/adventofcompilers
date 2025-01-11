@@ -37,31 +37,43 @@ import com.plasstech.lang.c.parser.While;
 
 /**
  * Resolver for renaming variables and making sure there aren't duplicated declarations, and that
- * all used variables are declared. Based on Chapter 5, page 103ff, Chapter 7, page 136ff
+ * all used variables are declared. Based on Chapter 5, page 103ff, Chapter 7, page 136ff, Chapter
+ * 8, p 175, Chapter 10, 227-229
  */
 class Resolver implements Validator {
-  private record ScopedIdentifier(String variable, boolean sameScope, boolean hasLinkage) {
-    public ScopedIdentifier(String variable, boolean sameScope) {
+  private record ScopedIdentifier(String variable, boolean fromCurrentScope, boolean hasLinkage) {
+    ScopedIdentifier(String variable, boolean isFromCurrentScope) {
       // Local variables have no linkage
-      this(variable, sameScope, false);
+      this(variable, isFromCurrentScope, false);
     }
   }
 
   @Override
   public Program validate(Program input) {
     Map<String, ScopedIdentifier> identifierMap = new HashMap<>();
-    return new Program(input.funDecls().stream()
-        .map(fd -> resolveFunctionDeclaration(fd, identifierMap)).toList());
+    List<Declaration> declarations =
+        input.declarations().stream().map(d -> {
+          return (Declaration) switch (d) {
+            case FunDecl fd -> resolveFunDecl(fd, identifierMap);
+            case VarDecl vd -> resolveFileScopeVarDecl(vd, identifierMap);
+            default -> throw new IllegalArgumentException("Unexpected value: " + d);
+          };
+        }).toList();
+    return new Program(declarations);
   }
 
   // Page 176
-  private Declaration resolveFunctionDeclaration(FunDecl decl,
-      Map<String, ScopedIdentifier> identifierMap) {
+  private FunDecl resolveFunDecl(FunDecl decl, Map<String, ScopedIdentifier> identifierMap) {
     ScopedIdentifier scopedIdentifier = identifierMap.get(decl.name());
     if (scopedIdentifier != null) {
-      if (scopedIdentifier.sameScope() && !scopedIdentifier.hasLinkage()) {
-        error("Duplicate function declaration of " + decl.name());
+      if (scopedIdentifier.fromCurrentScope() && !scopedIdentifier.hasLinkage()) {
+        error("Duplicate declaration of function '%s' ", decl.name());
       }
+    }
+
+    // Unclear if this is what they intended...
+    if (decl.isExtern() && decl.body().isPresent()) {
+      error("Cannot define extern function '%s'", decl.name());
     }
     identifierMap.put(decl.name(), new ScopedIdentifier(decl.name(), true, true));
     Map<String, ScopedIdentifier> innerMap = copy(identifierMap);
@@ -71,10 +83,17 @@ class Resolver implements Validator {
     return new FunDecl(decl.name(), newParams, newBlock, decl.storageClass());
   }
 
+  // Page 228
+  private VarDecl resolveFileScopeVarDecl(VarDecl vd,
+      Map<String, ScopedIdentifier> identifierMap) {
+    identifierMap.put(vd.identifier(), new ScopedIdentifier(vd.identifier(), true, true));
+    return vd;
+  }
+
   private String resolveParam(String name, Map<String, ScopedIdentifier> identifierMap) {
     ScopedIdentifier variable = identifierMap.get(name);
-    if (variable != null && variable.sameScope()) {
-      error("Duplicate parameter definition " + name);
+    if (variable != null && variable.fromCurrentScope()) {
+      error("Duplicate parameter '%s'", name);
     }
     String newName = UniqueId.makeUnique("resolved_param_" + name);
     identifierMap.put(name, new ScopedIdentifier(newName, true));
@@ -89,13 +108,13 @@ class Resolver implements Validator {
 
   private BlockItem resolveBlockItem(BlockItem item, Map<String, ScopedIdentifier> identifierMap) {
     return switch (item) {
-      case VarDecl d -> resolveVarDecl(d, identifierMap);
+      case VarDecl d -> resolveLocalVarDecl(d, identifierMap);
       case FunDecl d -> {
         if (d.body().isPresent()) {
-          error("Cannot define nested function " + d.name());
+          error("Cannot define nested function '%s'", d.name());
         }
 
-        yield resolveFunctionDeclaration(d, identifierMap);
+        yield resolveFunDecl(d, identifierMap);
       }
       case Statement s -> resolveStatement(s, identifierMap);
       default -> throw new IllegalArgumentException("Unexpected block item: " + item);
@@ -141,7 +160,7 @@ class Resolver implements Validator {
 
   private ForInit resolveForInit(ForInit init, Map<String, ScopedIdentifier> newMap) {
     return switch (init) {
-      case InitDecl id -> new InitDecl(resolveVarDecl(id.decl(), newMap));
+      case InitDecl id -> new InitDecl(resolveLocalVarDecl(id.decl(), newMap));
       case InitExp ie -> new InitExp(ie.exp().map(e -> resolveExp(e, newMap)));
       default -> throw new IllegalArgumentException("Unexpected value: " + init);
     };
@@ -163,14 +182,21 @@ class Resolver implements Validator {
     return new If(cond, then, elseStmt);
   }
 
-  private VarDecl resolveVarDecl(VarDecl decl, Map<String, ScopedIdentifier> identifierMap) {
+  private VarDecl resolveLocalVarDecl(VarDecl decl, Map<String, ScopedIdentifier> identifierMap) {
     String name = decl.identifier();
-    ScopedIdentifier variable = identifierMap.get(name);
-    if (variable != null && variable.sameScope()) {
-      error("Duplicate variable definition " + name);
+    ScopedIdentifier prevEntry = identifierMap.get(name);
+    if (prevEntry != null) {
+      if (prevEntry.fromCurrentScope()) {
+        if (!(prevEntry.hasLinkage() && decl.isExtern()))
+          error("Duplicate variable definition '%s'", decl.identifier());
+      }
+    }
+    if (decl.isExtern()) {
+      identifierMap.put(decl.identifier(), new ScopedIdentifier(decl.identifier(), true, true));
+      return decl;
     }
     String unique = UniqueId.makeUnique("resolved_var_" + name);
-    identifierMap.put(name, new ScopedIdentifier(unique, true));
+    identifierMap.put(name, new ScopedIdentifier(unique, true, false));
     Optional<Exp> init = decl.init().map(exp -> resolveExp(exp, identifierMap));
     return new VarDecl(unique, init, decl.storageClass());
   }
@@ -204,13 +230,13 @@ class Resolver implements Validator {
       return new FunctionCall(newName, newArgs);
     }
     // Not in the map. Never declared, or it's not a function.
-    error("Undeclared function " + fc.identifier());
+    error("Undeclared function '%s'", fc.identifier());
     return null;
   }
 
   private Exp resolveAssignment(Assignment a, Map<String, ScopedIdentifier> identifierMap) {
     if (!(a.lvalue() instanceof Var)) {
-      error("lvalues can only be variables; saw: " + a.lvalue());
+      error("lvalues can only be variables; saw: %s", a.lvalue());
     }
     return new Assignment(resolveExp(a.lvalue(), identifierMap),
         resolveExp(a.rvalue(), identifierMap));
@@ -221,7 +247,7 @@ class Resolver implements Validator {
     if (mapped != null) {
       return new Var(mapped.variable());
     }
-    error("Undeclared variable " + v.identifier());
+    error("Undeclared variable '%s'", v.identifier());
     return null;
   }
 }

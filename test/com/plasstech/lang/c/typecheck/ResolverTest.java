@@ -45,7 +45,9 @@ public class ResolverTest {
           a=4;
         }
         """;
-    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    SemanticAnalyzerException exception =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(exception.getMessage()).contains("Undeclared variable 'a'");
   }
 
   @Test
@@ -56,7 +58,9 @@ public class ResolverTest {
           int a; // ERROR
         }
         """;
-    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    SemanticAnalyzerException exception =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(exception.getMessage()).contains("Duplicate variable definition 'a'");
   }
 
   @Test
@@ -326,7 +330,8 @@ public class ResolverTest {
         int main(void) {
           return main();
         }""";
-    validate(input);
+    Program program = new Parser(new Scanner(input)).parse();
+    assertThat(validator.validate(program)).isEqualTo(program);
   }
 
   @Test
@@ -358,7 +363,8 @@ public class ResolverTest {
           decl();
           return 0;
         }""";
-    validate(input);
+    Program program = new Parser(new Scanner(input)).parse();
+    assertThat(validator.validate(program)).isEqualTo(program);
   }
 
   @Test
@@ -382,7 +388,8 @@ public class ResolverTest {
           decl();
           return 0;
         }""";
-    System.err.println(validate(input));
+    Program program = new Parser(new Scanner(input)).parse();
+    assertThat(validator.validate(program)).isEqualTo(program);
   }
 
   @Test
@@ -411,6 +418,103 @@ public class ResolverTest {
           int a = 3;
           return a;
         }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void fileScopeVar() {
+    String input = """
+        int a = 3;
+        """;
+    Program program = new Parser(new Scanner(input)).parse();
+    assertThat(validator.validate(program)).isEqualTo(program);
+  }
+
+  @Test
+  public void externAndLocalVarDecl() {
+    String input = """
+        int decl(int a) {
+          extern int b;
+          int b;
+          return a;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void localThenExternVarDecl() {
+    String input = """
+        int decl(int a) {
+          int x = 3;
+          extern int x;
+          return x;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void staticThenExternVarDecl() {
+    String input = """
+        int decl(int a) {
+          static int x = 3;
+          extern int x;
+          return x;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void staticAndLocalVarDecl() {
+    String input = """
+        int decl(int a) {
+          static int b;
+          int b;
+          return a;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void externFunDeclWithBody() {
+    String input = """
+        extern int decl(void) {
+          return 0;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void externInInternalScope() {
+    String input = """
+            int main(void) {
+               {
+                /* This declares a variable 'a'
+                 * with external linkage
+                 */
+                extern int a;
+               }
+               /* a is no longer in scope after the end of the block */
+               return a;
+            }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void undeclaredGlobalStatic() {
+    String input = """
+        int main(void) {
+            return x;
+        }
+
+        /* you must declare a file-scope variable before using it */
+        int x = 0;
         """;
     assertThrows(SemanticAnalyzerException.class, () -> validate(input));
   }
