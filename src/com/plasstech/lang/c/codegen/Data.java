@@ -5,6 +5,11 @@ package com.plasstech.lang.c.codegen;
  */
 public record Data(String identifier) implements Operand {
   @Override
+  public final String toString() {
+    return String.format("%s(%%rip)", identifier);
+  }
+
+  @Override
   public boolean inMemory() {
     return true;
   }

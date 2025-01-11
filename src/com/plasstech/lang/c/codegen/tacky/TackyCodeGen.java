@@ -29,6 +29,7 @@ import com.plasstech.lang.c.parser.InitExp;
 import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
+import com.plasstech.lang.c.parser.StorageClass;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
 import com.plasstech.lang.c.parser.VarDecl;
@@ -141,9 +142,12 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(VarDecl n) {
     TackyVar dst = new TackyVar(n.name());
-    if (n.init().isPresent()) {
-      TackyVal result = n.init().get().accept(this);
-      emit(new TackyCopy(result, dst));
+    if (!(n.hasStorageClass(StorageClass.STATIC)) || n.hasStorageClass(StorageClass.EXTERN)) {
+      // Do not generate code for var decls with storage class static or extern (page 234)
+      if (n.init().isPresent()) {
+        TackyVal result = n.init().get().accept(this);
+        emit(new TackyCopy(result, dst));
+      }
     }
     return dst;
   }

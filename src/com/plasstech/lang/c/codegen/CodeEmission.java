@@ -13,16 +13,12 @@ import com.plasstech.lang.c.typecheck.SymbolTable;
  * <p>
  * Output: List<String> Assembly language text
  */
-public class AsmCodeGen implements AsmNode.Visitor<Void> {
+public class CodeEmission implements AsmNode.Visitor<Void> {
+  private final SymbolTable symbolTable;
   private final List<String> emitted = new ArrayList<>();
-  private final SymbolTable symbols;
 
-  public AsmCodeGen() {
-    this(new SymbolTable());
-  }
-
-  public AsmCodeGen(SymbolTable symbolTable) {
-    this.symbols = symbolTable;
+  public CodeEmission(SymbolTable symbolTable) {
+    this.symbolTable = symbolTable;
   }
 
   public List<String> generate(AsmProgram program) {
@@ -52,12 +48,35 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(AsmFunction n) {
-    emit(".globl %s", n.name());
+    if (n.global()) {
+      emit(".globl %s", n.name());
+    }
+    emit(".text");
     emit0("%s:", n.name());
     emit("pushq %rbp");
     emit("movq %rsp, %rbp");
     for (Instruction i : n.instructions()) {
       i.accept(this);
+    }
+    return null;
+  }
+
+  @Override
+  public Void visit(AsmStaticVariable n) {
+    if (n.global()) {
+      emit(".globl %s", n.name());
+    }
+    if (n.initialValue() == 0) {
+      emit(".bss");
+    } else {
+      emit(".data");
+    }
+    emit(".align 4");
+    emit0("%s:", n.name());
+    if (n.initialValue() == 0) {
+      emit(".zero 4");
+    } else {
+      emit(".long %d", n.initialValue());
     }
     return null;
   }
@@ -176,7 +195,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Call n) {
-    Symbol s = symbols.get(n.identifier());
+    Symbol s = symbolTable.get(n.identifier());
     boolean external = false;
     if (s != null) {
       external = !s.attribute().defined();
@@ -185,8 +204,12 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     return null;
   }
 
-  @Override
-  public Void visit(AsmStaticVariable n) {
-    throw new IllegalStateException("Not done yet");
-  }
+  /*
+   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/libraries/
+   * internal_linkage_function
+   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/multiple_static_local
+   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/
+   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/static_recursive_call
+   * static_local_multiple_scopes
+   */
 }

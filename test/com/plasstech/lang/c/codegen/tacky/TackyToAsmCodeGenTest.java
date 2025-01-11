@@ -7,7 +7,7 @@ import java.util.List;
 import org.junit.Test;
 
 import com.google.common.base.Joiner;
-import com.plasstech.lang.c.codegen.AsmCodeGen;
+import com.plasstech.lang.c.codegen.CodeEmission;
 import com.plasstech.lang.c.codegen.AsmProgram;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
@@ -92,6 +92,6 @@ public class TackyToAsmCodeGenTest {
     TackyProgram tp = new TackyCodeGen(semanticAnalyzer.symbolTable()).generate(prog);
     asmProgramNode = new TackyToAsmCodeGen(semanticAnalyzer.symbolTable()).generate(tp);
     assertThat(asmProgramNode).isNotNull();
-    return new AsmCodeGen(semanticAnalyzer.symbolTable()).generate(asmProgramNode);
+    return new CodeEmission(semanticAnalyzer.symbolTable()).generate(asmProgramNode);
   }
 }
