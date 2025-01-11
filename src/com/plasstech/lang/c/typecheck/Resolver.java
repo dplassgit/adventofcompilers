@@ -43,10 +43,6 @@ import com.plasstech.lang.c.parser.While;
  */
 class Resolver implements Validator {
   private record ScopedIdentifier(String variable, boolean fromCurrentScope, boolean hasLinkage) {
-    ScopedIdentifier(String variable, boolean isFromCurrentScope) {
-      // Local variables have no linkage
-      this(variable, isFromCurrentScope, false);
-    }
   }
 
   @Override
@@ -87,7 +83,9 @@ class Resolver implements Validator {
   // Page 228
   private VarDecl resolveFileScopeVarDecl(VarDecl vd,
       Map<String, ScopedIdentifier> identifierMap) {
-    identifierMap.put(vd.identifier(), new ScopedIdentifier(vd.identifier(), true, true));
+    // File-level variables have linkage (? but what about storageclass?)
+    identifierMap.put(vd.name(),
+        new ScopedIdentifier(vd.name(), /* fromCurrentScope= */true, /* hasLinkage= */true));
     return vd;
   }
 
@@ -97,7 +95,9 @@ class Resolver implements Validator {
       error("Duplicate parameter '%s'", name);
     }
     String newName = UniqueId.makeUnique("resolved_param_" + name);
-    identifierMap.put(name, new ScopedIdentifier(newName, true));
+    // Locals don't have linkage
+    identifierMap.put(name,
+        new ScopedIdentifier(newName, /* fromCurrentScope= */true, /* hasLinkage= */false));
     return newName;
   }
 
@@ -171,7 +171,9 @@ class Resolver implements Validator {
     // Copy variable map with the from current block flag set to false. Page 139
     Map<String, ScopedIdentifier> copy = new HashMap<>();
     for (Map.Entry<String, ScopedIdentifier> entry : identifierMap.entrySet()) {
-      copy.put(entry.getKey(), new ScopedIdentifier(entry.getValue().variable, false));
+      ScopedIdentifier oldSi = entry.getValue();
+      copy.put(entry.getKey(),
+          new ScopedIdentifier(oldSi.variable, false, oldSi.hasLinkage));
     }
     return copy;
   }
@@ -184,16 +186,16 @@ class Resolver implements Validator {
   }
 
   private VarDecl resolveLocalVarDecl(VarDecl decl, Map<String, ScopedIdentifier> identifierMap) {
-    String name = decl.identifier();
+    String name = decl.name();
     ScopedIdentifier prevEntry = identifierMap.get(name);
     if (prevEntry != null) {
       if (prevEntry.fromCurrentScope()) {
         if (!(prevEntry.hasLinkage() && decl.hasStorageClass(StorageClass.EXTERN)))
-          error("Duplicate variable definition '%s'", decl.identifier());
+          error("Duplicate variable definition '%s'", decl.name());
       }
     }
     if (decl.hasStorageClass(StorageClass.EXTERN)) {
-      identifierMap.put(decl.identifier(), new ScopedIdentifier(decl.identifier(), true, true));
+      identifierMap.put(decl.name(), new ScopedIdentifier(decl.name(), true, true));
       return decl;
     }
     String unique = UniqueId.makeUnique("resolved_var_" + name);

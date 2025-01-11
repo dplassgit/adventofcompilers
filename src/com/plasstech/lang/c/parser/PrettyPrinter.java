@@ -126,7 +126,7 @@ public class PrettyPrinter extends GenericNodeVisitor<Void> {
     System.out.printf("%sDeclaration: (\n", spaces());
 
     indentation += 2;
-    System.out.printf("%svariable: %s\n", spaces(), n.identifier());
+    System.out.printf("%svariable: %s\n", spaces(), n.name());
     if (n.init().isPresent()) {
       System.out.printf("%sinit:\n", spaces());
       indentation += 2;

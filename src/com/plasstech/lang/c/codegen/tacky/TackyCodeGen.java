@@ -100,7 +100,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(VarDecl n) {
-    TackyVar dst = new TackyVar(n.identifier());
+    TackyVar dst = new TackyVar(n.name());
     if (n.init().isPresent()) {
       TackyVal result = n.init().get().accept(this);
       emit(new TackyCopy(result, dst));

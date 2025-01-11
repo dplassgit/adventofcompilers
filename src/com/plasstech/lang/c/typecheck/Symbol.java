@@ -7,8 +7,7 @@ import com.google.common.base.Joiner;
 import com.plasstech.lang.c.typecheck.Type.IntType;
 
 /**
- * Symbol for a symbol table. if "defined" is false, it means it was just declared. This applies for
- * functions mostly.
+ * Symbol for a symbol table.
  */
 public record Symbol(String name, Type type, Attribute attribute) {
   @Override

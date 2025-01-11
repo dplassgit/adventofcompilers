@@ -272,7 +272,7 @@ public class ParserTest {
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(VarDecl.class);
     VarDecl d = (VarDecl) (Declaration) statement;
-    assertThat(d.identifier()).isEqualTo("i");
+    assertThat(d.name()).isEqualTo("i");
   }
 
   @Test
@@ -287,7 +287,7 @@ public class ParserTest {
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(VarDecl.class);
     VarDecl d = (VarDecl) statement;
-    assertThat(d.identifier()).isEqualTo("i");
+    assertThat(d.name()).isEqualTo("i");
     assertThat(d.init()).hasValue(Constant.of(1));
   }
 
@@ -303,7 +303,7 @@ public class ParserTest {
     BlockItem statement = fn.body().get().items().get(0);
     assertThat(statement).isInstanceOf(VarDecl.class);
     VarDecl d = (VarDecl) statement;
-    assertThat(d.identifier()).isEqualTo("i");
+    assertThat(d.name()).isEqualTo("i");
     BinExp expected = new BinExp(new Var("a"), TokenType.PLUS, new Var("b"));
     assertThat(d.init()).hasValue(expected);
   }

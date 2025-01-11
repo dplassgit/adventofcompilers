@@ -227,7 +227,7 @@ public class Parser {
             error("Duplicated type 'int'");
             return null;
           }
-          type = Type.Int;
+          type = Type.INT;
           advance();
           break;
 

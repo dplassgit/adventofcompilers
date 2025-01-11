@@ -19,14 +19,21 @@ import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
+import com.plasstech.lang.c.parser.VarDecl;
 import com.plasstech.lang.c.parser.While;
 
 class LoopLabeler implements Validator {
 
   @Override
   public Program validate(Program input) {
-    return new Program(input.funDecls().stream()
-        .map(fd -> labelFunction(fd))
+    return new Program(input.declarations().stream()
+        .map(d -> {
+          return switch (d) {
+            case FunDecl fd -> labelFunction(fd);
+            case VarDecl vd -> vd;
+            default -> throw new IllegalArgumentException("Unexpected value: " + d);
+          };
+        })
         .toList());
   }
 

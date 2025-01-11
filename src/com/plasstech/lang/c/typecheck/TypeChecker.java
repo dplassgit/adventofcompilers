@@ -1,11 +1,14 @@
 package com.plasstech.lang.c.typecheck;
 
+import java.util.Optional;
+
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
+import com.plasstech.lang.c.parser.Constant;
 import com.plasstech.lang.c.parser.DoWhile;
 import com.plasstech.lang.c.parser.Exp;
 import com.plasstech.lang.c.parser.Expression;
@@ -79,14 +82,100 @@ public class TypeChecker implements Validator {
     if (hasBody) {
       // Defaults to ints as parameter types
       decl.params().forEach(
-          paramName -> symbols.put(paramName, new Symbol(paramName, Type.Int,
+          paramName -> symbols.put(paramName, new Symbol(paramName, Type.INT,
               Attribute.LOCAL_ATTR)));
       typeCheckBlock(decl.body().get());
     }
   }
 
   // Page 231
-  private void typeCheckFileScopeVarDecl(VarDecl vd) {}
+  private void typeCheckFileScopeVarDecl(VarDecl decl) {
+    InitialValue initialValue = InitialValue.NO_INITIALIZER;
+    // Figure out initial IV
+    Optional<Integer> initialInt = getDeclInitialValue(decl);
+    if (initialInt.isPresent()) {
+      initialValue = new Initializer(initialInt.get());
+    } else if (decl.init().isEmpty()) {
+      if (decl.hasStorageClass(StorageClass.EXTERN)) {
+        initialValue = InitialValue.NO_INITIALIZER;
+      } else {
+        initialValue = InitialValue.TENTATIVE;
+      }
+    } else {
+      error("Non-constant initializer for file scope variable '%s'", decl.name());
+    }
+
+    boolean global = !decl.hasStorageClass(StorageClass.STATIC);
+
+    Symbol oldDecl = symbols.get(decl.name());
+    if (oldDecl != null) {
+      if (!oldDecl.type().equals(Type.INT)) {
+        error("Function '%s' redeclared as variable", decl.name());
+      }
+      if (decl.hasStorageClass(StorageClass.EXTERN)) {
+        global = oldDecl.attribute().isGlobal();
+      } else if (oldDecl.attribute().isGlobal() != global) {
+        error("Conflicting variable linkage for '%s'", decl.name());
+      }
+
+      // Page 231. The book is messed up. It says:
+      // if oldDecl.attrs.init "is a constant" {
+      //    if initialValue "is a constant" {
+      //       error("Conflicting file scope variable definitions");
+      //    } else {
+      //      initialValue = oldDecl.attributes().init()
+      //    }
+      // } else if initialvalue "is not a constant" && oldDecl.attrs.init == Tentative {
+      //    initialValue = Tentative
+      // }
+
+      // BUT what does "is a constant" mean"? attrs.init only exists if attrs is a static attr
+      // and init can only be a constant if it's an Initializer
+      if (isConstantInit(oldDecl.attribute())) {
+        if (initialValue instanceof Initializer) {
+          error("Conflicting file scope variable definitions");
+        }
+        if (oldDecl.attribute() instanceof StaticAttr sa) {
+          initialValue = sa.init();
+        } else {
+          error("Should never get here.");
+        }
+      } else if (!isConstant(initialValue) && isTentative(oldDecl.attribute())) {
+        initialValue = InitialValue.TENTATIVE;
+      }
+    }
+    symbols.put(decl.name(),
+        new Symbol(decl.name(), Type.INT, new StaticAttr(initialValue, global)));
+  }
+
+  private static boolean isTentative(Attribute attribute) {
+    if (attribute instanceof StaticAttr sa) {
+      return sa.init().equals(InitialValue.TENTATIVE);
+    }
+    return false;
+  }
+
+  private static boolean isConstant(InitialValue initialValue) {
+    return initialValue instanceof Initializer;
+  }
+
+  private static boolean isConstantInit(Attribute attribute) {
+    if (attribute instanceof StaticAttr sa) {
+      return isConstant(sa.init());
+    }
+    return false;
+  }
+
+  private Optional<Integer> getDeclInitialValue(VarDecl decl) {
+    if (decl.init().isEmpty()) {
+      return Optional.empty();
+    }
+    Exp e = decl.init().get();
+    return switch (e) {
+      case Constant<?> ci -> Optional.of(ci.asInt());
+      default -> Optional.empty();
+    };
+  }
 
   private void typeCheckBlock(Block block) {
     block.items().forEach(this::typeCheckBlockItem);
@@ -94,9 +183,13 @@ public class TypeChecker implements Validator {
 
   private void typeCheckBlockItem(BlockItem item) {
     switch (item) {
-      case VarDecl d -> typeCheckVarDecl(d);
+      case VarDecl d -> typeCheckLocalVarDecl(d);
       case FunDecl d -> {
         typeCheckFunDecl(d);
+        if (d.hasStorageClass(StorageClass.STATIC)) {
+          error("Can't have static storage class on block-scope function declaration of '%s'",
+              d.name());
+        }
       }
       case Statement s -> typeCheckStatement(s);
       default -> {
@@ -136,7 +229,12 @@ public class TypeChecker implements Validator {
 
   private void typeCheckForInit(ForInit init) {
     switch (init) {
-      case InitDecl id -> typeCheckVarDecl(id.decl());
+      case InitDecl id -> {
+        typeCheckLocalVarDecl(id.decl());
+        if (id.decl().storageClass().isPresent()) {
+          error("Cannot include `extern` or `static` specifier in for loop header");
+        }
+      }
       case InitExp ie -> ie.exp().ifPresent(e -> typeCheckExp(e));
       default -> throw new IllegalArgumentException("Unexpected value: " + init);
     }
@@ -148,14 +246,37 @@ public class TypeChecker implements Validator {
     i.elseStmt().ifPresent(stmt -> typeCheckStatement(stmt));
   }
 
-  private void typeCheckVarDecl(VarDecl decl) {
-    if (decl.hasStorageClass(StorageClass.EXTERN) && decl.init().isPresent()) {
-      error("Cannot initialize `extern` variable '%s'", decl.identifier());
+  private void typeCheckLocalVarDecl(VarDecl decl) {
+    if (decl.hasStorageClass(StorageClass.EXTERN)) {
+      if (decl.init().isPresent()) {
+        error("Cannot initialize `extern` variable '%s'", decl.name());
+      }
+      Symbol oldDecl = symbols.get(decl.name());
+      if (oldDecl != null) {
+        if (!oldDecl.type().equals(Type.INT)) {
+          error("Function '%s' redeclared as variable", decl.name());
+        }
+      } else {
+        Attribute attrs = new StaticAttr(InitialValue.NO_INITIALIZER, true);
+        Symbol symbol = new Symbol(decl.name(), Type.INT, attrs);
+        symbols.put(decl.name(), symbol);
+      }
+    } else if (decl.hasStorageClass(StorageClass.STATIC)) {
+      InitialValue initialValue = InitialValue.NO_INITIALIZER;
+      Optional<Integer> maybeConst = getDeclInitialValue(decl);
+      if (maybeConst.isPresent()) {
+        initialValue = new Initializer(maybeConst.get());
+      } else if (decl.init().isEmpty()) {
+        initialValue = new Initializer(0); // ??!?
+      } else {
+        error("Non-constant iniitalizer on local static variable '%s'", decl.name());
+      }
+      symbols.put(decl.name(),
+          new Symbol(decl.name(), Type.INT, new StaticAttr(initialValue, false)));
+    } else {
+      symbols.put(decl.name(), new Symbol(decl.name(), Type.INT, Attribute.LOCAL_ATTR));
+      decl.init().ifPresent(exp -> typeCheckExp(exp));
     }
-    // TODO: create the right attribute
-    Attribute attr = Attribute.LOCAL_ATTR;
-    symbols.put(decl.identifier(), new Symbol(decl.identifier(), Type.Int, attr));
-    decl.init().ifPresent(exp -> typeCheckExp(exp));
   }
 
   private void typeCheckExp(Exp e) {
@@ -184,7 +305,7 @@ public class TypeChecker implements Validator {
     if (s == null) {
       return;
     }
-    if (!s.type().equals(Type.Int)) {
+    if (!s.type().equals(Type.INT)) {
       error("Function name " + v.identifier() + " used as variable");
     }
   }

@@ -10,5 +10,5 @@ public interface Type {
     }
   }
 
-  Type Int = new IntType();
+  Type INT = new IntType();
 }
