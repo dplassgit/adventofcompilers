@@ -30,6 +30,7 @@ import com.plasstech.lang.c.parser.NullStatement;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
 import com.plasstech.lang.c.parser.Statement;
+import com.plasstech.lang.c.parser.StorageClass;
 import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
 import com.plasstech.lang.c.parser.VarDecl;
@@ -72,7 +73,7 @@ class Resolver implements Validator {
     }
 
     // Unclear if this is what they intended...
-    if (decl.isExtern() && decl.body().isPresent()) {
+    if (decl.hasStorageClass(StorageClass.EXTERN) && decl.body().isPresent()) {
       error("Cannot define extern function '%s'", decl.name());
     }
     identifierMap.put(decl.name(), new ScopedIdentifier(decl.name(), true, true));
@@ -187,11 +188,11 @@ class Resolver implements Validator {
     ScopedIdentifier prevEntry = identifierMap.get(name);
     if (prevEntry != null) {
       if (prevEntry.fromCurrentScope()) {
-        if (!(prevEntry.hasLinkage() && decl.isExtern()))
+        if (!(prevEntry.hasLinkage() && decl.hasStorageClass(StorageClass.EXTERN)))
           error("Duplicate variable definition '%s'", decl.identifier());
       }
     }
-    if (decl.isExtern()) {
+    if (decl.hasStorageClass(StorageClass.EXTERN)) {
       identifierMap.put(decl.identifier(), new ScopedIdentifier(decl.identifier(), true, true));
       return decl;
     }

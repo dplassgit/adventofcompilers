@@ -177,7 +177,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     Symbol s = symbols.get(n.identifier());
     boolean external = false;
     if (s != null) {
-      external = !s.defined();
+      external = !s.attribute().defined();
     }
     emit("call %s%s", n.identifier(), external ? "@PLT" : "");
     return null;

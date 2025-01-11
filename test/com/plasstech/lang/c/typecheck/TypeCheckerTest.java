@@ -27,7 +27,7 @@ public class TypeCheckerTest {
     validate(input);
     Symbol s = symbols.get("main");
     assertThat(s).isNotNull();
-    assertThat(s.defined()).isTrue();
+    assertThat(s.attribute().defined()).isTrue();
   }
 
   @Test
@@ -92,7 +92,7 @@ public class TypeCheckerTest {
     validate(input);
     Symbol s = symbols.get("main");
     assertThat(s).isNotNull();
-    assertThat(s.defined()).isFalse();
+    assertThat(s.attribute().defined()).isFalse();
   }
 
   @Test
@@ -101,7 +101,7 @@ public class TypeCheckerTest {
     validate(input);
     Symbol s = symbols.get("main");
     assertThat(s).isNotNull();
-    assertThat(s.defined()).isFalse();
+    assertThat(s.attribute().defined()).isFalse();
     assertThat(s.type()).isInstanceOf(FunType.class);
     if (s.type() instanceof FunType f) {
       assertThat(f.paramCount()).isEqualTo(2);

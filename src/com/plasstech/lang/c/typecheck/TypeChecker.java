@@ -36,19 +36,23 @@ public class TypeChecker implements Validator {
 
   @Override
   public Program validate(Program program) {
-    program.funDecls().stream().forEach(this::typeCheckFunDecl);
-    program.varDecls().stream().forEach(this::typeCheckVarDecl);
+    program.declarations().stream().forEach(d -> {
+      switch (d) {
+        case FunDecl fd -> typeCheckFunDecl(fd);
+        case VarDecl vd -> typeCheckFileScopeVarDecl(vd);
+        default -> throw new IllegalArgumentException("Unexpected value: " + d);
+      }
+    });
     return program;
   }
 
-  // Page 180, listing 9-21.
+  // Page 180, 230
   private void typeCheckFunDecl(FunDecl decl) {
     boolean hasBody = decl.body().isPresent();
-    decl.storageClass().ifPresent(sc -> {
-      if (sc == StorageClass.EXTERN && hasBody) {
-        error("Cannot define `extern` function '%s'", decl.name());
-      }
-    });
+    if (decl.hasStorageClass(StorageClass.EXTERN) && hasBody) {
+      error("Cannot define `extern` function '%s'", decl.name());
+    }
+    boolean global = !decl.hasStorageClass(StorageClass.STATIC);
 
     Type funType = new FunType(decl.params().size());
     boolean alreadyDefined = false;
@@ -60,18 +64,29 @@ public class TypeChecker implements Validator {
             decl.name(), oldDecl.toString());
         return;
       }
-      alreadyDefined = oldDecl.defined();
+      alreadyDefined = oldDecl.attribute().defined();
       if (alreadyDefined && hasBody) {
         error("Function '%s' defined more than once", decl.name());
         return;
       }
+      global = oldDecl.attribute().isGlobal();
+      if (oldDecl.attribute().isGlobal() && decl.hasStorageClass(StorageClass.STATIC)) {
+        error("Static function declaration folllows non-static");
+      }
     }
-    symbols.put(decl.name(), new Symbol(decl.name(), funType, alreadyDefined || hasBody));
+    Attribute attr = new FunAttr(alreadyDefined || hasBody, global);
+    symbols.put(decl.name(), new Symbol(decl.name(), funType, attr));
     if (hasBody) {
-      decl.params().forEach(paramName -> symbols.put(paramName, new Symbol(paramName, Type.Int)));
+      // Defaults to ints as parameter types
+      decl.params().forEach(
+          paramName -> symbols.put(paramName, new Symbol(paramName, Type.Int,
+              Attribute.LOCAL_ATTR)));
       typeCheckBlock(decl.body().get());
     }
   }
+
+  // Page 231
+  private void typeCheckFileScopeVarDecl(VarDecl vd) {}
 
   private void typeCheckBlock(Block block) {
     block.items().forEach(this::typeCheckBlockItem);
@@ -134,12 +149,12 @@ public class TypeChecker implements Validator {
   }
 
   private void typeCheckVarDecl(VarDecl decl) {
-    decl.storageClass().ifPresent(sc -> {
-      if (sc == StorageClass.EXTERN && decl.init().isPresent()) {
-        error("Cannot initialize `extern` variable '%s'", decl.identifier());
-      }
-    });
-    symbols.put(decl.identifier(), new Symbol(decl.identifier(), Type.Int));
+    if (decl.hasStorageClass(StorageClass.EXTERN) && decl.init().isPresent()) {
+      error("Cannot initialize `extern` variable '%s'", decl.identifier());
+    }
+    // TODO: create the right attribute
+    Attribute attr = Attribute.LOCAL_ATTR;
+    symbols.put(decl.identifier(), new Symbol(decl.identifier(), Type.Int, attr));
     decl.init().ifPresent(exp -> typeCheckExp(exp));
   }
 

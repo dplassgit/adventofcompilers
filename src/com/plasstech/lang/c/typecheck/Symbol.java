@@ -10,11 +10,7 @@ import com.plasstech.lang.c.typecheck.Type.IntType;
  * Symbol for a symbol table. if "defined" is false, it means it was just declared. This applies for
  * functions mostly.
  */
-public record Symbol(String name, Type type, boolean defined) {
-  public Symbol(String name, Type type) {
-    this(name, type, true);
-  }
-
+public record Symbol(String name, Type type, Attribute attribute) {
   @Override
   public final String toString() {
     return switch (type) {
