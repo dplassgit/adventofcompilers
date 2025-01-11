@@ -241,7 +241,7 @@ public class TackyCodeGenTest {
   }
 
   @Test
-  public void generateStaticVarDecl() {
+  public void generateStaticVarDecls() {
     String input = """
         int foo = 1;
         static int bar;
@@ -249,6 +249,51 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp.topLevelDefinitions()).hasSize(2);
-    System.err.println(tp);
+  }
+
+  @Test
+  public void generateStaticVarDecl() {
+    String input = """
+        static int bar;
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.topLevelDefinitions()).hasSize(1);
+    TackyStaticVariable sv = (TackyStaticVariable) tp.topLevelDefinitions().get(0);
+    assertThat(sv.global()).isFalse();
+    assertThat(sv.initialValue()).isEqualTo(0);
+  }
+
+  @Test
+  public void generateNonStaticVarDecl() {
+    String input = """
+        int foo = 1;
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.topLevelDefinitions()).hasSize(1);
+    TackyStaticVariable t1 = (TackyStaticVariable) tp.topLevelDefinitions().get(0);
+    assertThat(t1.global()).isTrue();
+    assertThat(t1.initialValue()).isEqualTo(1);
+  }
+
+  @Test
+  public void generateGlobalFunction() {
+    String input = """
+        int foo(void) { return 0;}
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.topLevelDefinitions()).hasSize(1);
+    TackyFunctionDef tf = (TackyFunctionDef) tp.topLevelDefinitions().get(0);
+    assertThat(tf.global()).isTrue();
+  }
+
+  @Test
+  public void generateStaticFunction() {
+    String input = """
+        static int foo(void) { return 0;}
+        """;
+    TackyProgram tp = generate(input);
+    assertThat(tp.topLevelDefinitions()).hasSize(1);
+    TackyFunctionDef tf = (TackyFunctionDef) tp.topLevelDefinitions().get(0);
+    assertThat(tf.global()).isFalse();
   }
 }
