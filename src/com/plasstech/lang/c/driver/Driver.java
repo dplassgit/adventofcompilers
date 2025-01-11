@@ -25,24 +25,14 @@ import com.plasstech.lang.c.typecheck.SymbolTable;
 
 public class Driver {
 
-  private static SymbolTable symbolTable;
-
-  private static String readStdin() {
-    String input = "";
-    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    try {
-      String line = reader.readLine();
-      while (line != null) {
-        input += line + "\n";
-        line = reader.readLine();
-      }
-    } catch (IOException e) {
-      throw new RuntimeException("Could not read standard in", e);
-    }
-    return input;
+  public static void main(String args[]) {
+    new Driver().run(args);
   }
 
-  public static void main(String args[]) {
+  private Program program;
+  private final SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+
+  private void run(String args[]) {
     try {
       String input = readStdin();
       Scanner s = new Scanner(input);
@@ -80,37 +70,52 @@ public class Driver {
     }
   }
 
-  private static void tackyCodeGen(Scanner s) {
-    Program program = validate(s);
+  private static String readStdin() {
+    String input = "";
+    BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+    try {
+      String line = reader.readLine();
+      while (line != null) {
+        input += line + "\n";
+        line = reader.readLine();
+      }
+    } catch (IOException e) {
+      throw new RuntimeException("Could not read standard in", e);
+    }
+    return input;
+  }
+
+  private SymbolTable symbolTable() {
+    return semanticAnalyzer.symbolTable();
+  }
+
+  private void tackyCodeGen(Scanner s) {
+    validate(s);
     // This throws on error, doesn't really generate anything
-    new TackyCodeGen().generate(program);
+    new TackyCodeGen(symbolTable()).generate(program);
   }
 
-  private static List<String> generateAsm(Scanner s) {
-    Program prog = validate(s);
-    TackyProgram tp = new TackyCodeGen().generate(prog);
+  private List<String> generateAsm(Scanner s) {
+    validate(s);
+    TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
     AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
-    return new AsmCodeGen(symbolTable).generate(an);
+    return new AsmCodeGen(symbolTable()).generate(an);
   }
 
-  private static AsmProgramNode codeGen(Scanner s) {
-    Program program = validate(s);
+  private AsmProgramNode codeGen(Scanner s) {
+    validate(s);
     // This only does chapter 1. Not sure if it ever should be run after chapter 1...
     return new CodeGen().generate(program);
+  }
+
+  private void validate(Scanner s) {
+    Program initialProgram = parse(s);
+    this.program = semanticAnalyzer.validate(initialProgram);
   }
 
   private static void prettyPrint(Scanner s) {
     Program program = parse(s);
     new PrettyPrinter().prettyPrint(program);
-  }
-
-  private static Program validate(Scanner s) {
-    Parser p = new Parser(s);
-    Program program = p.parse();
-    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
-    Program output = semanticAnalyzer.validate(program);
-    symbolTable = semanticAnalyzer.symbolTable();
-    return output;
   }
 
   private static Program parse(Scanner s) {

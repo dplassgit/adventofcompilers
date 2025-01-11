@@ -41,7 +41,10 @@ import com.plasstech.lang.c.codegen.Stack;
 public class TackyToAsmCodeGen {
   public AsmProgramNode generate(TackyProgram program) {
     // Generate multiple functiondefs. Page 194
-    List<AsmFunctionNode> fns = program.functionDefs().stream().map(fn -> generate(fn)).toList();
+    List<AsmFunctionNode> fns = program.topLevelDefinitions().stream()
+        .filter(fn -> fn instanceof TackyFunctionDef)
+        .map(fn -> generate((TackyFunctionDef) fn)).toList();
+    // TODO: generate static variables too
     return new AsmProgramNode(fns);
   }
 

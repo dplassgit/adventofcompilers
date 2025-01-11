@@ -1,5 +1,6 @@
 package com.plasstech.lang.c.typecheck;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -12,5 +13,9 @@ public class SymbolTable {
 
   public void put(String name, Symbol s) {
     symbols.put(name, s);
+  }
+
+  public Collection<Symbol> values() {
+    return symbols.values();
   }
 }

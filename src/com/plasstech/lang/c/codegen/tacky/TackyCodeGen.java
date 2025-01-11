@@ -2,6 +2,7 @@ package com.plasstech.lang.c.codegen.tacky;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.common.Labelled;
@@ -32,6 +33,13 @@ import com.plasstech.lang.c.parser.UnaryExp;
 import com.plasstech.lang.c.parser.Var;
 import com.plasstech.lang.c.parser.VarDecl;
 import com.plasstech.lang.c.parser.While;
+import com.plasstech.lang.c.typecheck.Attribute;
+import com.plasstech.lang.c.typecheck.FunType;
+import com.plasstech.lang.c.typecheck.InitialValue;
+import com.plasstech.lang.c.typecheck.Initializer;
+import com.plasstech.lang.c.typecheck.StaticAttr;
+import com.plasstech.lang.c.typecheck.Symbol;
+import com.plasstech.lang.c.typecheck.SymbolTable;
 
 /**
  * Input: Program (Parse AST)
@@ -42,15 +50,40 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   private static final TackyVal ONE = new TackyIntConstant(1);
   private static final TackyVal ZERO = new TackyIntConstant(0);
 
+  private final SymbolTable symbolTable;
   private final List<TackyInstruction> instructions = new ArrayList<>();
 
+  public TackyCodeGen(SymbolTable symbolTable) {
+    this.symbolTable = symbolTable;
+  }
+
   public TackyProgram generate(Program program) {
-    List<TackyFunctionDef> functionDefs =
+    List<TackyTopLevel> functionDefs =
         program.funDecls().stream()
             // Only generate Tacky instructions for functions with bodies. Page 182.
             .filter(fd -> fd.body().isPresent())
-            .map(fd -> generate(fd)).toList();
-    return new TackyProgram(functionDefs);
+            .map(fd -> (TackyTopLevel) generate(fd)).collect(Collectors.toList());
+
+    List<TackyTopLevel> allTopLevel = new ArrayList<>(functionDefs);
+    allTopLevel.addAll(convertSymbolsToTacky());
+    return new TackyProgram(allTopLevel);
+  }
+
+  // Page 235
+  private List<TackyTopLevel> convertSymbolsToTacky() {
+    List<TackyTopLevel> defs = new ArrayList<>();
+    for (Symbol s : symbolTable.values()) {
+      Attribute attr = s.attribute();
+      if (attr instanceof StaticAttr sa) {
+        InitialValue iv = sa.init();
+        if (iv instanceof Initializer i) {
+          defs.add(new TackyStaticVariable(s.name(), sa.isGlobal(), i.value()));
+        } else if (iv.equals(InitialValue.TENTATIVE)) {
+          defs.add(new TackyStaticVariable(s.name(), sa.isGlobal(), 0));
+        }
+      }
+    }
+    return defs;
   }
 
   private void emit(TackyInstruction ti) {
@@ -63,7 +96,14 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     functionDef.body().get().accept(this);
     emit(new TackyReturn(ZERO));
     // Must make a copy, otherwise we will have our successors list of instructions too.
-    return new TackyFunctionDef(functionDef.name(), ImmutableList.copyOf(functionDef.params()),
+
+    // HOW to know if this should be global? "from the symbol table"
+    Symbol s = symbolTable.get(functionDef.name());
+    assert (s != null);
+    assert (s.type() instanceof FunType);
+    return new TackyFunctionDef(functionDef.name(),
+        s.attribute().isGlobal(),
+        ImmutableList.copyOf(functionDef.params()),
         ImmutableList.copyOf(instructions));
   }
 
