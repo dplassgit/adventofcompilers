@@ -90,7 +90,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     instructions.add(ti);
   }
 
-  private TackyFunctionDef generate(FunDecl functionDef) {
+  private TackyFunction generate(FunDecl functionDef) {
     instructions.clear(); // otherwise things will grow out of control
 
     functionDef.body().get().accept(this);
@@ -101,7 +101,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     Symbol s = symbolTable.get(functionDef.name());
     assert (s != null);
     assert (s.type() instanceof FunType);
-    return new TackyFunctionDef(functionDef.name(),
+    return new TackyFunction(functionDef.name(),
         s.attribute().isGlobal(),
         ImmutableList.copyOf(functionDef.params()),
         ImmutableList.copyOf(instructions));

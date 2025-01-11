@@ -7,6 +7,8 @@ import com.plasstech.lang.c.typecheck.Symbol;
 import com.plasstech.lang.c.typecheck.SymbolTable;
 
 /**
+ * This is the "code emission" step.
+ * <p>
  * Input: AsmProgramNode (ASM AST)
  * <p>
  * Output: List<String> Assembly language text
@@ -43,7 +45,7 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
   // Maybe these methods should return List<String>?
   @Override
   public Void visit(AsmProgramNode n) {
-    n.functions().forEach(fn -> fn.accept(this));
+    n.topLevelNodes().forEach(fn -> fn.accept(this));
     emit(".section .note.GNU-stack,\"\",@progbits");
     return null;
   }
@@ -181,5 +183,10 @@ public class AsmCodeGen implements AsmNode.Visitor<Void> {
     }
     emit("call %s%s", n.identifier(), external ? "@PLT" : "");
     return null;
+  }
+
+  @Override
+  public Void visit(AsmStaticVariable n) {
+    throw new IllegalStateException("Not done yet");
   }
 }

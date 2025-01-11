@@ -58,4 +58,9 @@ public record RegisterOperand(Register register) implements Operand {
   public String toString(int bytes) {
     return "%" + register.toString(bytes);
   }
+
+  @Override
+  public boolean inMemory() {
+    return false;
+  }
 }

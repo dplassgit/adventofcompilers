@@ -6,6 +6,8 @@ public interface AsmNode {
 
     R visit(AsmFunctionNode n);
 
+    R visit(AsmStaticVariable n);
+
     R visit(Mov n);
 
     R visit(AsmUnary n);

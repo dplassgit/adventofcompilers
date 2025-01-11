@@ -5,4 +5,9 @@ public record Stack(int offset) implements Operand {
   public final String toString() {
     return String.format("%d(%%rbp)", offset);
   }
+
+  @Override
+  public boolean inMemory() {
+    return true;
+  }
 }

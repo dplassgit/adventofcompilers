@@ -8,6 +8,7 @@ import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunctionNode;
 import com.plasstech.lang.c.codegen.AsmNode;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
+import com.plasstech.lang.c.codegen.AsmStaticVariable;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
@@ -24,14 +25,13 @@ import com.plasstech.lang.c.codegen.Push;
 import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
-import com.plasstech.lang.c.codegen.Stack;
 
 /** Fix up AsmNode instructions that we've created naively. */
 class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   @Override
   public List<Instruction> visit(Mov n) {
     // Can't mov stack to stack: use r10 as an intermediary. See page 42.
-    if (n.src() instanceof Stack && n.dest() instanceof Stack) {
+    if (n.src().inMemory() && n.dest().inMemory()) {
       return ImmutableList.of(
           new Mov(n.src(), RegisterOperand.R10),
           new Mov(RegisterOperand.R10, n.dest()));
@@ -45,7 +45,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       case PLUS:
       case MINUS:
         // Can't add or subtract stack and stack; use r10. See page 64
-        if (n.left() instanceof Stack && n.right() instanceof Stack) {
+        if (n.left().inMemory() && n.right().inMemory()) {
           return ImmutableList.of(
               new Mov(n.left(), RegisterOperand.R10),
               new AsmBinary(n.operator(), RegisterOperand.R10, n.right()));
@@ -54,7 +54,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
       case STAR:
         // Can't mul into stack; use r11. See page 65
-        if (n.right() instanceof Stack) {
+        if (n.right().inMemory()) {
           return ImmutableList.of(
               new Mov(n.right(), RegisterOperand.R11), // NOTYPO
               new AsmBinary(n.operator(), n.left(), RegisterOperand.R11),
@@ -110,9 +110,14 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   }
 
   @Override
+  public List<Instruction> visit(AsmStaticVariable n) {
+    return null;
+  }
+
+  @Override
   public List<Instruction> visit(Cmp n) {
     // Fix if both operands are in memory; use r10. See page 88
-    if (n.left() instanceof Stack && n.right() instanceof Stack) {
+    if (n.left().inMemory() && n.right().inMemory()) {
       return ImmutableList.of(
           new Mov(n.left(), RegisterOperand.R10),
           new Cmp(RegisterOperand.R10, n.right()));

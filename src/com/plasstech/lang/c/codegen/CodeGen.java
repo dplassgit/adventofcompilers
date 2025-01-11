@@ -10,21 +10,24 @@ import com.plasstech.lang.c.parser.FunDecl;
 import com.plasstech.lang.c.parser.GenericNodeVisitor;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.parser.Return;
+import com.plasstech.lang.c.parser.StorageClass;
 
 /**
- * Input: Program (AST). Output: AsmProgramNode (ASM AST)
+ * Input: Program (AST). Output: AsmProgramNode (ASM AST) Mostly obsolete, only used in chapter 1?
  */
 public class CodeGen {
   public AsmProgramNode generate(Program program) {
-    List<AsmFunctionNode> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
+    List<AsmTopLevelNode> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
     return new AsmProgramNode(fns);
   }
 
-  private AsmFunctionNode generate(FunDecl functionDef) {
+  private AsmTopLevelNode generate(FunDecl functionDef) {
+    // This is totally bogus
     BlockItem body = functionDef.body().get().items().get(0);
     StatementVisitor sv = new StatementVisitor();
     List<Instruction> instructions = body.accept(sv);
-    return new AsmFunctionNode(functionDef.name(), ImmutableList.copyOf(instructions));
+    return new AsmFunctionNode(functionDef.name(),
+        !functionDef.hasStorageClass(StorageClass.STATIC), ImmutableList.copyOf(instructions));
   }
 
   private static class StatementVisitor extends GenericNodeVisitor<List<Instruction>> {

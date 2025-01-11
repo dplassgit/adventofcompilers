@@ -9,4 +9,9 @@ public record Imm(String value) implements Operand {
   public String toString() {
     return String.format("$%s", value);
   }
+
+  @Override
+  public boolean inMemory() {
+    return false;
+  }
 }

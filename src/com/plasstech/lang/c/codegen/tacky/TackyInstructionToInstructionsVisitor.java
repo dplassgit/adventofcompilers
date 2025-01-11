@@ -28,7 +28,7 @@ import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.lex.TokenType;
 
 /**
- * This is the "assembly generation" step.
+ * This is part of the "assembly generation" step, used by the top-level TackyToAsmCodeGen.
  * <p>
  * Input: TackyInstruction
  * <p>

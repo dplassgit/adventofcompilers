@@ -65,7 +65,7 @@ public class TackyCodeGenTest {
 
   private List<TackyInstruction> getFirstTackyFunctionBody(TackyProgram tp) {
     TackyTopLevel first = tp.topLevelDefinitions().get(0);
-    if (first instanceof TackyFunctionDef fd) {
+    if (first instanceof TackyFunction fd) {
       return fd.body();
     }
     fail("Expected first top level entry to be a function");
@@ -208,7 +208,7 @@ public class TackyCodeGenTest {
     TackyProgram tp = generate(input);
     assertThat(tp.topLevelDefinitions()).hasSize(3);
     for (var tld : tp.topLevelDefinitions()) {
-      if (tld instanceof TackyFunctionDef fn) {
+      if (tld instanceof TackyFunction fn) {
         List<TackyInstruction> instructions = fn.body();
         assertThat(instructions.size()).isGreaterThan(0);
       } else {
@@ -230,7 +230,7 @@ public class TackyCodeGenTest {
     TackyProgram tp = generate(input);
     assertThat(tp.topLevelDefinitions()).hasSize(1);
     for (var tld : tp.topLevelDefinitions()) {
-      if (tld instanceof TackyFunctionDef fn) {
+      if (tld instanceof TackyFunction fn) {
         List<TackyInstruction> instructions = fn.body();
         assertThat(instructions.size()).isGreaterThan(0);
         System.err.println(Joiner.on("\n").join(instructions));
@@ -282,7 +282,7 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp.topLevelDefinitions()).hasSize(1);
-    TackyFunctionDef tf = (TackyFunctionDef) tp.topLevelDefinitions().get(0);
+    TackyFunction tf = (TackyFunction) tp.topLevelDefinitions().get(0);
     assertThat(tf.global()).isTrue();
   }
 
@@ -293,7 +293,7 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp.topLevelDefinitions()).hasSize(1);
-    TackyFunctionDef tf = (TackyFunctionDef) tp.topLevelDefinitions().get(0);
+    TackyFunction tf = (TackyFunction) tp.topLevelDefinitions().get(0);
     assertThat(tf.global()).isFalse();
   }
 }

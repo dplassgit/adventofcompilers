@@ -8,7 +8,6 @@ import java.util.List;
 import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
-import com.plasstech.lang.c.codegen.CodeGen;
 import com.plasstech.lang.c.codegen.tacky.TackyCodeGen;
 import com.plasstech.lang.c.codegen.tacky.TackyProgram;
 import com.plasstech.lang.c.codegen.tacky.TackyToAsmCodeGen;
@@ -91,21 +90,21 @@ public class Driver {
 
   private void tackyCodeGen(Scanner s) {
     validate(s);
-    // This throws on error, doesn't really generate anything
+    // This doesn't output anything.
     new TackyCodeGen(symbolTable()).generate(program);
   }
 
   private List<String> generateAsm(Scanner s) {
     validate(s);
     TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
-    AsmProgramNode an = new TackyToAsmCodeGen().generate(tp);
+    AsmProgramNode an = new TackyToAsmCodeGen(symbolTable()).generate(tp);
     return new AsmCodeGen(symbolTable()).generate(an);
   }
 
   private AsmProgramNode codeGen(Scanner s) {
     validate(s);
-    // This only does chapter 1. Not sure if it ever should be run after chapter 1...
-    return new CodeGen().generate(program);
+    TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
+    return new TackyToAsmCodeGen(symbolTable()).generate(tp);
   }
 
   private void validate(Scanner s) {

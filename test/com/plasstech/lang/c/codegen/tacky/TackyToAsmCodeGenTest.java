@@ -8,7 +8,6 @@ import org.junit.Test;
 
 import com.google.common.base.Joiner;
 import com.plasstech.lang.c.codegen.AsmCodeGen;
-import com.plasstech.lang.c.codegen.AsmFunctionNode;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
@@ -64,9 +63,7 @@ public class TackyToAsmCodeGenTest {
         }
         """;
     printAsm(generateAsm(input));
-    for (AsmFunctionNode fn : asmProgramNode.functions()) {
-      System.err.println(Joiner.on("\n").join(fn.instructions()));
-    }
+    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
   @Test
@@ -79,9 +76,7 @@ public class TackyToAsmCodeGenTest {
             }
             """;
     printAsm(generateAsm(input));
-    for (AsmFunctionNode fn : asmProgramNode.functions()) {
-      System.err.println(Joiner.on("\n").join(fn.instructions()));
-    }
+    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
   private static void printAsm(List<String> asm) {
@@ -95,7 +90,7 @@ public class TackyToAsmCodeGenTest {
     SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
     prog = semanticAnalyzer.validate(prog);
     TackyProgram tp = new TackyCodeGen(semanticAnalyzer.symbolTable()).generate(prog);
-    asmProgramNode = new TackyToAsmCodeGen().generate(tp);
+    asmProgramNode = new TackyToAsmCodeGen(semanticAnalyzer.symbolTable()).generate(tp);
     assertThat(asmProgramNode).isNotNull();
     return new AsmCodeGen(semanticAnalyzer.symbolTable()).generate(asmProgramNode);
   }

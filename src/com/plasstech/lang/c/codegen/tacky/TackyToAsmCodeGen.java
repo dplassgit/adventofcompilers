@@ -11,10 +11,13 @@ import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunctionNode;
 import com.plasstech.lang.c.codegen.AsmNode;
 import com.plasstech.lang.c.codegen.AsmProgramNode;
+import com.plasstech.lang.c.codegen.AsmStaticVariable;
+import com.plasstech.lang.c.codegen.AsmTopLevelNode;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
+import com.plasstech.lang.c.codegen.Data;
 import com.plasstech.lang.c.codegen.DeallocateStack;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
@@ -30,49 +33,65 @@ import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
+import com.plasstech.lang.c.typecheck.Attribute;
+import com.plasstech.lang.c.typecheck.StaticAttr;
+import com.plasstech.lang.c.typecheck.Symbol;
+import com.plasstech.lang.c.typecheck.SymbolTable;
 
 /**
- * This is the "code emission" step.
+ * This is part of the "assembly generation" step, including "replacing pseudoregisters" and "fixing
+ * up instructions".
  * <p>
  * Input: TackyProgram (Tacky AST)
  * <p>
  * Output: AsmProgramNode (ASM AST)
  */
 public class TackyToAsmCodeGen {
+  private final SymbolTable symbolTable;
+
+  public TackyToAsmCodeGen(SymbolTable symbolTable) {
+    this.symbolTable = symbolTable;
+  }
+
   public AsmProgramNode generate(TackyProgram program) {
     // Generate multiple functiondefs. Page 194
-    List<AsmFunctionNode> fns = program.topLevelDefinitions().stream()
-        .filter(fn -> fn instanceof TackyFunctionDef)
-        .map(fn -> generate((TackyFunctionDef) fn)).toList();
-    // TODO: generate static variables too
+    List<AsmTopLevelNode> fns = program.topLevelDefinitions().stream()
+        .map(tln -> {
+          return switch (tln) {
+            case TackyFunction fn -> generateFn(fn);
+            case TackyStaticVariable sv ->
+              new AsmStaticVariable(sv.identifier(), sv.global(), sv.initialValue());
+            default -> throw new IllegalArgumentException("Unexpected value: " + tln);
+          };
+        }).toList();
     return new AsmProgramNode(fns);
   }
 
   private int currentProcOffset = 0;
 
-  private AsmFunctionNode generate(TackyFunctionDef functionDef) {
+  private AsmTopLevelNode generateFn(TackyFunction function) {
     List<Instruction> instructions = new ArrayList<>();
     // Page 200, top
     // Copy input registers to param names.
-    for (int i = 0; i < Math.min(6, functionDef.params().size()); ++i) {
+    for (int i = 0; i < Math.min(6, function.params().size()); ++i) {
       instructions.add(new Mov(RegisterOperand.ARG_REGISTERS.get(i),
-          new Pseudo(functionDef.params().get(i))));
+          new Pseudo(function.params().get(i))));
     }
     // Copy stack to param names.
     int offset = 16;
-    for (int i = 6; i < functionDef.params().size(); ++i) {
+    for (int i = 6; i < function.params().size(); ++i) {
       // It *reads* from 16,24,32, etc.
-      instructions.add(new Mov(new Stack(offset), new Pseudo(functionDef.params().get(i))));
+      instructions.add(new Mov(new Stack(offset), new Pseudo(function.params().get(i))));
       offset += 8;
     }
     // 4 because they're ints now.
-    currentProcOffset = 4 * functionDef.params().size();
+    currentProcOffset = 4 * function.params().size();
 
     TackyInstruction.Visitor<List<Instruction>> visitor =
         new TackyInstructionToInstructionsVisitor();
     PseudoToStackInstructionVisitor siv = new PseudoToStackInstructionVisitor();
     FixupVisitor mfv = new FixupVisitor();
-    List<Instruction> opInstructions = functionDef.body().stream()
+    List<Instruction> opInstructions = function.body().stream()
         .map(ti -> ti.accept(visitor)) // each tackyinstruction becomes a list of asmnodes
         .flatMap(List::stream).toList();
 
@@ -92,7 +111,7 @@ public class TackyToAsmCodeGen {
       instructions.add(0, new AllocateStack(currentProcOffset));
     }
 
-    return new AsmFunctionNode(functionDef.identifier(), instructions);
+    return new AsmFunctionNode(function.identifier(), function.global(), instructions);
   }
 
   // Maps from pseudo register name to offset
@@ -113,7 +132,19 @@ public class TackyToAsmCodeGen {
       case Imm imm -> imm;
       case RegisterOperand ro -> ro;
       case Stack s -> s;
-      case Pseudo p -> new Stack(getOffset(p.identifier()));
+      case Pseudo p -> {
+        Symbol s = symbolTable.get(p.identifier());
+        if (s != null) {
+          // It's OK if s is null; it means it's a temp
+          Attribute attr = s.attribute();
+          if (attr instanceof StaticAttr) {
+            // Unclear if this is right. Page 237
+            yield new Data(p.identifier());
+          }
+        }
+        yield new Stack(getOffset(p.identifier()));
+      }
+      case Data d -> d;
       default -> throw new IllegalArgumentException("Unexpected value: " + input);
     };
   }
@@ -213,6 +244,11 @@ public class TackyToAsmCodeGen {
     @Override
     public Instruction visit(Call n) {
       return n;
+    }
+
+    @Override
+    public Instruction visit(AsmStaticVariable n) {
+      return null;
     }
   }
 }
