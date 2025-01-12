@@ -14,9 +14,11 @@ public enum TokenType {
   CONTINUE(true),
   EXTERN(true),
   STATIC(true),
+  LONG(true),
   IDENTIFIER,
   //  STRING_LITERAL,
   INT_LITERAL,
+  LONG_LITERAL,
   OBRACE("{"),
   CBRACE("}"),
   OPAREN("("),
@@ -56,7 +58,7 @@ public enum TokenType {
   }
 
   TokenType(boolean kw) {
-    this.text = null;
+    this.text = name();
     this.isConditional = false;
     this.isKeyword = kw;
   }

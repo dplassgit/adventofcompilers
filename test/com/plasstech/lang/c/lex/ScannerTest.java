@@ -51,7 +51,8 @@ public class ScannerTest {
 
   @Test
   public void nextTokenKeywords() {
-    Scanner s = new Scanner("int return void if else do while for break continue extern static");
+    Scanner s =
+        new Scanner("int return void if else do while for break continue extern static long");
     Token t = s.nextToken();
     assertThat(t.type()).isEqualTo(TokenType.INT);
     assertThat(t.isKeyword()).isTrue();
@@ -66,6 +67,7 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.CONTINUE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EXTERN);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.STATIC);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.LONG);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
@@ -100,10 +102,26 @@ public class ScannerTest {
   }
 
   @Test
+  public void nextTokenLongConstant() {
+    Scanner s = new Scanner("0L 1L 123123123123l");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.value()).isEqualTo("0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.value()).isEqualTo("1");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.value()).isEqualTo("123123123123");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
   public void nextTokenBadIntConstant() {
     assertThrows(ScannerException.class, () -> new Scanner("0a").nextToken());
     assertThrows(ScannerException.class, () -> new Scanner("23B").nextToken());
     assertThrows(ScannerException.class, () -> new Scanner("234.").nextToken());
+    assertThrows(ScannerException.class, () -> new Scanner("234L.").nextToken());
   }
 
   @Test

@@ -163,11 +163,20 @@ public class Scanner {
       sb.append(cc);
       advance();
     }
+    boolean longConstant = false;
+    if (cc == 'L' || cc == 'l') {
+      // long constant
+      advance();
+      longConstant = true;
+    }
     if (Character.isLetter(cc) || cc == '.') {
       return error("Illegal character " + cc);
     }
 
     String value = sb.toString();
+    if (longConstant) {
+      return new Token(TokenType.LONG_LITERAL, value);
+    }
     return new Token(TokenType.INT_LITERAL, value);
   }
 
