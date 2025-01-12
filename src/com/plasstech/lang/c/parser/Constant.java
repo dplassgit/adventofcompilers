@@ -7,6 +7,10 @@ public record Constant<T>(T value) implements Exp {
     return new Constant<Integer>(value);
   }
 
+  public static Constant<Long> of(long value) {
+    return new Constant<Long>(value);
+  }
+
   @Override
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);

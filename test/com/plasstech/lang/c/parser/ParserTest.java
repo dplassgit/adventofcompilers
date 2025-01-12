@@ -1212,4 +1212,15 @@ public class ParserTest {
         """;
     assertThrows(ParserException.class, () -> parse(input));
   }
+
+  @Test
+  public void chapter11ImplicitLong() {
+    String input = """
+        long a = 123123123123;
+        """;
+    Program prog = parse(input);
+    VarDecl vd = (VarDecl) prog.declarations().get(0);
+    Exp rhs = vd.init().get();
+    assertThat(rhs).isEqualTo(Constant.of(123123123123L));
+  }
 }

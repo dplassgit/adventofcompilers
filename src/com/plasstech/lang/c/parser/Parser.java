@@ -421,15 +421,20 @@ public class Parser {
       case INT_LITERAL -> {
         String valueAsString = token.value();
         expect(TokenType.INT_LITERAL);
-        int value = Integer.parseInt(valueAsString);
-        yield new Constant<Integer>(value);
+        long valueAsLong = Long.parseLong(valueAsString);
+        if (valueAsLong <= 2147483647) {
+          int value = Integer.parseInt(valueAsString);
+          yield Constant.of(value);
+        } else {
+          yield Constant.of(valueAsLong);
+        }
       }
 
       case LONG_LITERAL -> {
         String valueAsString = token.value();
         expect(TokenType.LONG_LITERAL);
         long value = Long.parseLong(valueAsString);
-        yield new Constant<Long>(value);
+        yield Constant.of(value);
       }
 
       case MINUS, TWIDDLE, BANG -> {
