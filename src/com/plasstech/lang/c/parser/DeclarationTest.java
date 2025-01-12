@@ -11,7 +11,8 @@ import com.google.common.collect.ImmutableList;
 public class DeclarationTest {
   @Test
   public void hasStorageClassNone() {
-    Declaration d = new FunDecl("name", ImmutableList.of(), Optional.empty(), Optional.empty());
+    Declaration d =
+        new FunDecl("name", null, ImmutableList.of(), Optional.empty(), Optional.empty());
     assertThat(d.hasStorageClass(StorageClass.STATIC)).isFalse();
     assertThat(d.hasStorageClass(StorageClass.EXTERN)).isFalse();
   }
@@ -19,7 +20,8 @@ public class DeclarationTest {
   @Test
   public void hasStorageClassExtern() {
     Declaration d =
-        new FunDecl("name", ImmutableList.of(), Optional.empty(), Optional.of(StorageClass.EXTERN));
+        new FunDecl("name", null, ImmutableList.of(), Optional.empty(),
+            Optional.of(StorageClass.EXTERN));
     assertThat(d.hasStorageClass(StorageClass.STATIC)).isFalse();
     assertThat(d.hasStorageClass(StorageClass.EXTERN)).isTrue();
   }

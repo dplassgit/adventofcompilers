@@ -19,6 +19,11 @@ public record Constant<T>(T value) implements Exp {
 
   public int asInt() {
     Preconditions.checkState(value instanceof Integer);
-    return (Integer) value;
+    return (int) value;
+  }
+
+  public long asLong() {
+    Preconditions.checkState(value instanceof Long);
+    return (long) value;
   }
 }

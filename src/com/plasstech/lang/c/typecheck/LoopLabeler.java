@@ -37,10 +37,10 @@ class LoopLabeler implements Validator {
         .toList());
   }
 
-  private Declaration labelFunction(FunDecl functionDef) {
-    Optional<Block> labeledBlock = functionDef.body().map(block -> labelBlock(block));
-    return new FunDecl(functionDef.name(), functionDef.params(), labeledBlock,
-        functionDef.storageClass());
+  private Declaration labelFunction(FunDecl funDecl) {
+    Optional<Block> labeledBlock = funDecl.body().map(block -> labelBlock(block));
+    return new FunDecl(funDecl.name(), funDecl.funType(), funDecl.params(),
+        labeledBlock, funDecl.storageClass());
   }
 
   private Block labelBlock(Block block) {

@@ -2,17 +2,20 @@ package com.plasstech.lang.c.parser;
 
 import java.util.Optional;
 
+import com.plasstech.lang.c.typecheck.Type;
+
 /**
  * Declaration of a variable, with an optional initial expression.
  */
-public record VarDecl(String name, Optional<Exp> init, Optional<StorageClass> storageClass)
+public record VarDecl(String name, Type type, Optional<Exp> init,
+    Optional<StorageClass> storageClass)
     implements Declaration {
-  public VarDecl(String name, Optional<StorageClass> storageClass) {
-    this(name, Optional.empty(), storageClass);
+  public VarDecl(String name, Type type, Optional<StorageClass> storageClass) {
+    this(name, type, Optional.empty(), storageClass);
   }
 
-  public VarDecl(String name, Exp init, Optional<StorageClass> storageClass) {
-    this(name, Optional.of(init), storageClass);
+  public VarDecl(String name, Type type, Exp init, Optional<StorageClass> storageClass) {
+    this(name, type, Optional.of(init), storageClass);
   }
 
   @Override

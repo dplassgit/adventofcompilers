@@ -9,6 +9,7 @@ import org.junit.Test;
 
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.TokenType;
+import com.plasstech.lang.c.typecheck.Type;
 
 public class ParserTest {
 
@@ -49,9 +50,7 @@ public class ParserTest {
   @Test
   public void missingCloseBrace() {
     String input = "int main(void) { return 1;";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -63,17 +62,13 @@ public class ParserTest {
   @Test
   public void missingSemi() {
     String input = "int main(void) { return 1}";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
   public void chapter1ExtraCode() {
     String input = "int main(void) { return 1;} int";
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -139,9 +134,7 @@ public class ParserTest {
           return -;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -151,9 +144,7 @@ public class ParserTest {
           return (-);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -163,9 +154,7 @@ public class ParserTest {
           return --3;
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -753,9 +742,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -789,9 +776,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -802,9 +787,7 @@ public class ParserTest {
           }
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -838,9 +821,7 @@ public class ParserTest {
     String input = """
         int main2(int a, ) {}
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -848,10 +829,7 @@ public class ParserTest {
     String input = """
         int main2(int) {}
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -859,10 +837,7 @@ public class ParserTest {
     String input = """
         int main2(void, void) {}
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -891,9 +866,7 @@ public class ParserTest {
         int main2(void) {
           return main2(
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -903,10 +876,7 @@ public class ParserTest {
           return main2(a+b b*a+3);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -916,10 +886,7 @@ public class ParserTest {
           return main2(a,b,);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -929,10 +896,7 @@ public class ParserTest {
           return main2(a,b);
         }
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -940,9 +904,7 @@ public class ParserTest {
     String input = """
         main2(a+b b*a+3);
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -1047,9 +1009,7 @@ public class ParserTest {
     String input = """
         int int a;
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -1057,9 +1017,7 @@ public class ParserTest {
     String input = """
         int extern static a;
         """;
-    Scanner s = new Scanner(input);
-    Parser p = new Parser(s);
-    assertThrows(ParserException.class, () -> p.parse());
+    assertThrows(ParserException.class, () -> parse(input));
   }
 
   @Test
@@ -1115,5 +1073,143 @@ public class ParserTest {
         }
         """;
     parse(input);
+  }
+
+  @Test
+  public void chapter11IntLocal() {
+    String input = """
+        int main(void) {
+           int a;
+        }
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    if (statement instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.INT);
+    }
+  }
+
+  @Test
+  public void chapter11LongLocal() {
+    String input = """
+        int main(void) {
+           long a;
+        }
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    if (statement instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void chapter11LongIntLocal() {
+    String input = """
+        int main(void) {
+           long int a;
+        }
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    if (statement instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void chapter11IntLongLocal() {
+    String input = """
+        int main(void) {
+           long int a;
+        }
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    BlockItem statement = fn.body().get().items().get(0);
+    assertThat(statement).isInstanceOf(VarDecl.class);
+    if (statement instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void chapter11IntIntBad() {
+    String input = """
+        int main(void) {
+           int int a;
+        }
+        """;
+    assertThrows(ParserException.class, () -> parse(input));
+  }
+
+  @Test
+  public void chapter11LongIntFn() {
+    String input = """
+        long int main(void) { return 0L;}
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.funType().ret()).isEqualTo(Type.LONG);
+  }
+
+  @Test
+  public void chapter11IntFn() {
+    String input = """
+        int main(void) { return 0L;}
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.funType().ret()).isEqualTo(Type.INT);
+  }
+
+  @Test
+  public void chapter11LongIntParam() {
+    String input = """
+        int main(long int p) { return 0;}
+        """;
+    Program prog = parse(input);
+    FunDecl fn = prog.funDecls().get(0);
+    assertThat(fn.funType().params().get(0)).isEqualTo(Type.LONG);
+  }
+
+  @Test
+  public void chapter11Cast() {
+    String input = """
+        long int main(int p) {
+          long p2 = (long) p;
+          return p2;
+        }
+        """;
+    Program prog = parse(input);
+    System.err.println(prog);
+  }
+
+  @Test
+  public void chapter11BadCastToConstant() {
+    String input = """
+        long main(int p) {
+          long p2 = (3) p;
+          return p2;
+        }
+        """;
+    assertThrows(ParserException.class, () -> parse(input));
+  }
+
+  @Test
+  public void chapter11BadCast() {
+    String input = """
+        long main(int p) {
+          long p2 = (p) p;
+          return p2;
+        }
+        """;
+    assertThrows(ParserException.class, () -> parse(input));
   }
 }

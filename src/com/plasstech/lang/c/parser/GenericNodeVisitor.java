@@ -115,4 +115,9 @@ public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   public R visit(FunctionCall n) {
     throw new UnsupportedOperationException();
   }
+
+  @Override
+  public R visit(Cast n) {
+    throw new UnsupportedOperationException();
+  }
 }

@@ -77,7 +77,7 @@ class Resolver implements Validator {
     List<String> newParams =
         decl.params().stream().map(param -> resolveParam(param, innerMap)).toList();
     Optional<Block> newBlock = decl.body().map(oldBlock -> resolveBlock(oldBlock, innerMap));
-    return new FunDecl(decl.name(), newParams, newBlock, decl.storageClass());
+    return new FunDecl(decl.name(), decl.funType(), newParams, newBlock, decl.storageClass());
   }
 
   // Page 228
@@ -201,7 +201,7 @@ class Resolver implements Validator {
     String unique = UniqueId.makeUnique("resolved_var_" + name);
     identifierMap.put(name, new ScopedIdentifier(unique, true, false));
     Optional<Exp> init = decl.init().map(exp -> resolveExp(exp, identifierMap));
-    return new VarDecl(unique, init, decl.storageClass());
+    return new VarDecl(unique, decl.type(), init, decl.storageClass());
   }
 
   private Exp resolveExp(Exp e, Map<String, ScopedIdentifier> identifierMap) {

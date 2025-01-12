@@ -47,6 +47,8 @@ public interface AstNode {
     R visit(InitExp n);
 
     R visit(FunctionCall n);
+
+    R visit(Cast n);
   }
 
   /** Visitor pattern. */

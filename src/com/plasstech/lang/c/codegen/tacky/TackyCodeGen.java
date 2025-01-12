@@ -14,6 +14,7 @@ import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Break;
+import com.plasstech.lang.c.parser.Cast;
 import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
@@ -360,5 +361,10 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     TackyVar result = newTemp("fun_call_" + n.identifier());
     emit(new TackyFunCall(n.identifier(), args, result));
     return result;
+  }
+
+  @Override
+  public TackyVal visit(Cast n) {
+    throw new UnsupportedOperationException();
   }
 }

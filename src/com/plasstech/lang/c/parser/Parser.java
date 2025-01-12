@@ -1,9 +1,11 @@
 package com.plasstech.lang.c.parser;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -11,6 +13,7 @@ import com.google.common.collect.ImmutableSet;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
+import com.plasstech.lang.c.typecheck.FunType;
 import com.plasstech.lang.c.typecheck.Type;
 
 public class Parser {
@@ -35,25 +38,36 @@ public class Parser {
     return new Program(fileLevelDecls);
   }
 
-  private List<String> parseParamList() {
+  private List<Type> parseTypeSpecifiers() {
+    List<Type> types = new ArrayList<>();
+    while (token.type() != TokenType.EOF
+        && (token.type() == TokenType.INT || token.type() == TokenType.LONG)) {
+      types.add(Type.fromTokenType(token.type()));
+      advance();
+    }
+
+    return types;
+  }
+
+  private List<Param> parseParamList() {
     return switch (token.type()) {
       case VOID -> {
         expect(TokenType.VOID);
         yield ImmutableList.of();
       }
-      case INT -> {
-        // parse list of params. Eventually this will be a list of pairs, shrug.
-        List<String> params = new ArrayList<>();
+      case INT, LONG -> {
+        List<Param> params = new ArrayList<>();
         while (token.type() != TokenType.EOF) {
           if (params.size() > 0) {
             expect(TokenType.COMMA);
           }
-          expect(TokenType.INT);
+          // Ugh, gotta do the stupid long int thing here too
+          Type type = extractType(parseTypeSpecifiers());
           if (token.type() != TokenType.IDENTIFIER) {
             error("Expected identifier, saw " + token);
             break;
           }
-          params.add(token.value());
+          params.add(new Param(token.value(), type));
           expect(TokenType.IDENTIFIER);
           if (token.type() != TokenType.COMMA) {
             break;
@@ -83,6 +97,7 @@ public class Parser {
 
   private static final ImmutableSet<TokenType> DECL_STARTERS = ImmutableSet.of(
       TokenType.INT,
+      TokenType.LONG,
       // TokenType.VOID, unclear if this is allowed as of Chapter 10
       TokenType.EXTERN,
       TokenType.STATIC);
@@ -202,6 +217,9 @@ public class Parser {
     return new Expression(exp);
   }
 
+  private record Param(String name, Type type) {
+  }
+
   private record TypeAndStorageClass(Type type, Optional<StorageClass> storageClass) {
     TypeAndStorageClass(Type type, StorageClass storageClass) {
       this(type, Optional.of(storageClass));
@@ -214,8 +232,10 @@ public class Parser {
 
   private TypeAndStorageClass parseTypeAndStorageClass() {
     List<StorageClass> storageClasses = new ArrayList<>();
-    Type type = null;
-    while (token.type() == TokenType.EOF || token.type() == TokenType.INT
+    List<Type> types = new ArrayList<>();
+    while (token.type() == TokenType.EOF
+        // I kind of hate this
+        || token.type() == TokenType.INT || token.type() == TokenType.LONG
         || token.type() == TokenType.EXTERN || token.type() == TokenType.STATIC) {
       switch (token.type()) {
         case EOF:
@@ -223,12 +243,8 @@ public class Parser {
           return null;
 
         case INT:
-          if (type != null) {
-            error("Duplicated type 'int'");
-            return null;
-          }
-          type = Type.INT;
-          advance();
+        case LONG:
+          types.addAll(parseTypeSpecifiers());
           break;
 
         case STATIC:
@@ -238,21 +254,48 @@ public class Parser {
           break;
 
         default:
+          // needs to break out of the while loop?
           break;
       }
     }
-    if (type == null) {
-      error("Missing type specifier");
-      return null;
-    }
     if (storageClasses.size() > 1) {
-      error(String.format("Too many storage classes: %s", storageClasses.toString()));
+      error("Too many storage classes: %s", storageClasses.toString());
       return null;
     }
+    Type type = extractType(types);
     if (storageClasses.size() == 0) {
       return new TypeAndStorageClass(type);
     }
     return new TypeAndStorageClass(type, storageClasses.get(0));
+  }
+
+  private static final Set<Type> INT_LONG = ImmutableSet.of(Type.INT, Type.LONG);
+
+  private Type extractType(List<Type> types) {
+    if (types.size() == 0) {
+      error("Must specify a type");
+      return null;
+    }
+    // ing, or long (or short)
+    if (types.size() == 1) {
+      return types.get(0);
+    }
+    if (types.size() > 2) {
+      error("Too many types specified (maximum 2). Saw: %s", types.toString());
+      return null;
+    }
+    Set<Type> uniqueTypes = new HashSet<>(types);
+    // Can only be int, long or long, int
+    if (uniqueTypes.size() == 1) {
+      error("Can only specify long int or int long; saw %s", types.toString());
+      return null;
+    }
+    if (uniqueTypes.equals(INT_LONG)) {
+      // it's int long or long int
+      return Type.LONG;
+    }
+    error("Should never get here; types list was %s", types.toString());
+    return null;
   }
 
   // int var [ = exp] ;
@@ -265,18 +308,18 @@ public class Parser {
     expect(TokenType.IDENTIFIER);
     if (token.type() == TokenType.SEMICOLON) {
       advance();
-      return new VarDecl(varName, tasc.storageClass);
+      return new VarDecl(varName, tasc.type, tasc.storageClass);
     }
     if (token.type() == TokenType.EQ) {
       //  Declaration with initialization
       expect(TokenType.EQ);
       Exp init = parseExp();
       expect(TokenType.SEMICOLON);
-      return new VarDecl(varName, init, tasc.storageClass);
+      return new VarDecl(varName, tasc.type, init, tasc.storageClass);
     }
 
     expect(TokenType.OPAREN);
-    List<String> params = parseParamList();
+    List<Param> params = parseParamList();
     expect(TokenType.CPAREN);
     Optional<Block> block = Optional.empty();
     if (token.type() != TokenType.SEMICOLON) {
@@ -285,7 +328,9 @@ public class Parser {
       expect(TokenType.SEMICOLON);
     }
 
-    return new FunDecl(varName, params, block, tasc.storageClass);
+    FunType funType = new FunType(tasc.type, params.stream().map(Param::type).toList());
+    return new FunDecl(varName, funType, params.stream().map(Param::name).toList(), block,
+        tasc.storageClass);
   }
 
   // return exp;
@@ -354,17 +399,37 @@ public class Parser {
 
       case OPAREN -> {
         advance();
-        Exp innerExp = parseExp();
-        expect(TokenType.CPAREN);
-        yield innerExp;
+        Exp result = switch (token.type()) {
+          case INT, LONG -> {
+            // cast
+            Type type = extractType(parseTypeSpecifiers());
+            expect(TokenType.CPAREN);
+            Exp innerExp = parseExp();
+            yield new Cast(type, innerExp);
+          }
+
+          default -> {
+            // Just parentheses
+            Exp innerExp = parseExp();
+            expect(TokenType.CPAREN);
+            yield innerExp;
+          }
+        };
+        yield result;
       }
 
       case INT_LITERAL -> {
-        // Int literal
         String valueAsString = token.value();
         expect(TokenType.INT_LITERAL);
         int value = Integer.parseInt(valueAsString);
         yield new Constant<Integer>(value);
+      }
+
+      case LONG_LITERAL -> {
+        String valueAsString = token.value();
+        expect(TokenType.LONG_LITERAL);
+        long value = Long.parseLong(valueAsString);
+        yield new Constant<Long>(value);
       }
 
       case MINUS, TWIDDLE, BANG -> {
@@ -375,7 +440,7 @@ public class Parser {
       }
 
       default -> {
-        error("Unexpected token " + tt.name() + "; expected INT, unary operator or identifier");
+        error("Unexpected token %s; expected type, unary operator or identifier", tt.text);
         yield null;
       }
     };
@@ -401,8 +466,8 @@ public class Parser {
     return new FunctionCall(variableName, args);
   }
 
-  private static void error(String message) {
-    throw new ParserException(message);
+  private void error(String message, Object... params) {
+    throw new ParserException(String.format(message, params));
   }
 
   private void expect(TokenType tt) {
@@ -410,6 +475,6 @@ public class Parser {
       advance();
       return;
     }
-    error(String.format("Expected `%s`, saw `%s`", tt.toString(), token.type().toString()));
+    error("Expected `%s`, saw `%s`", tt.toString(), token.type().toString());
   }
 }
