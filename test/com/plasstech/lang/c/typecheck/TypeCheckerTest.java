@@ -7,8 +7,10 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.plasstech.lang.c.lex.Scanner;
+import com.plasstech.lang.c.parser.FunDecl;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
+import com.plasstech.lang.c.parser.Return;
 
 public class TypeCheckerTest {
   private SymbolTable symbols = new SymbolTable();
@@ -233,5 +235,29 @@ public class TypeCheckerTest {
         }
         """;
     assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void goodCast() {
+    String input = """
+        int main(void) {
+          int a = 3;
+          return (long) a;
+        }
+        """;
+    validate(input);
+  }
+
+  @Test
+  public void notLongBecomesInt() {
+    String input = """
+        int main(long a) {
+          return !a;
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.body().get().items().get(0);
+    assertThat(r.exp().type()).isEqualTo(Type.INT);
   }
 }

@@ -365,6 +365,6 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(Cast n) {
-    throw new UnsupportedOperationException();
+    return n.exp().accept(this);
   }
 }

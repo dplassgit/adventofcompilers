@@ -50,18 +50,16 @@ class Resolver implements Validator {
   public Program validate(Program input) {
     Map<String, ScopedIdentifier> identifierMap = new HashMap<>();
     List<Declaration> declarations =
-        input.declarations().stream().map(d -> {
-          return (Declaration) switch (d) {
-            case FunDecl fd -> resolveFunDecl(fd, identifierMap);
-            case VarDecl vd -> resolveFileScopeVarDecl(vd, identifierMap);
-            default -> throw new IllegalArgumentException("Unexpected value: " + d);
-          };
+        input.declarations().stream().map(d -> switch (d) {
+          case FunDecl fd -> resolveFunDecl(fd, identifierMap);
+          case VarDecl vd -> resolveFileScopeVarDecl(vd, identifierMap);
+          default -> throw new IllegalArgumentException("Unexpected value: " + d);
         }).toList();
     return new Program(declarations);
   }
 
   // Page 176
-  private FunDecl resolveFunDecl(FunDecl decl, Map<String, ScopedIdentifier> identifierMap) {
+  private Declaration resolveFunDecl(FunDecl decl, Map<String, ScopedIdentifier> identifierMap) {
     ScopedIdentifier scopedIdentifier = identifierMap.get(decl.name());
     if (scopedIdentifier != null) {
       if (scopedIdentifier.fromCurrentScope() && !scopedIdentifier.hasLinkage()) {
@@ -82,7 +80,7 @@ class Resolver implements Validator {
   }
 
   // Page 228
-  private VarDecl resolveFileScopeVarDecl(VarDecl vd,
+  private Declaration resolveFileScopeVarDecl(VarDecl vd,
       Map<String, ScopedIdentifier> identifierMap) {
     // File-level variables have linkage (? but what about storageclass?)
     identifierMap.put(vd.name(),

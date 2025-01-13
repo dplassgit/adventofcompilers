@@ -10,8 +10,8 @@ public record Symbol(String name, Type type, Attribute attribute) {
   public final String toString() {
     return switch (type) {
       case FunType ft ->
-        String.format("%s %s(%s)", ft.returnType().toString(), name(),
-            Joiner.on(", ").join(ft.paramTypes().stream().map(Type::toString).toList()));
+        String.format("%s %s(%s)", ft.returnType().name(), name(),
+            Joiner.on(", ").join(ft.paramTypes().stream().map(Type::name).toList()));
 
       default -> String.format("%s %s", type.name(), name);
     };
