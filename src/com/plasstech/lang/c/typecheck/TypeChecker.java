@@ -173,6 +173,7 @@ public class TypeChecker implements Validator {
     }
     Exp e = decl.init().get();
     return switch (e) {
+      // TODO: This must change for longs
       case Constant<?> ci -> Optional.of(ci.asInt());
       default -> Optional.empty();
     };

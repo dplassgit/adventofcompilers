@@ -1,3 +1,7 @@
 package com.plasstech.lang.c.parser;
 
-public interface Exp extends AstNode {}
+import com.plasstech.lang.c.typecheck.Type;
+
+public interface Exp extends AstNode {
+  Type type();
+}

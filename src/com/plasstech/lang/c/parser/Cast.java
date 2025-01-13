@@ -7,4 +7,9 @@ public record Cast(Type targetType, Exp exp) implements Exp {
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public Type type() {
+    return targetType();
+  }
 }

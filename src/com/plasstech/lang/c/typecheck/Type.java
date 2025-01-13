@@ -10,6 +10,7 @@ public interface Type {
 
   Type INT = new SimpleType("int");
   Type LONG = new SimpleType("long");
+  Type NO_TYPE = new SimpleType("no type");
 
   static Type fromTokenType(TokenType type) {
     return switch (type) {

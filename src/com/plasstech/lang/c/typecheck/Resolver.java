@@ -11,6 +11,7 @@ import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
 import com.plasstech.lang.c.parser.BlockItem;
 import com.plasstech.lang.c.parser.Break;
+import com.plasstech.lang.c.parser.Cast;
 import com.plasstech.lang.c.parser.Compound;
 import com.plasstech.lang.c.parser.Conditional;
 import com.plasstech.lang.c.parser.Constant;
@@ -218,6 +219,8 @@ class Resolver implements Validator {
             resolveExp(c.left(), identifierMap),
             resolveExp(c.right(), identifierMap));
       case FunctionCall fc -> resolveFunctionCall(fc, identifierMap);
+      // Page 251
+      case Cast c -> new Cast(c.targetType(), resolveExp(c.exp(), identifierMap));
       default -> throw new IllegalArgumentException("Unexpected value: " + e);
     };
   }

@@ -1,14 +1,15 @@
 package com.plasstech.lang.c.parser;
 
 import com.google.common.base.Preconditions;
+import com.plasstech.lang.c.typecheck.Type;
 
-public record Constant<T>(T value) implements Exp {
+public record Constant<T>(T value, Type type) implements Exp {
   public static Constant<Integer> of(int value) {
-    return new Constant<Integer>(value);
+    return new Constant<Integer>(value, Type.INT);
   }
 
   public static Constant<Long> of(long value) {
-    return new Constant<Long>(value);
+    return new Constant<Long>(value, Type.LONG);
   }
 
   @Override
