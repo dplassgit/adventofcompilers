@@ -1156,7 +1156,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
-    assertThat(fn.funType().ret()).isEqualTo(Type.LONG);
+    assertThat(fn.funType().returnType()).isEqualTo(Type.LONG);
   }
 
   @Test
@@ -1166,7 +1166,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
-    assertThat(fn.funType().ret()).isEqualTo(Type.INT);
+    assertThat(fn.funType().returnType()).isEqualTo(Type.INT);
   }
 
   @Test
@@ -1176,7 +1176,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     FunDecl fn = prog.funDecls().get(0);
-    assertThat(fn.funType().params().get(0)).isEqualTo(Type.LONG);
+    assertThat(fn.funType().paramTypes().get(0)).isEqualTo(Type.LONG);
   }
 
   @Test

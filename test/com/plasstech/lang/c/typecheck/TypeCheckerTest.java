@@ -105,7 +105,7 @@ public class TypeCheckerTest {
     assertThat(s.attribute().defined()).isFalse();
     assertThat(s.type()).isInstanceOf(FunType.class);
     if (s.type() instanceof FunType f) {
-      assertThat(f.params().size()).isEqualTo(2);
+      assertThat(f.paramTypes().size()).isEqualTo(2);
     }
   }
 

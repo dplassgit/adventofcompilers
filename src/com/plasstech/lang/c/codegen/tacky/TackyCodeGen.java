@@ -105,7 +105,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     assert (s.type() instanceof FunType);
     return new TackyFunction(functionDef.name(),
         s.attribute().isGlobal(),
-        ImmutableList.copyOf(functionDef.params()),
+        ImmutableList.copyOf(functionDef.paramNames()),
         ImmutableList.copyOf(instructions));
   }
 

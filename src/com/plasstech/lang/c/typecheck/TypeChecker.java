@@ -58,7 +58,7 @@ public class TypeChecker implements Validator {
     boolean global = !decl.hasStorageClass(StorageClass.STATIC);
 
     // ??? is this right?
-    Type funType = decl.funType();// new FunType(decl.params().size());
+    FunType funType = decl.funType();// new FunType(decl.params().size());
     boolean alreadyDefined = false;
     Symbol oldDecl = symbols.get(decl.name());
     if (oldDecl != null) {
@@ -82,7 +82,8 @@ public class TypeChecker implements Validator {
     symbols.put(decl.name(), new Symbol(decl.name(), funType, attr));
     if (hasBody) {
       // Defaults to ints as parameter types
-      decl.params().forEach(
+      // TODO: NO! We have the parameter type in the FunType
+      decl.paramNames().forEach(
           paramName -> symbols.put(paramName, new Symbol(paramName, Type.INT,
               Attribute.LOCAL_ATTR)));
       typeCheckBlock(decl.body().get());
@@ -324,9 +325,9 @@ public class TypeChecker implements Validator {
       return;
     }
     FunType ft = (FunType) s.type();
-    if (ft.params().size() != fc.args().size()) {
+    if (ft.paramTypes().size() != fc.args().size()) {
       error("Function '%s' called with wrong number of params; saw %d, expected %d",
-          fc.identifier(), fc.args().size(), ft.params().size());
+          fc.identifier(), fc.args().size(), ft.paramTypes().size());
       return;
     }
     fc.args().stream().forEach(arg -> typeCheckExp(arg));

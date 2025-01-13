@@ -76,7 +76,7 @@ class Resolver implements Validator {
     identifierMap.put(decl.name(), new ScopedIdentifier(decl.name(), true, true));
     Map<String, ScopedIdentifier> innerMap = copy(identifierMap);
     List<String> newParams =
-        decl.params().stream().map(param -> resolveParam(param, innerMap)).toList();
+        decl.paramNames().stream().map(param -> resolveParam(param, innerMap)).toList();
     Optional<Block> newBlock = decl.body().map(oldBlock -> resolveBlock(oldBlock, innerMap));
     return new FunDecl(decl.name(), decl.funType(), newParams, newBlock, decl.storageClass());
   }
