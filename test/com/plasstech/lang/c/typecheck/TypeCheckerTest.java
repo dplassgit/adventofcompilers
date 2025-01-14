@@ -260,4 +260,42 @@ public class TypeCheckerTest {
     Return r = (Return) fd.body().get().items().get(0);
     assertThat(r.exp().type()).isEqualTo(Type.INT);
   }
+
+  @Test
+  public void binLongAndIntBecomesLong() {
+    String input = """
+        long main(long a) {
+          int b = 1;
+          return b + a;
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.body().get().items().get(1);
+    assertThat(r.exp().type()).isEqualTo(Type.LONG);
+  }
+
+  @Test
+  public void returnTypeRules() {
+    String input = """
+        int main(long a) {
+          int b = 1;
+          return b + a;
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.body().get().items().get(1);
+    assertThat(r.exp().type()).isEqualTo(Type.INT);
+  }
+
+  @Test
+  public void redeclareFileScopeVarAsDifferentType() {
+    String input = """
+        extern int foo;
+        extern long foo;
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
 }

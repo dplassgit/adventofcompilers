@@ -6,6 +6,10 @@ public interface Type {
   String name();
 
   record SimpleType(String name) implements Type {
+    @Override
+    public final String toString() {
+      return name;
+    }
   }
 
   Type INT = new SimpleType("int");

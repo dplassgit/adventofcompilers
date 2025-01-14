@@ -1,8 +1,12 @@
 package com.plasstech.lang.c.typecheck;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import com.google.common.collect.ImmutableSet;
+import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.parser.Assignment;
 import com.plasstech.lang.c.parser.BinExp;
 import com.plasstech.lang.c.parser.Block;
@@ -37,6 +41,10 @@ public class TypeChecker implements Validator {
   private final SymbolTable symbols;
   private Type currentRetType;
 
+  private static final Set<TokenType> ARITHMETIC_OPS =
+      ImmutableSet.of(TokenType.PLUS, TokenType.MINUS,
+          TokenType.STAR, TokenType.SLASH, TokenType.PERCENT);
+
   public TypeChecker(SymbolTable symbols) {
     this.symbols = symbols;
   }
@@ -64,7 +72,7 @@ public class TypeChecker implements Validator {
     boolean alreadyDefined = false;
     Symbol oldDecl = symbols.get(decl.name());
     if (oldDecl != null) {
-      // already defined somehow
+      // already defined 
       if (!oldDecl.type().equals(funType)) {
         error("Incompatible function declarations; '%s' already defined as '%s'",
             decl.name(), oldDecl.toString());
@@ -103,9 +111,14 @@ public class TypeChecker implements Validator {
   private Declaration typeCheckFileScopeVarDecl(VarDecl decl) {
     InitialValue initialValue = InitialValue.NO_INITIALIZER;
     // Figure out initial IV
+    // TODO: FIXME
+    // make sure it's the right type!
     Optional<Integer> initialInt = getDeclInitialValue(decl);
+    Optional<Exp> newInit = decl.init();
     if (initialInt.isPresent()) {
+      // TODO: FIXME make sure it's the right type
       initialValue = new Initializer(initialInt.get());
+      // TODO: FIXME: make a new newInit
     } else if (decl.init().isEmpty()) {
       if (decl.hasStorageClass(StorageClass.EXTERN)) {
         initialValue = InitialValue.NO_INITIALIZER;
@@ -121,7 +134,7 @@ public class TypeChecker implements Validator {
 
     Symbol oldDecl = symbols.get(decl.name());
     if (oldDecl != null) {
-      if (!oldDecl.type().equals(Type.INT)) {
+      if (oldDecl.type() instanceof FunType) {
         error("Function '%s' redeclared as variable", decl.name());
         return null;
       }
@@ -129,6 +142,15 @@ public class TypeChecker implements Validator {
         global = oldDecl.attribute().isGlobal();
       } else if (oldDecl.attribute().isGlobal() != global) {
         error("Conflicting variable linkage for '%s'", decl.name());
+        return null;
+      }
+
+      // Page 257 it says something vague about making sure the old
+      // and new decl are the same but unclear if there is something else we have to do,
+      // or do it elsewhere too
+      if (!oldDecl.type().equals(decl.type())) {
+        error("Conflicting types for '%s': originally declared as %s, then as %s",
+            decl.name(), oldDecl.type(), decl.type());
         return null;
       }
 
@@ -159,9 +181,9 @@ public class TypeChecker implements Validator {
       }
     }
     symbols.put(decl.name(),
-        new Symbol(decl.name(), Type.INT, new StaticAttr(initialValue, global)));
-    // TODO: FIX ME
-    return decl;
+        new Symbol(decl.name(), decl.type(), new StaticAttr(initialValue, global)));
+    // TODO: FIXME
+    return new VarDecl(decl.name(), decl.type(), newInit, decl.storageClass());
   }
 
   private static boolean isTentative(Attribute attribute) {
@@ -232,6 +254,7 @@ public class TypeChecker implements Validator {
     return new Return(convertTo(typeCheckExp(r.exp()), currentRetType));
   }
 
+  // Page 254
   private static Type getCommonType(Type t1, Type t2) {
     if (t1.equals(t2)) {
       return t1;
@@ -239,6 +262,7 @@ public class TypeChecker implements Validator {
     return Type.LONG;
   }
 
+  // Page 255
   private static Exp convertTo(Exp exp, Type desiredType) {
     if (exp.type().equals(desiredType)) {
       return exp;
@@ -253,45 +277,45 @@ public class TypeChecker implements Validator {
   }
 
   private While typeCheckWhile(While w) {
-    typeCheckExp(w.condition());
-    typeCheckStatement(w.body());
-    // TODO: fixme
-    return w;
+    Exp newCond = typeCheckExp(w.condition());
+    Statement newStatement = typeCheckStatement(w.body());
+    return new While(w.label(), newCond, newStatement);
   }
 
   private For typeCheckFor(For f) {
-    typeCheckForInit(f.init());
-    f.condition().ifPresent(c -> typeCheckExp(c));
-    f.post().ifPresent(p -> typeCheckExp(p));
-    typeCheckStatement(f.body());
-    // TODO: fixme
-    return f;
+    ForInit newForInit = typeCheckForInit(f.init());
+    Optional<Exp> newCondition = f.condition().map(c -> typeCheckExp(c));
+    Optional<Exp> newPost = f.post().map(p -> typeCheckExp(p));
+    Statement newStatement = typeCheckStatement(f.body());
+    return new For(f.label(), newForInit, newCondition, newPost, newStatement);
   }
 
   private ForInit typeCheckForInit(ForInit init) {
     switch (init) {
       case InitDecl id -> {
-        typeCheckLocalVarDecl(id.decl());
+        VarDecl varDecl = typeCheckLocalVarDecl(id.decl());
         if (id.decl().storageClass().isPresent()) {
           error("Cannot include `extern` or `static` specifier in for loop header");
         }
+        return new InitDecl(varDecl);
       }
-      case InitExp ie -> ie.exp().ifPresent(e -> typeCheckExp(e));
+      case InitExp ie -> {
+        Optional<Exp> newExp = ie.exp().map(e -> typeCheckExp(e));
+        return new InitExp(newExp);
+      }
       default -> throw new IllegalArgumentException("Unexpected value: " + init);
     }
-    // TODO: fixme
-    return init;
   }
 
   private If typeCheckIf(If i) {
-    typeCheckExp(i.condition());
-    typeCheckStatement(i.then());
-    i.elseStmt().ifPresent(stmt -> typeCheckStatement(stmt));
-    // TODO: fixme
-    return i;
+    Exp newCondition = typeCheckExp(i.condition());
+    Statement newThen = typeCheckStatement(i.then());
+    Optional<Statement> newElse = i.elseStmt().map(stmt -> typeCheckStatement(stmt));
+    return new If(newCondition, newThen, newElse);
   }
 
   private VarDecl typeCheckLocalVarDecl(VarDecl decl) {
+    Optional<Exp> newInit = decl.init();
     if (decl.hasStorageClass(StorageClass.EXTERN)) {
       if (decl.init().isPresent()) {
         error("Cannot initialize `extern` variable '%s'", decl.name());
@@ -299,13 +323,13 @@ public class TypeChecker implements Validator {
       }
       Symbol oldDecl = symbols.get(decl.name());
       if (oldDecl != null) {
-        if (!oldDecl.type().equals(Type.INT)) {
+        if (oldDecl.type() instanceof FunType) {
           error("Function '%s' redeclared as variable", decl.name());
           return null;
         }
       } else {
         Attribute attrs = new StaticAttr(InitialValue.NO_INITIALIZER, true);
-        Symbol symbol = new Symbol(decl.name(), Type.INT, attrs);
+        Symbol symbol = new Symbol(decl.name(), decl.type(), attrs);
         symbols.put(decl.name(), symbol);
       }
     } else if (decl.hasStorageClass(StorageClass.STATIC)) {
@@ -314,19 +338,20 @@ public class TypeChecker implements Validator {
       if (maybeConst.isPresent()) {
         initialValue = new Initializer(maybeConst.get());
       } else if (decl.init().isEmpty()) {
+        // TODO: FIXME
+        // need to make it the appropriate type
         initialValue = new Initializer(0); // ??!?
       } else {
         error("Non-constant iniitalizer on local static variable '%s'", decl.name());
         return null;
       }
       symbols.put(decl.name(),
-          new Symbol(decl.name(), Type.INT, new StaticAttr(initialValue, false)));
+          new Symbol(decl.name(), decl.type(), new StaticAttr(initialValue, false)));
     } else {
-      symbols.put(decl.name(), new Symbol(decl.name(), Type.INT, Attribute.LOCAL_ATTR));
-      decl.init().ifPresent(exp -> typeCheckExp(exp));
+      symbols.put(decl.name(), new Symbol(decl.name(), decl.type(), Attribute.LOCAL_ATTR));
+      newInit = decl.init().map(exp -> convertTo(typeCheckExp(exp), decl.type()));
     }
-    // TODO: FIX ME
-    return decl;
+    return new VarDecl(decl.name(), decl.type(), newInit, decl.storageClass());
   }
 
   private Exp typeCheckExp(Exp e) {
@@ -351,19 +376,31 @@ public class TypeChecker implements Validator {
   }
 
   private Exp typeCheckConditional(Conditional c) {
-    typeCheckExp(c.condition());
-    typeCheckExp(c.left());
-    typeCheckExp(c.right());
-    // TODO: fixme
-    return c;
+    Exp newCondition = typeCheckExp(c.condition());
+    Exp newLeft = typeCheckExp(c.left());
+    Exp newRight = typeCheckExp(c.right());
+    Type commonType = getCommonType(newLeft.type(), newRight.type());
+
+    return new Conditional(newCondition, convertTo(newLeft, commonType),
+        convertTo(newRight, commonType), commonType);
   }
 
   // Page 255
   private Exp typeCheckBinExp(BinExp e) {
-    typeCheckExp(e.left());
-    typeCheckExp(e.right());
-    // TODO: fixme
-    return e;
+    Exp typedE1 = typeCheckExp(e.left());
+    Exp typedE2 = typeCheckExp(e.right());
+    if (e.operator() == TokenType.DOUBLE_AMP || e.operator() == TokenType.DOUBLE_BAR) {
+      // 'and' and 'or' always become "int"
+      return new BinExp(typedE1, e.operator(), typedE2, Type.INT);
+    }
+    Type commonType = getCommonType(typedE1.type(), typedE2.type());
+    Exp convertedE1 = convertTo(typedE1, commonType);
+    Exp convertedE2 = convertTo(typedE2, commonType);
+    if (!ARITHMETIC_OPS.contains(e.operator())) {
+      // Comparisons become INT; arithmetic (+ - / * %) retain the common type. 
+      commonType = Type.INT;
+    }
+    return new BinExp(convertedE1, e.operator(), convertedE2, commonType);
   }
 
   // page 181, 253
@@ -387,26 +424,30 @@ public class TypeChecker implements Validator {
       error("Undeclared function '%s'", fc.identifier());
       return null;
     }
-    if (!(s.type() instanceof FunType)) {
-      error("Variable '%s' called as function", fc.identifier());
-      return null;
+    Type sType = s.type();
+    if (sType instanceof FunType ft) {
+      if (ft.paramTypes().size() != fc.args().size()) {
+        error("Function '%s' called with wrong number of params; saw %d, expected %d",
+            fc.identifier(), fc.args().size(), ft.paramTypes().size());
+        return null;
+      }
+      List<Exp> newArgs = new ArrayList<>();
+      // For each arg, convert to param type
+      for (int i = 0; i < fc.args().size(); ++i) {
+        Exp newArg = typeCheckExp(fc.args().get(i));
+        Exp convertedArg = convertTo(newArg, ft.paramTypes().get(i));
+        newArgs.add(convertedArg);
+      }
+      return new FunctionCall(fc.identifier(), newArgs, ft.returnType());
     }
-    FunType ft = (FunType) s.type();
-    if (ft.paramTypes().size() != fc.args().size()) {
-      error("Function '%s' called with wrong number of params; saw %d, expected %d",
-          fc.identifier(), fc.args().size(), ft.paramTypes().size());
-      return null;
-    }
-    fc.args().stream().forEach(arg -> typeCheckExp(arg));
-    // TODO: FIXME
-    return fc;
+    error("Variable '%s' called as function", fc.identifier());
+    return null;
   }
 
   // Page 256
   private Assignment typeCheckAssignment(Assignment a) {
-    typeCheckExp(a.lvalue());
-    typeCheckExp(a.rvalue());
-    // TODO: FIXME
-    return a;
+    Exp newLvalue = typeCheckExp(a.lvalue());
+    Exp convertedRValue = convertTo(typeCheckExp(a.rvalue()), newLvalue.type());
+    return new Assignment(newLvalue, convertedRValue, newLvalue.type());
   }
 }
