@@ -113,9 +113,8 @@ public class TypeChecker implements Validator {
     // Figure out initial IV
     Optional<Long> initialLong = getDeclInitialValue(decl);
     Optional<Exp> newInit = decl.init();
-    // TODO FIXME: convert the init to the LHS type. 
+
     // Something about subtracting 2^32 if it's an int but won't fit in an int?
-    // TODO: FIXME: make a new newInit???
     if (initialLong.isPresent()) {
       initialValue = Initializer.of(initialLong.get(), decl.type());
     } else if (decl.init().isEmpty()) {
@@ -133,23 +132,19 @@ public class TypeChecker implements Validator {
 
     Symbol oldDecl = symbols.get(decl.name());
     if (oldDecl != null) {
-      if (oldDecl.type() instanceof FunType) {
-        error("Function '%s' redeclared as variable", decl.name());
-        return null;
-      }
-      if (decl.hasStorageClass(StorageClass.EXTERN)) {
-        global = oldDecl.attribute().isGlobal();
-      } else if (oldDecl.attribute().isGlobal() != global) {
-        error("Conflicting variable linkage for '%s'", decl.name());
-        return null;
-      }
-
       // Page 257 it says something vague about making sure the old
       // and new decl are the same but unclear if there is something else we have to do,
       // or do it elsewhere too
       if (!oldDecl.type().equals(decl.type())) {
         error("Conflicting types for '%s': originally declared as %s, then as %s",
             decl.name(), oldDecl.type(), decl.type());
+        return null;
+      }
+
+      if (decl.hasStorageClass(StorageClass.EXTERN)) {
+        global = oldDecl.attribute().isGlobal();
+      } else if (oldDecl.attribute().isGlobal() != global) {
+        error("Conflicting variable linkage for '%s'", decl.name());
         return null;
       }
 
@@ -300,7 +295,7 @@ public class TypeChecker implements Validator {
       case InitDecl id -> {
         VarDecl varDecl = typeCheckLocalVarDecl(id.decl());
         if (id.decl().storageClass().isPresent()) {
-          error("Cannot include `extern` or `static` specifier in for loop header");
+          error("Cannot include `extern` or `static` specifier in `for` loop header");
         }
         return new InitDecl(varDecl);
       }
@@ -328,17 +323,11 @@ public class TypeChecker implements Validator {
       }
       Symbol oldDecl = symbols.get(decl.name());
       if (oldDecl != null) {
-        if (oldDecl.type() instanceof FunType) {
-          error("Function '%s' redeclared as variable", decl.name());
-          return null;
-        }
-
         if (!oldDecl.type().equals(decl.type())) {
           error("Conflicting types for '%s': originally declared as %s, then as %s",
               decl.name(), oldDecl.type(), decl.type());
           return null;
         }
-
       } else {
         Attribute attrs = new StaticAttr(InitialValue.NO_INITIALIZER, true);
         Symbol symbol = new Symbol(decl.name(), decl.type(), attrs);

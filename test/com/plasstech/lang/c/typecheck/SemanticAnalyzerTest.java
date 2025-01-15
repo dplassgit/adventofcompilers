@@ -211,7 +211,7 @@ public class SemanticAnalyzerTest {
         """;
     SemanticAnalyzerException e =
         assertThrows(SemanticAnalyzerException.class, () -> validate(input));
-    assertThat(e.getMessage()).contains("Function 'foo' redeclared as variable");
+    assertThat(e.getMessage()).contains("Conflicting types for 'foo'");
   }
 
   @Test

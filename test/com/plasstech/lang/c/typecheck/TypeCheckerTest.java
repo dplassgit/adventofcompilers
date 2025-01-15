@@ -215,7 +215,7 @@ public class TypeCheckerTest {
         """;
     SemanticAnalyzerException e =
         assertThrows(SemanticAnalyzerException.class, () -> validate(input));
-    assertThat(e.getMessage()).contains("Function 'foo' redeclared as variable");
+    assertThat(e.getMessage()).contains("Conflicting types for 'foo'");
   }
 
   @Test
@@ -234,7 +234,9 @@ public class TypeCheckerTest {
             return 0;
         }
         """;
-    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("'foo' already defined");
   }
 
   @Test
@@ -295,7 +297,9 @@ public class TypeCheckerTest {
         extern int foo;
         extern long foo;
         """;
-    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Conflicting types for 'foo'");
   }
 
   @Test
@@ -313,16 +317,18 @@ public class TypeCheckerTest {
   @Test
   public void conflictingVariableTypesExtern() {
     String input = """
-        long a;
+        long foo;
 
         int main(void) {
-            /* This declaration refers to the global 'a' variable,
+            /* This declaration refers to the global 'foo' variable,
              * but has a conflicting type.
              */
-            extern int a;
+            extern int foo;
             return 0;
         }
         """;
-    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Conflicting types for 'foo'");
   }
 }
