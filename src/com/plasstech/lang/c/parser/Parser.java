@@ -404,7 +404,7 @@ public class Parser {
             // cast
             Type type = extractType(parseTypeSpecifiers());
             expect(TokenType.CPAREN);
-            Exp innerExp = parseExp();
+            Exp innerExp = parseFactor();
             yield new Cast(type, innerExp);
           }
 

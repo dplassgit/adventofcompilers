@@ -298,4 +298,31 @@ public class TypeCheckerTest {
     assertThrows(SemanticAnalyzerException.class, () -> validate(input));
   }
 
+  @Test
+  public void castIsNotAnLvalue() {
+    String input = """
+        int main(void) {
+            int i = 0;
+            i = (long) i = 10;
+            return 0;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
+
+  @Test
+  public void conflictingVariableTypesExtern() {
+    String input = """
+        long a;
+
+        int main(void) {
+            /* This declaration refers to the global 'a' variable,
+             * but has a conflicting type.
+             */
+            extern int a;
+            return 0;
+        }
+        """;
+    assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+  }
 }

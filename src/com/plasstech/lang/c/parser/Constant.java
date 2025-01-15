@@ -23,12 +23,11 @@ public record Constant<T>(T value, Type type) implements Exp {
   }
 
   public int asInt() {
-    Preconditions.checkState(value instanceof Integer);
+    Preconditions.checkState(type.equals(Type.INT));
     return (int) value;
   }
 
   public long asLong() {
-    Preconditions.checkState(value instanceof Long);
     return (long) value;
   }
 }

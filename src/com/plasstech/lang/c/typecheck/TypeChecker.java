@@ -111,14 +111,13 @@ public class TypeChecker implements Validator {
   private Declaration typeCheckFileScopeVarDecl(VarDecl decl) {
     InitialValue initialValue = InitialValue.NO_INITIALIZER;
     // Figure out initial IV
-    // TODO: FIXME
-    // make sure it's the right type!
-    Optional<Integer> initialInt = getDeclInitialValue(decl);
+    Optional<Long> initialLong = getDeclInitialValue(decl);
     Optional<Exp> newInit = decl.init();
-    if (initialInt.isPresent()) {
-      // TODO: FIXME make sure it's the right type
-      initialValue = new Initializer(initialInt.get());
-      // TODO: FIXME: make a new newInit
+    // TODO FIXME: convert the init to the LHS type. 
+    // Something about subtracting 2^32 if it's an int but won't fit in an int?
+    // TODO: FIXME: make a new newInit???
+    if (initialLong.isPresent()) {
+      initialValue = Initializer.of(initialLong.get(), decl.type());
     } else if (decl.init().isEmpty()) {
       if (decl.hasStorageClass(StorageClass.EXTERN)) {
         initialValue = InitialValue.NO_INITIALIZER;
@@ -182,7 +181,6 @@ public class TypeChecker implements Validator {
     }
     symbols.put(decl.name(),
         new Symbol(decl.name(), decl.type(), new StaticAttr(initialValue, global)));
-    // TODO: FIXME
     return new VarDecl(decl.name(), decl.type(), newInit, decl.storageClass());
   }
 
@@ -204,14 +202,21 @@ public class TypeChecker implements Validator {
     return false;
   }
 
-  private Optional<Integer> getDeclInitialValue(VarDecl decl) {
+  private Optional<Long> getDeclInitialValue(VarDecl decl) {
     if (decl.init().isEmpty()) {
       return Optional.empty();
     }
     Exp e = decl.init().get();
     return switch (e) {
-      // TODO: This must change for longs
-      case Constant<?> ci -> Optional.of(ci.asInt());
+      case Constant<?> ci -> {
+        if (ci.type().equals(Type.INT)) {
+          yield Optional.of((long) ci.asInt());
+        }
+        if (ci.type().equals(Type.LONG)) {
+          yield Optional.of(ci.asLong());
+        }
+        throw new IllegalArgumentException("Unexpected value: " + ci.type());
+      }
       default -> Optional.empty();
     };
   }
@@ -327,6 +332,13 @@ public class TypeChecker implements Validator {
           error("Function '%s' redeclared as variable", decl.name());
           return null;
         }
+
+        if (!oldDecl.type().equals(decl.type())) {
+          error("Conflicting types for '%s': originally declared as %s, then as %s",
+              decl.name(), oldDecl.type(), decl.type());
+          return null;
+        }
+
       } else {
         Attribute attrs = new StaticAttr(InitialValue.NO_INITIALIZER, true);
         Symbol symbol = new Symbol(decl.name(), decl.type(), attrs);
@@ -334,13 +346,11 @@ public class TypeChecker implements Validator {
       }
     } else if (decl.hasStorageClass(StorageClass.STATIC)) {
       InitialValue initialValue = InitialValue.NO_INITIALIZER;
-      Optional<Integer> maybeConst = getDeclInitialValue(decl);
+      Optional<Long> maybeConst = getDeclInitialValue(decl);
       if (maybeConst.isPresent()) {
-        initialValue = new Initializer(maybeConst.get());
+        initialValue = Initializer.of(maybeConst.get(), decl.type());
       } else if (decl.init().isEmpty()) {
-        // TODO: FIXME
-        // need to make it the appropriate type
-        initialValue = new Initializer(0); // ??!?
+        initialValue = Initializer.zeroOf(decl.type());
       } else {
         error("Non-constant iniitalizer on local static variable '%s'", decl.name());
         return null;
@@ -447,6 +457,9 @@ public class TypeChecker implements Validator {
   // Page 256
   private Assignment typeCheckAssignment(Assignment a) {
     Exp newLvalue = typeCheckExp(a.lvalue());
+    if (!(newLvalue instanceof Var)) {
+      error("lvalues can only be variables; saw: %s", newLvalue);
+    }
     Exp convertedRValue = convertTo(typeCheckExp(a.rvalue()), newLvalue.type());
     return new Assignment(newLvalue, convertedRValue, newLvalue.type());
   }

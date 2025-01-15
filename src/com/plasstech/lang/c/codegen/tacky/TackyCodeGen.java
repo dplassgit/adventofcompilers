@@ -79,7 +79,8 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
       if (attr instanceof StaticAttr sa) {
         InitialValue iv = sa.init();
         if (iv instanceof Initializer i) {
-          defs.add(new TackyStaticVariable(s.name(), sa.isGlobal(), i.value()));
+          defs.add(
+              new TackyStaticVariable(s.name(), sa.isGlobal(), (int) i.staticInit().valueAsLong()));
         } else if (iv.equals(InitialValue.TENTATIVE)) {
           defs.add(new TackyStaticVariable(s.name(), sa.isGlobal(), 0));
         }
