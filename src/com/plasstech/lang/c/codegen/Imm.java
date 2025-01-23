@@ -1,8 +1,8 @@
 package com.plasstech.lang.c.codegen;
 
 public record Imm(String value) implements Operand {
-  public Imm(int value) {
-    this(Integer.toString(value));
+  public Imm(long value) {
+    this(Long.toString(value));
   }
 
   @Override

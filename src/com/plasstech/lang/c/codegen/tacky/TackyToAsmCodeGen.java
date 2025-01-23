@@ -60,7 +60,7 @@ public class TackyToAsmCodeGen {
           return switch (tln) {
             case TackyFunction fn -> generateFn(fn);
             case TackyStaticVariable sv ->
-              new AsmStaticVariable(sv.identifier(), sv.global(), sv.initialValue());
+              new AsmStaticVariable(sv.identifier(), sv.global(), sv.init().valueAsLong());
             default -> throw new IllegalArgumentException("Unexpected value: " + tln);
           };
         }).toList();

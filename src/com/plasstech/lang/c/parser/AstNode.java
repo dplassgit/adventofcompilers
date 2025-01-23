@@ -8,7 +8,7 @@ public interface AstNode {
 
     R visit(Conditional n);
 
-    <T> R visit(Constant<T> n);
+    <T extends Number> R visit(Constant<T> n);
 
     R visit(VarDecl n);
 

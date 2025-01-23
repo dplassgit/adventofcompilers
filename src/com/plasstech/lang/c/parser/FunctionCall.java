@@ -9,6 +9,10 @@ public record FunctionCall(String identifier, List<Exp> args, Type type) impleme
     this(identifier, args, Type.NO_TYPE);
   }
 
+  public Type returnType() {
+    return type(); // heh.
+  }
+
   @Override
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);

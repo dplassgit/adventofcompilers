@@ -2,7 +2,7 @@ package com.plasstech.lang.c.parser;
 
 public class GenericNodeVisitor<R> implements AstNode.Visitor<R> {
   @Override
-  public <T> R visit(Constant<T> n) {
+  public <T extends Number> R visit(Constant<T> n) {
     throw new UnsupportedOperationException();
   }
 

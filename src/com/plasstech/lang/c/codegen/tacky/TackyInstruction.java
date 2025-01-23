@@ -22,6 +22,10 @@ interface TackyInstruction {
     R visit(TackyReturn op);
 
     R visit(TackyFunCall op);
+
+    R visit(TackySignExtend op);
+
+    R visit(TackyTruncate op);
   }
 
   <R> R accept(Visitor<R> visitor);

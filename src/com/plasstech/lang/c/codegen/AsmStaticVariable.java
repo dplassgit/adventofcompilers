@@ -1,6 +1,7 @@
 package com.plasstech.lang.c.codegen;
 
-public record AsmStaticVariable(String name, boolean global, int initialValue)
+/** Represents a static variable in the "Assembly Generation" step. Page 235 */
+public record AsmStaticVariable(String name, boolean global, long initialValue)
     implements AsmTopLevel {
 
   @Override

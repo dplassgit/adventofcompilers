@@ -3,7 +3,7 @@ package com.plasstech.lang.c.parser;
 import com.google.common.base.Preconditions;
 import com.plasstech.lang.c.typecheck.Type;
 
-public record Constant<T>(T value, Type type) implements Exp {
+public record Constant<T extends Number>(T value, Type type) implements Exp {
   public static Constant<Integer> of(int value) {
     return new Constant<Integer>(value, Type.INT);
   }
@@ -24,10 +24,10 @@ public record Constant<T>(T value, Type type) implements Exp {
 
   public int asInt() {
     Preconditions.checkState(type.equals(Type.INT));
-    return (int) value;
+    return value.intValue();
   }
 
   public long asLong() {
-    return (long) value;
+    return value.longValue();
   }
 }

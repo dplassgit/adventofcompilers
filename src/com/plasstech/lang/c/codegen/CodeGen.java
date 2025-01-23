@@ -47,7 +47,7 @@ public class CodeGen {
 
   private static class OperandVisitor extends GenericNodeVisitor<Operand> {
     @Override
-    public <T> Operand visit(Constant<T> n) {
+    public <T extends Number> Operand visit(Constant<T> n) {
       return new Imm(n.value().toString());
     }
   }

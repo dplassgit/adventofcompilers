@@ -11,8 +11,8 @@ import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
 
 public class SemanticAnalyzerTest {
-  private SemanticAnalyzer validator = new SemanticAnalyzer();
-  private SymbolTable symbols = validator.symbolTable();
+  private SymbolTable symbols = new SymbolTable();
+  private SemanticAnalyzer validator = new SemanticAnalyzer(symbols);
 
   private Program validate(String input) {
     return validator.validate(new Parser(new Scanner(input)).parse());

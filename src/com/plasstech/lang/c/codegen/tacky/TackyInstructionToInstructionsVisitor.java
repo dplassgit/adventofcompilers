@@ -40,7 +40,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   private static Operand toOperand(TackyVal val) {
     return switch (val) {
       case TackyVar v -> new Pseudo(v.identifier());
-      case TackyIntConstant ic -> new Imm(ic.val());
+      case TackyConstant ic -> new Imm(ic.val());
       default -> throw new IllegalArgumentException("Unexpected value: " + val);
     };
   }
@@ -209,5 +209,15 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     instructions.add(new Mov(RegisterOperand.RAX, dest));
 
     return instructions;
+  }
+
+  @Override
+  public List<Instruction> visit(TackySignExtend op) {
+    throw new UnsupportedOperationException("Cannot geneate tackysignextend");
+  }
+
+  @Override
+  public List<Instruction> visit(TackyTruncate op) {
+    throw new UnsupportedOperationException("Cannot geneate tackytruncate");
   }
 }

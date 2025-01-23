@@ -42,6 +42,7 @@ import com.plasstech.lang.c.typecheck.Initializer;
 import com.plasstech.lang.c.typecheck.StaticAttr;
 import com.plasstech.lang.c.typecheck.Symbol;
 import com.plasstech.lang.c.typecheck.SymbolTable;
+import com.plasstech.lang.c.typecheck.Type;
 
 /**
  * Input: Program (Parse AST)
@@ -49,8 +50,8 @@ import com.plasstech.lang.c.typecheck.SymbolTable;
  * Output: TackyProgram (Tacky AST)
  */
 public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
-  private static final TackyVal ONE = new TackyIntConstant(1);
-  private static final TackyVal ZERO = new TackyIntConstant(0);
+  private static final TackyVal ONE = new TackyConstant(1);
+  private static final TackyVal ZERO = new TackyConstant(0);
 
   private final SymbolTable symbolTable;
   private final List<TackyInstruction> instructions = new ArrayList<>();
@@ -78,15 +79,24 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
       Attribute attr = s.attribute();
       if (attr instanceof StaticAttr sa) {
         InitialValue iv = sa.init();
+        // Middle of 259
         if (iv instanceof Initializer i) {
           defs.add(
-              new TackyStaticVariable(s.name(), sa.isGlobal(), (int) i.staticInit().valueAsLong()));
+              new TackyStaticVariable(s.name(), sa.isGlobal(), s.type(), i.staticInit()));
         } else if (iv.equals(InitialValue.TENTATIVE)) {
-          defs.add(new TackyStaticVariable(s.name(), sa.isGlobal(), 0));
+          defs.add(new TackyStaticVariable(s.name(), sa.isGlobal(), s.type(),
+              Initializer.of(0, s.type()).staticInit()));
         }
       }
     }
     return defs;
+  }
+
+  // Page 261
+  private TackyVar makeTackyVariable(String name, Type type) {
+    TackyVar dst = new TackyVar(UniqueId.makeUnique(name));
+    symbolTable.put(dst.identifier(), new Symbol(dst.identifier(), type, Attribute.LOCAL_ATTR));
+    return dst;
   }
 
   private void emit(TackyInstruction ti) {
@@ -124,8 +134,8 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   }
 
   @Override
-  public <T> TackyVal visit(Constant<T> n) {
-    return new TackyIntConstant(n.asInt());
+  public <T extends Number> TackyVal visit(Constant<T> n) {
+    return new TackyConstant(n.asLong());
   }
 
   @Override
@@ -162,7 +172,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(UnaryExp n) {
     TackyVal src = n.exp().accept(this);
-    TackyVar dst = newTemp("unaryexp_result");
+    TackyVar dst = makeTackyVariable("unaryexp_result", n.type());
     emit(new TackyUnary(dst, n.operator(), src));
     return dst;
   }
@@ -170,7 +180,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(BinExp n) {
     TackyVal src1 = n.left().accept(this);
-    TackyVar dst = newTemp("binexp_result");
+    TackyVar dst = makeTackyVariable("binexp_result", n.type());
     if (n.operator() == TokenType.DOUBLE_AMP) {
       // Short circuit
       String falseLabel = UniqueId.makeUnique("and_false");
@@ -211,7 +221,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(Conditional n) {
     // evaluate conditional. if false, jump to "else".
-    TackyVar result = newTemp("cond_result");
+    TackyVar result = makeTackyVariable("cond_result", Type.INT);
     String falseLabel = UniqueId.makeUnique("cond_false");
     String endLabel = UniqueId.makeUnique("cond_end");
 
@@ -253,10 +263,6 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   @Override
   public TackyVal visit(NullStatement n) {
     return null;
-  }
-
-  private static TackyVar newTemp(String prefix) {
-    return new TackyVar(UniqueId.makeUnique(prefix));
   }
 
   @Override
@@ -358,14 +364,27 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(FunctionCall n) {
     // Page 183, listing 9-24
     List<TackyVal> args = n.args().stream().map(arg -> arg.accept(this)).toList();
-    // Unclear if this is right...
-    TackyVar result = newTemp("fun_call_" + n.identifier());
+    TackyVar result = makeTackyVariable("fun_call_" + n.identifier(), n.returnType());
     emit(new TackyFunCall(n.identifier(), args, result));
     return result;
   }
 
   @Override
   public TackyVal visit(Cast n) {
-    return n.exp().accept(this);
+    // p 260
+    TackyVal result = n.exp().accept(this);
+    Type t = n.targetType();
+    if (t.equals(n.exp().type())) {
+      return result;
+    }
+    TackyVar dst = makeTackyVariable("cast_to_" + n.targetType().name(), n.type());
+    if (t.equals(Type.LONG)) {
+      emit(new TackySignExtend(result, dst));
+    } else if (t.equals(Type.INT)) {
+      emit(new TackyTruncate(result, dst));
+    } else {
+      throw new UnsupportedOperationException("Cannot generate cast");
+    }
+    return dst;
   }
 }

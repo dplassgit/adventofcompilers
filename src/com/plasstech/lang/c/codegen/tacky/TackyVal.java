@@ -7,7 +7,7 @@ interface TackyVal {
   interface Visitor<R> {
     R visit(TackyVar tackyVar);
 
-    R visit(TackyIntConstant tackyInt);
+    R visit(TackyConstant tackyInt);
   }
 
   <R> R accept(Visitor<R> visitor);

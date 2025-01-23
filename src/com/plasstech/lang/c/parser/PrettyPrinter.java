@@ -21,7 +21,7 @@ public class PrettyPrinter extends GenericNodeVisitor<Void> {
   }
 
   @Override
-  public <T> Void visit(Constant<T> n) {
+  public <T extends Number> Void visit(Constant<T> n) {
     System.out.printf("%sConstant(%s)\n", spaces(), n.toString());
     return null;
   }

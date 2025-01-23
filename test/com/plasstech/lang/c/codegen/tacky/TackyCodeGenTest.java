@@ -3,27 +3,31 @@ package com.plasstech.lang.c.codegen.tacky;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.fail;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
 
-import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableSet;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
+import com.plasstech.lang.c.typecheck.Symbol;
+import com.plasstech.lang.c.typecheck.SymbolTable;
 
 public class TackyCodeGenTest {
+  private SymbolTable symtab = new SymbolTable();
+
   private TackyProgram generate(String input) {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
 
     Program prog = p.parse();
-    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(symtab);
     prog = semanticAnalyzer.validate(prog);
-    TackyCodeGen cg = new TackyCodeGen(semanticAnalyzer.symbolTable());
-    TackyProgram tp = cg.generate(prog);
-    return tp;
+    TackyCodeGen cg = new TackyCodeGen(symtab);
+    return cg.generate(prog);
   }
 
   @Test
@@ -233,7 +237,6 @@ public class TackyCodeGenTest {
       if (tld instanceof TackyFunction fn) {
         List<TackyInstruction> instructions = fn.body();
         assertThat(instructions.size()).isGreaterThan(0);
-        System.err.println(Joiner.on("\n").join(instructions));
       } else {
         fail("Expected TackyFunctionDef");
       }
@@ -260,7 +263,7 @@ public class TackyCodeGenTest {
     assertThat(tp.topLevelDefinitions()).hasSize(1);
     TackyStaticVariable sv = (TackyStaticVariable) tp.topLevelDefinitions().get(0);
     assertThat(sv.global()).isFalse();
-    assertThat(sv.initialValue()).isEqualTo(0);
+    assertThat(sv.init().valueAsLong()).isEqualTo(0);
   }
 
   @Test
@@ -272,7 +275,7 @@ public class TackyCodeGenTest {
     assertThat(tp.topLevelDefinitions()).hasSize(1);
     TackyStaticVariable t1 = (TackyStaticVariable) tp.topLevelDefinitions().get(0);
     assertThat(t1.global()).isTrue();
-    assertThat(t1.initialValue()).isEqualTo(1);
+    assertThat(t1.init().valueAsLong()).isEqualTo(1L);
   }
 
   @Test
@@ -295,5 +298,52 @@ public class TackyCodeGenTest {
     assertThat(tp.topLevelDefinitions()).hasSize(1);
     TackyFunction tf = (TackyFunction) tp.topLevelDefinitions().get(0);
     assertThat(tf.global()).isFalse();
+  }
+
+  @Test
+  public void generateExplicitNopCast() {
+    String input = """
+        long main(void) {
+          long i = (long) 123L;
+          return i;
+        }
+        """;
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(symtab);
+    Program prog = new Parser(new Scanner(input)).parse();
+    prog = semanticAnalyzer.validate(prog);
+    TackyCodeGen cg = new TackyCodeGen(symtab);
+    Collection<Symbol> beforeGeneration = ImmutableSet.copyOf(symtab.values());
+    cg.generate(prog);
+    assertThat(beforeGeneration).isEqualTo(ImmutableSet.copyOf(symtab.values()));
+  }
+
+  @Test
+  public void generateCastUp() {
+    String input = """
+        long main(void) {
+          long i = 123;
+          return i;
+        }
+        """;
+    TackyProgram tp = generate(input);
+    System.err.println(tp);
+  }
+
+  @Test
+  public void generateCastDown() {
+    String input = """
+        int main(void) {
+          int i = 123L;
+          return i;
+        }
+        """;
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(symtab);
+    Parser p = new Parser(new Scanner(input));
+    Program prog = p.parse();
+    prog = semanticAnalyzer.validate(prog);
+    TackyCodeGen cg = new TackyCodeGen(symtab);
+    Collection<Symbol> beforeGeneration = ImmutableSet.copyOf(symtab.values());
+    cg.generate(prog);
+    assertThat(beforeGeneration).isNotEqualTo(symtab.values());
   }
 }
