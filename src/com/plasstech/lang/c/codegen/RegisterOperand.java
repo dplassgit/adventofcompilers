@@ -6,6 +6,7 @@ import com.google.common.collect.ImmutableList;
 
 public record RegisterOperand(Register register) implements Operand {
   private enum Register {
+    RSP("rsp", "rsp"),
     RAX("al", "eax"),
     RCX("cl", "ecx"),
     RDX("dl", "edx"),
@@ -45,6 +46,7 @@ public record RegisterOperand(Register register) implements Operand {
   public static RegisterOperand R9 = new RegisterOperand(Register.R9);
   public static RegisterOperand R10 = new RegisterOperand(Register.R10);
   public static RegisterOperand R11 = new RegisterOperand(Register.R11);
+  public static RegisterOperand RSP = new RegisterOperand(Register.RSP);
 
   public static final List<RegisterOperand> ARG_REGISTERS = ImmutableList.of(
       RDI, RSI, RDX, RCX, R8, R9);

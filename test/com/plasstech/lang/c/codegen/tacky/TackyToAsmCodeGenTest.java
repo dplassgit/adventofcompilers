@@ -7,8 +7,8 @@ import java.util.List;
 import org.junit.Test;
 
 import com.google.common.base.Joiner;
-import com.plasstech.lang.c.codegen.CodeEmission;
 import com.plasstech.lang.c.codegen.AsmProgram;
+import com.plasstech.lang.c.codegen.CodeEmission;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
@@ -75,6 +75,20 @@ public class TackyToAsmCodeGenTest {
               return simple(1,2,3,4,5,6,7,8);
             }
             """;
+    printAsm(generateAsm(input));
+    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
+  }
+
+  @Test
+  public void generateWrongLong() {
+    String input = """
+        int static foo(void) {
+          return 3;
+        }
+        int main(void) {
+          return foo() + 5;
+        }
+        """;
     printAsm(generateAsm(input));
     System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }

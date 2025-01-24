@@ -7,7 +7,8 @@ import com.plasstech.lang.c.lex.TokenType;
  * <p>
  * addl $2, -4(%rbp)
  */
-public record AsmBinary(TokenType operator, Operand left, Operand right) implements Instruction {
+public record AsmBinary(TokenType operator, AssemblyType type, Operand left, Operand right)
+    implements Instruction {
   @Override
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);

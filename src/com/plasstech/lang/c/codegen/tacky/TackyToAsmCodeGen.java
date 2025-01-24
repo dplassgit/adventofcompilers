@@ -14,6 +14,7 @@ import com.plasstech.lang.c.codegen.AsmProgram;
 import com.plasstech.lang.c.codegen.AsmStaticVariable;
 import com.plasstech.lang.c.codegen.AsmTopLevel;
 import com.plasstech.lang.c.codegen.AsmUnary;
+import com.plasstech.lang.c.codegen.AssemblyType;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
@@ -26,6 +27,7 @@ import com.plasstech.lang.c.codegen.Jmp;
 import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
+import com.plasstech.lang.c.codegen.Movsx;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Pseudo;
 import com.plasstech.lang.c.codegen.Push;
@@ -37,6 +39,7 @@ import com.plasstech.lang.c.typecheck.Attribute;
 import com.plasstech.lang.c.typecheck.StaticAttr;
 import com.plasstech.lang.c.typecheck.Symbol;
 import com.plasstech.lang.c.typecheck.SymbolTable;
+import com.plasstech.lang.c.typecheck.Type;
 
 /**
  * This is part of the "assembly generation" step, including "replacing pseudoregisters" and "fixing
@@ -59,8 +62,17 @@ public class TackyToAsmCodeGen {
         .map(tln -> {
           return switch (tln) {
             case TackyFunction fn -> generateFn(fn);
-            case TackyStaticVariable sv ->
-              new AsmStaticVariable(sv.identifier(), sv.global(), sv.init().valueAsLong());
+            case TackyStaticVariable sv -> {
+              int alignment;
+              if (sv.type().equals(Type.LONG)) {
+                alignment = 8;
+              } else if (sv.type().equals(Type.INT)) {
+                alignment = 4;
+              } else {
+                throw new IllegalStateException("Unknown static type " + sv.type());
+              }
+              yield new AsmStaticVariable(sv.identifier(), sv.global(), alignment, sv.init());
+            }
             default -> throw new IllegalArgumentException("Unexpected value: " + tln);
           };
         }).toList();
@@ -74,21 +86,24 @@ public class TackyToAsmCodeGen {
     // Page 200, top
     // Copy input registers to param names.
     for (int i = 0; i < Math.min(6, function.params().size()); ++i) {
-      instructions.add(new Mov(RegisterOperand.ARG_REGISTERS.get(i),
+      // WHERE do we get the type from?
+      instructions.add(new Mov(AssemblyType.Longword, RegisterOperand.ARG_REGISTERS.get(i),
           new Pseudo(function.params().get(i))));
     }
     // Copy stack to param names.
     int offset = 16;
     for (int i = 6; i < function.params().size(); ++i) {
       // It *reads* from 16,24,32, etc.
-      instructions.add(new Mov(new Stack(offset), new Pseudo(function.params().get(i))));
+      // WHERE do we get the type from?
+      instructions.add(
+          new Mov(AssemblyType.Longword, new Stack(offset), new Pseudo(function.params().get(i))));
       offset += 8;
     }
     // 4 because they're ints now.
     currentProcOffset = 4 * function.params().size();
 
     TackyInstruction.Visitor<List<Instruction>> visitor =
-        new TackyInstructionToInstructionsVisitor();
+        new TackyInstructionToInstructionsVisitor(symbolTable);
     PseudoToStackInstructionVisitor siv = new PseudoToStackInstructionVisitor();
     FixupVisitor mfv = new FixupVisitor();
     List<Instruction> opInstructions = function.body().stream()
@@ -152,103 +167,108 @@ public class TackyToAsmCodeGen {
   /** Replace pseudo operands to stack references. See page 42. */
   private class PseudoToStackInstructionVisitor implements AsmNode.Visitor<Instruction> {
     @Override
-    public Instruction visit(Mov n) {
-      Operand newSrc = remap(n.src());
-      Operand newDest = remap(n.dest());
-      return new Mov(newSrc, newDest);
+    public Instruction visit(Mov op) {
+      Operand newSrc = remap(op.src());
+      Operand newDest = remap(op.dest());
+      return new Mov(op.type(), newSrc, newDest);
     }
 
     @Override
-    public Instruction visit(Ret n) {
-      return n;
+    public Instruction visit(Ret op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(AsmUnary u) {
-      Operand newSrc = remap(u.operand());
-      return new AsmUnary(u.operator(), newSrc);
+    public Instruction visit(AsmUnary op) {
+      Operand newSrc = remap(op.operand());
+      return new AsmUnary(op.operator(), op.type(), newSrc);
     }
 
     @Override
-    public Instruction visit(AsmBinary n) {
-      Operand newLeft = remap(n.left());
-      Operand newRight = remap(n.right());
-      return new AsmBinary(n.operator(), newLeft, newRight);
+    public Instruction visit(AsmBinary op) {
+      Operand newLeft = remap(op.left());
+      Operand newRight = remap(op.right());
+      return new AsmBinary(op.operator(), op.type(), newLeft, newRight);
     }
 
     @Override
-    public Instruction visit(AllocateStack a) {
-      return a;
+    public Instruction visit(AllocateStack op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(Idiv n) {
-      Operand newOperand = remap(n.operand());
-      return new Idiv(newOperand);
+    public Instruction visit(Idiv op) {
+      Operand newOperand = remap(op.operand());
+      return new Idiv(op.type(), newOperand);
     }
 
     @Override
-    public Instruction visit(Cdq n) {
-      return n;
+    public Instruction visit(Cdq op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(Cmp n) {
-      Operand newLeft = remap(n.left());
-      Operand newRight = remap(n.right());
-      return new Cmp(newLeft, newRight);
+    public Instruction visit(Cmp op) {
+      Operand newLeft = remap(op.left());
+      Operand newRight = remap(op.right());
+      return new Cmp(op.type(), newLeft, newRight);
     }
 
     @Override
-    public Instruction visit(Jmp n) {
-      return n;
+    public Instruction visit(Jmp op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(JmpCC n) {
-      return n;
+    public Instruction visit(JmpCC op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(SetCC n) {
-      Operand newOperand = remap(n.dest());
-      return new SetCC(n.cc(), newOperand);
+    public Instruction visit(SetCC op) {
+      Operand newOperand = remap(op.dest());
+      return new SetCC(op.cc(), newOperand);
     }
 
     @Override
-    public Instruction visit(Label n) {
-      return n;
+    public Instruction visit(Label op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(AsmProgram n) {
+    public Instruction visit(AsmProgram op) {
       return null;
     }
 
     @Override
-    public Instruction visit(AsmFunction n) {
+    public Instruction visit(AsmFunction op) {
       return null;
     }
 
     @Override
-    public Instruction visit(DeallocateStack n) {
-      return n;
+    public Instruction visit(DeallocateStack op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(Push n) {
-      Operand newOperand = remap(n.operand());
+    public Instruction visit(Push op) {
+      Operand newOperand = remap(op.operand());
       return new Push(newOperand);
     }
 
     @Override
-    public Instruction visit(Call n) {
-      return n;
+    public Instruction visit(Call op) {
+      return op;
     }
 
     @Override
-    public Instruction visit(AsmStaticVariable n) {
+    public Instruction visit(AsmStaticVariable op) {
       return null;
+    }
+
+    @Override
+    public Instruction visit(Movsx op) {
+      throw new UnsupportedOperationException("movsx not implemented");
     }
   }
 }

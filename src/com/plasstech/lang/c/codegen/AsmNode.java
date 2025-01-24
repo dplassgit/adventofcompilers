@@ -2,41 +2,43 @@ package com.plasstech.lang.c.codegen;
 
 public interface AsmNode {
   interface Visitor<R> {
-    R visit(AsmProgram n);
+    R visit(AsmProgram op);
 
-    R visit(AsmFunction n);
+    R visit(AsmFunction op);
 
-    R visit(AsmStaticVariable n);
+    R visit(AsmStaticVariable op);
 
-    R visit(Mov n);
+    R visit(Mov op);
 
-    R visit(AsmUnary n);
+    R visit(AsmUnary op);
 
-    R visit(AsmBinary n);
+    R visit(AsmBinary op);
 
-    R visit(Cmp n);
+    R visit(Cmp op);
 
-    R visit(Idiv n);
+    R visit(Idiv op);
 
-    R visit(Cdq n);
+    R visit(Cdq op);
 
-    R visit(Jmp n);
+    R visit(Jmp op);
 
-    R visit(JmpCC n);
+    R visit(JmpCC op);
 
-    R visit(SetCC n);
+    R visit(SetCC op);
 
-    R visit(Label n);
+    R visit(Label op);
 
-    R visit(AllocateStack n);
+    R visit(AllocateStack op);
 
-    R visit(Ret n);
+    R visit(Ret op);
 
-    R visit(DeallocateStack n);
+    R visit(DeallocateStack op);
 
-    R visit(Push n);
+    R visit(Push op);
 
-    R visit(Call n);
+    R visit(Call op);
+
+    R visit(Movsx op);
   }
 
   <R> R accept(Visitor<R> visitor);

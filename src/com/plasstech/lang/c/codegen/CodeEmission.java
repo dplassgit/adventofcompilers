@@ -66,24 +66,24 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
     if (n.global()) {
       emit(".globl %s", n.name());
     }
-    if (n.initialValue() == 0) {
+    if (n.init().valueAsLong() == 0) {
       emit(".bss");
     } else {
       emit(".data");
     }
-    emit(".align 4");
+    emit(".align %d", n.alignment());
     emit0("%s:", n.name());
-    if (n.initialValue() == 0) {
+    if (n.init().valueAsLong() == 0) {
       emit(".zero 4");
     } else {
-      emit(".long %d", n.initialValue());
+      emit(".long %d", n.init().valueAsLong());
     }
     return null;
   }
 
   @Override
   public Void visit(Mov n) {
-    // I'm not sure I like this... /shrug.
+    // I'm sure I hate this.
     emit(n.toString());
     return null;
   }
@@ -204,12 +204,8 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
     return null;
   }
 
-  /*
-   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/libraries/
-   * internal_linkage_function
-   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/multiple_static_local
-   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/
-   * /mnt/c/Users/dplas/dev/writing-a-c-compiler-tests/tests/chapter_10/valid/static_recursive_call
-   * static_local_multiple_scopes
-   */
+  @Override
+  public Void visit(Movsx op) {
+    throw new UnsupportedOperationException("movsx not implemented");
+  }
 }

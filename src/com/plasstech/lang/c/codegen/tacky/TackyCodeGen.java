@@ -50,8 +50,8 @@ import com.plasstech.lang.c.typecheck.Type;
  * Output: TackyProgram (Tacky AST)
  */
 public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
-  private static final TackyVal ONE = new TackyConstant(1);
-  private static final TackyVal ZERO = new TackyConstant(0);
+  private static final TackyVal ONE = new TackyConstant(Type.INT, 1);
+  private static final TackyVal ZERO = new TackyConstant(Type.INT, 0);
 
   private final SymbolTable symbolTable;
   private final List<TackyInstruction> instructions = new ArrayList<>();
@@ -135,7 +135,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public <T extends Number> TackyVal visit(Constant<T> n) {
-    return new TackyConstant(n.asLong());
+    return new TackyConstant(n.type(), n.asLong());
   }
 
   @Override
