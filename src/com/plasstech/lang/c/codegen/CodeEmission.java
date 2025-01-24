@@ -108,14 +108,6 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   }
 
   @Override
-  public Void visit(AllocateStack n) {
-    if (n.bytes() > 0) {
-      emit("subq $%d, %%rsp", n.bytes());
-    }
-    return null;
-  }
-
-  @Override
   public Void visit(AsmBinary n) {
     String instruction = switch (n.operator()) {
       case MINUS -> "subl";
@@ -171,14 +163,6 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   public Void visit(Label n) {
     // Page 89
     emit0(".L%s:", n.label());
-    return null;
-  }
-
-  @Override
-  public Void visit(DeallocateStack n) {
-    if (n.bytes() > 0) {
-      emit("addq $%d, %%rsp", n.bytes());
-    }
     return null;
   }
 

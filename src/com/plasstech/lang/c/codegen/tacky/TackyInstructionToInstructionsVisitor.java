@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.AssemblyType;
@@ -12,7 +11,6 @@ import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.CondCode;
-import com.plasstech.lang.c.codegen.DeallocateStack;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -78,15 +76,15 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand src = toOperand(op.src());
     Operand dst = toOperand(op.dst());
     AssemblyType dstType = assemblyType(op.dst());
+    AssemblyType srcType = assemblyType(op.src());
     if (op.operator() == TokenType.BANG) {
       // Page 86, 265
-      AssemblyType srcType = assemblyType(op.src());
       instructions.add(new Cmp(srcType, ZERO, src));
       instructions.add(new Mov(dstType, ZERO, dst));
       instructions.add(new SetCC(CondCode.E, dst));
     } else {
-      instructions.add(new Mov(dstType, src, dst));
-      instructions.add(new AsmUnary(op.operator(), dstType, dst));
+      instructions.add(new Mov(srcType, src, dst));
+      instructions.add(new AsmUnary(op.operator(), srcType, dst));
     }
     return instructions;
   }
@@ -98,23 +96,23 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand src2 = toOperand(op.src2());
     Operand dst = toOperand(op.dst());
     TokenType operator = op.operator();
-    AssemblyType srcType = assemblyType(op.src1());
+    AssemblyType src1Type = assemblyType(op.src1());
     AssemblyType dstType = assemblyType(op.dst());
     switch (operator) {
       case SLASH:
       case PERCENT:
         // mov (src1, register(ax))
-        instructions.add(new Mov(srcType, src1, RegisterOperand.RAX));
+        instructions.add(new Mov(src1Type, src1, RegisterOperand.RAX));
         // cdq
-        instructions.add(new Cdq(srcType));
+        instructions.add(new Cdq(src1Type));
         // idiv(src2)
-        instructions.add(new Idiv(srcType, src2));
+        instructions.add(new Idiv(src1Type, src2));
         if (operator == TokenType.SLASH) {
           // mov(reg(ax), dst)
-          instructions.add(new Mov(dstType, RegisterOperand.RAX, dst));
+          instructions.add(new Mov(src1Type, RegisterOperand.RAX, dst));
         } else {
           // mov(reg(dx), dst)  for modulo
-          instructions.add(new Mov(dstType, RegisterOperand.RDX, dst));
+          instructions.add(new Mov(src1Type, RegisterOperand.RDX, dst));
         }
         break;
 
@@ -125,7 +123,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case LEQ:
       case NEQ:
         // Page 86
-        instructions.add(new Cmp(srcType, src2, src1));
+        instructions.add(new Cmp(src1Type, src2, src1));
         instructions.add(new Mov(dstType, ZERO, dst));
         instructions.add(new SetCC(CondCode.from(operator), dst));
         break;
@@ -135,10 +133,10 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case STAR:
         // For +, -, *: 
         // First move src1 to dest
-        instructions.add(new Mov(dstType, src1, dst));
+        instructions.add(new Mov(src1Type, src1, dst));
         // Then use dest and src2 with the operator
         // Are these types right?!
-        instructions.add(new AsmBinary(op.operator(), dstType, src2, dst));
+        instructions.add(new AsmBinary(op.operator(), src1Type, src2, dst));
         break;
 
       default:
@@ -207,7 +205,10 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     assert numStackArgs >= 0;
     int stackPadding = 8 * (numStackArgs % 2); // MATH THAT SH*T
     if (stackPadding != 0) {
-      instructions.add(new AllocateStack(stackPadding));
+      Instruction allocateStack =
+          new AsmBinary(TokenType.MINUS, AssemblyType.Quadword, new Imm(stackPadding),
+              RegisterOperand.RSP);
+      instructions.add(allocateStack);
     }
 
     // Pass args in registers
@@ -220,16 +221,21 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     }
 
     // Pass args on stack
+    // Updated with AssemblyType p 263
     for (int i = numStackArgs - 1; i >= 0; --i) {
       TackyVal arg = op.args().get(i + 6);
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
-      switch (argOp) {
-        case RegisterOperand ro -> instructions.add(new Push(argOp));
-        case Imm imm -> instructions.add(new Push(argOp));
-        default -> {
-          instructions.add(new Mov(srcType, argOp, RegisterOperand.RAX));
-          instructions.add(new Push(RegisterOperand.RAX));
+      if (srcType == AssemblyType.Quadword) {
+        instructions.add(new Push(argOp));
+      } else {
+        switch (argOp) {
+          case RegisterOperand ro -> instructions.add(new Push(argOp));
+          case Imm imm -> instructions.add(new Push(argOp));
+          default -> {
+            instructions.add(new Mov(AssemblyType.Longword, argOp, RegisterOperand.RAX));
+            instructions.add(new Push(RegisterOperand.RAX));
+          }
         }
       }
     }
@@ -239,7 +245,10 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     // Adjust stack pointer
     int bytesToRemove = 8 * numStackArgs + stackPadding;
     if (bytesToRemove > 0) {
-      instructions.add(new DeallocateStack(bytesToRemove));
+      Instruction deallocateStack =
+          new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, new Imm(bytesToRemove),
+              RegisterOperand.RSP);
+      instructions.add(deallocateStack);
     }
 
     // retrieve return value
@@ -252,11 +261,14 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   @Override
   public List<Instruction> visit(TackySignExtend op) {
+    // page 263
     return ImmutableList.of(new Movsx(toOperand(op.src()), toOperand(op.dst())));
   }
 
   @Override
   public List<Instruction> visit(TackyTruncate op) {
-    throw new UnsupportedOperationException("Cannot geneate tackytruncate");
+    // page 263
+    return ImmutableList
+        .of(new Mov(AssemblyType.Longword, toOperand(op.src()), toOperand(op.dst())));
   }
 }

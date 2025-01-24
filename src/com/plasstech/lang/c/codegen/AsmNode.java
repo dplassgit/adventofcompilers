@@ -28,11 +28,7 @@ public interface AsmNode {
 
     R visit(Label op);
 
-    R visit(AllocateStack op);
-
     R visit(Ret op);
-
-    R visit(DeallocateStack op);
 
     R visit(Push op);
 

@@ -3,7 +3,6 @@ package com.plasstech.lang.c.codegen.tacky;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
-import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmNode;
@@ -13,7 +12,6 @@ import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
-import com.plasstech.lang.c.codegen.DeallocateStack;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -91,11 +89,6 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   }
 
   @Override
-  public List<Instruction> visit(AllocateStack n) {
-    return ImmutableList.of(n);
-  }
-
-  @Override
   public List<Instruction> visit(Cdq n) {
     return ImmutableList.of(n);
   }
@@ -149,11 +142,6 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(Label n) {
-    return ImmutableList.of(n);
-  }
-
-  @Override
-  public List<Instruction> visit(DeallocateStack n) {
     return ImmutableList.of(n);
   }
 

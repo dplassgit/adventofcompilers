@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.plasstech.lang.c.codegen.AllocateStack;
 import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmNode;
@@ -19,7 +18,6 @@ import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.Data;
-import com.plasstech.lang.c.codegen.DeallocateStack;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -35,6 +33,7 @@ import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
+import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.typecheck.Attribute;
 import com.plasstech.lang.c.typecheck.StaticAttr;
 import com.plasstech.lang.c.typecheck.Symbol;
@@ -83,20 +82,24 @@ public class TackyToAsmCodeGen {
 
   private AsmTopLevel generateFn(TackyFunction function) {
     List<Instruction> instructions = new ArrayList<>();
-    // Page 200, top
+    // Page 200, 264 (botton)
     // Copy input registers to param names.
     for (int i = 0; i < Math.min(6, function.params().size()); ++i) {
-      // WHERE do we get the type from?
-      instructions.add(new Mov(AssemblyType.Longword, RegisterOperand.ARG_REGISTERS.get(i),
-          new Pseudo(function.params().get(i))));
+      String paramName = function.params().get(i);
+      Symbol symbol = symbolTable.get(paramName);
+      Type type = symbol.type();
+      instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.ARG_REGISTERS.get(i),
+          new Pseudo(paramName)));
     }
     // Copy stack to param names.
     int offset = 16;
     for (int i = 6; i < function.params().size(); ++i) {
       // It *reads* from 16,24,32, etc.
-      // WHERE do we get the type from?
+      String paramName = function.params().get(i);
+      Symbol symbol = symbolTable.get(paramName);
+      Type type = symbol.type();
       instructions.add(
-          new Mov(AssemblyType.Longword, new Stack(offset), new Pseudo(function.params().get(i))));
+          new Mov(AssemblyType.from(type), new Stack(offset), new Pseudo(paramName)));
       offset += 8;
     }
     // 4 because they're ints now.
@@ -123,7 +126,10 @@ public class TackyToAsmCodeGen {
     if (currentProcOffset != 0) {
       // Round this up to the nearest 16.
       currentProcOffset = (int) (Math.ceil(currentProcOffset / 16.0) * 16);
-      instructions.add(0, new AllocateStack(currentProcOffset));
+      Instruction allocateStack =
+          new AsmBinary(TokenType.MINUS, AssemblyType.Quadword, new Imm(currentProcOffset),
+              RegisterOperand.RSP);
+      instructions.add(0, allocateStack);
     }
 
     return new AsmFunction(function.identifier(), function.global(), instructions);
@@ -192,11 +198,6 @@ public class TackyToAsmCodeGen {
     }
 
     @Override
-    public Instruction visit(AllocateStack op) {
-      return op;
-    }
-
-    @Override
     public Instruction visit(Idiv op) {
       Operand newOperand = remap(op.operand());
       return new Idiv(op.type(), newOperand);
@@ -243,11 +244,6 @@ public class TackyToAsmCodeGen {
     @Override
     public Instruction visit(AsmFunction op) {
       return null;
-    }
-
-    @Override
-    public Instruction visit(DeallocateStack op) {
-      return op;
     }
 
     @Override
