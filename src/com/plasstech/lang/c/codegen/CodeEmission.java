@@ -110,9 +110,9 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   @Override
   public Void visit(AsmBinary n) {
     String instruction = switch (n.operator()) {
-      case MINUS -> "subl";
-      case PLUS -> "addl";
-      case STAR -> "imull";
+      case MINUS -> "sub" + n.type().suffix();
+      case PLUS -> "add" + n.type().suffix();
+      case STAR -> "imul" + n.type().suffix();
       default -> throw new IllegalStateException("Bad binary operator " + n.operator().name());
     };
     emit("%s %s, %s", instruction, n.left(), n.right());
