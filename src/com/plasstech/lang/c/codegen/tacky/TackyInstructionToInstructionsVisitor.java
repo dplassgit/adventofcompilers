@@ -46,9 +46,13 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   private static final Imm ZERO = new Imm(0);
 
-  private static Operand toOperand(TackyVal val) {
+  private Operand toOperand(TackyVal val) {
     return switch (val) {
-      case TackyVar v -> new Pseudo(v.identifier());
+      case TackyVar v -> {
+        // put a "fake" symbol in the ST for this pseudo
+        //        symbolTable.put(v.identifier(), new Symbol(v.identifier(), null, null));
+        yield new Pseudo(v.identifier());
+      }
       case TackyConstant ic -> new Imm(ic.val());
       default -> throw new IllegalArgumentException("Unexpected value: " + val);
     };

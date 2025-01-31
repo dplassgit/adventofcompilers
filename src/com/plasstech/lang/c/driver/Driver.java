@@ -6,8 +6,9 @@ import java.io.InputStreamReader;
 import java.util.List;
 
 import com.google.common.base.Joiner;
-import com.plasstech.lang.c.codegen.CodeEmission;
 import com.plasstech.lang.c.codegen.AsmProgram;
+import com.plasstech.lang.c.codegen.CodeEmission;
+import com.plasstech.lang.c.codegen.tacky.AsmState;
 import com.plasstech.lang.c.codegen.tacky.TackyCodeGen;
 import com.plasstech.lang.c.codegen.tacky.TackyProgram;
 import com.plasstech.lang.c.codegen.tacky.TackyToAsmCodeGen;
@@ -97,14 +98,16 @@ public class Driver {
   private List<String> generateAsm(Scanner s) {
     validate(s);
     TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
-    AsmProgram an = new TackyToAsmCodeGen(symbolTable()).generate(tp);
-    return new CodeEmission(symbolTable()).generate(an);
+    AsmState state = new TackyToAsmCodeGen(symbolTable()).generate(tp);
+    return new CodeEmission(symbolTable()).generate(state.program());
   }
 
   private AsmProgram codeGen(Scanner s) {
     validate(s);
     TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
-    return new TackyToAsmCodeGen(symbolTable()).generate(tp);
+    TackyToAsmCodeGen tackyToAsmCodeGen = new TackyToAsmCodeGen(symbolTable());
+    AsmState asmState = tackyToAsmCodeGen.generate(tp);
+    return asmState.program();
   }
 
   private void validate(Scanner s) {
