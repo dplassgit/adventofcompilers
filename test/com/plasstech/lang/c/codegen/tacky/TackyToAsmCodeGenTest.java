@@ -64,7 +64,6 @@ public class TackyToAsmCodeGenTest {
         }
         """;
     printAsm(generateAsm(input));
-    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
   @Test
@@ -77,7 +76,6 @@ public class TackyToAsmCodeGenTest {
             }
             """;
     printAsm(generateAsm(input));
-    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
   @Test
@@ -91,7 +89,6 @@ public class TackyToAsmCodeGenTest {
         }
         """;
     printAsm(generateAsm(input));
-    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
   @Test
@@ -110,7 +107,6 @@ public class TackyToAsmCodeGenTest {
         }
         """;
     printAsm(generateAsm(program));
-    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
   private static void printAsm(List<String> asm) {

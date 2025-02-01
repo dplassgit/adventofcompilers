@@ -38,12 +38,12 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
   private final BackendSymbolTable symbolTable;
   private int currentProcOffset;
 
-  public PseudoRegisterReplacer(BackendSymbolTable bst, int currentProcOffset) {
+  PseudoRegisterReplacer(BackendSymbolTable bst, int currentProcOffset) {
     this.symbolTable = bst;
     this.currentProcOffset = currentProcOffset;
   }
 
-  public int currentProcOffset() {
+  int currentProcOffset() {
     return currentProcOffset;
   }
 
@@ -56,17 +56,20 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
       AsmSymtabEntry entry = symbolTable.get(name);
       if (entry instanceof ObjEntry oe) {
         if (oe.type() == AssemblyType.Longword) {
-          currentProcOffset = currentProcOffset() + 4;
+          currentProcOffset += 4;
         } else if (oe.type() == AssemblyType.Quadword) {
-          // TODO: need to round up
-          currentProcOffset = currentProcOffset() + 8;
+          if ((currentProcOffset % 8) == 4) {
+            // Round up. page 267
+            currentProcOffset += 4;
+          }
+          currentProcOffset += 8;
         }
       } else {
         throw new IllegalStateException(
             "Unknown backend symbol type " + entry + " for pseudo name " + name + " symbol table "
                 + symbolTable);
       }
-      offset = -currentProcOffset();
+      offset = -currentProcOffset;
       pseudoMapping.put(name, offset);
     }
     return offset;
@@ -184,6 +187,8 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
 
   @Override
   public Instruction visit(Movsx op) {
-    throw new UnsupportedOperationException("movsx not implemented");
+    Operand newSrc = remap(op.src());
+    Operand newDest = remap(op.dst());
+    return new Movsx(newSrc, newDest);
   }
 }
