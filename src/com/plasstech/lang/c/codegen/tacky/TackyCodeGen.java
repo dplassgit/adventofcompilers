@@ -95,6 +95,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   // Page 261
   private TackyVar makeTackyVariable(String name, Type type) {
     TackyVar dst = new TackyVar(UniqueId.makeUnique(name), type);
+
     symbolTable.put(dst.identifier(), new Symbol(dst.identifier(), type, Attribute.LOCAL_ATTR));
     return dst;
   }

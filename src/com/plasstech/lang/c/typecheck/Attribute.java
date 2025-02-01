@@ -18,5 +18,10 @@ public interface Attribute {
     public boolean defined() {
       return true;
     }
+
+    @Override
+    public String toString() {
+      return "LOCAL_ATTR";
+    }
   };
 }

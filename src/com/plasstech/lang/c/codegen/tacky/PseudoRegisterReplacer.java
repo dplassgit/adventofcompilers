@@ -33,8 +33,7 @@ import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
 
-public class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
-
+class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
   /** Replace pseudo operands to stack references. See page 42. */
   private final BackendSymbolTable symbolTable;
   private int currentProcOffset;

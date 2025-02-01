@@ -69,10 +69,8 @@ public class TackyToAsmCodeGen {
       String paramName = function.params().get(i);
       Symbol symbol = symbolTable.get(paramName);
       Type type = symbol.type();
-      Pseudo pseudo = new Pseudo(paramName, type);
-      symbolTable.addPseudo(pseudo);
       instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.ARG_REGISTERS.get(i),
-          pseudo));
+          new Pseudo(paramName, type)));
     }
     // Copy stack to param names.
     int offset = 16;
@@ -81,9 +79,8 @@ public class TackyToAsmCodeGen {
       String paramName = function.params().get(i);
       Symbol symbol = symbolTable.get(paramName);
       Type type = symbol.type();
-      Pseudo pseudo = new Pseudo(paramName, type);
-      symbolTable.addPseudo(pseudo);
-      instructions.add(new Mov(AssemblyType.from(type), new Stack(offset), pseudo));
+      instructions
+          .add(new Mov(AssemblyType.from(type), new Stack(offset), new Pseudo(paramName, type)));
       offset += 8;
     }
     // 4 because they're ints now??? that's not right
@@ -95,6 +92,7 @@ public class TackyToAsmCodeGen {
         .map(ti -> ti.accept(visitor)) // each tackyinstruction becomes a list of asmnodes
         .flatMap(List::stream).toList();
 
+    //    System.err.println(symbolTable);
     PseudoRegisterReplacer siv =
         new PseudoRegisterReplacer(new BackendSymbolTable(symbolTable), currentProcOffset);
     FixupVisitor fv = new FixupVisitor();
