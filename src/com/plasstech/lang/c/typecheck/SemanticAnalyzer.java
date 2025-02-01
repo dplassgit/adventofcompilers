@@ -5,10 +5,6 @@ import com.plasstech.lang.c.parser.Program;
 public class SemanticAnalyzer implements Validator {
   private final SymbolTable symbols;
 
-  public SemanticAnalyzer() {
-    this(new SymbolTable());
-  }
-
   public SemanticAnalyzer(SymbolTable symbols) {
     this.symbols = symbols;
   }
@@ -22,9 +18,5 @@ public class SemanticAnalyzer implements Validator {
     Validator typeChecker = new TypeChecker(symbols);
     program = typeChecker.validate(program);
     return program;
-  }
-
-  public SymbolTable symbolTable() {
-    return symbols;
   }
 }

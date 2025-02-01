@@ -22,7 +22,7 @@ public class BackendSymbolTable {
     return String.format("BackendSymbolTable: %s", map.toString());
   }
 
-  public void put(String name, AsmSymtabEntry entry) {
+  private void put(String name, AsmSymtabEntry entry) {
     map.put(name, entry);
   }
 
@@ -35,11 +35,11 @@ public class BackendSymbolTable {
     for (Symbol s : input.values()) {
       switch (s.type()) {
         case FunType ft -> {
-          put(ft.name(), new FunEntry(s.name(), s.attribute().defined()));
+          put(s.name(), new FunEntry(s.name(), s.attribute().defined()));
         }
         case SimpleType st -> {
           AssemblyType assemblyType = AssemblyType.from(s.type());
-          put(st.name(), new ObjEntry(s.name(), assemblyType, s.attribute() instanceof StaticAttr));//.isGlobal()));
+          put(s.name(), new ObjEntry(s.name(), assemblyType, s.attribute() instanceof StaticAttr));//.isGlobal()));
         }
         default -> throw new IllegalArgumentException("Unexpected value: " + s.type());
       }

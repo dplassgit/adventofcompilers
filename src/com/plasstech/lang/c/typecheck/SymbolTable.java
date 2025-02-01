@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.plasstech.lang.c.codegen.Pseudo;
+
 public class SymbolTable {
   private final Map<String, Symbol> symbols = new HashMap<>();
 
@@ -17,5 +19,14 @@ public class SymbolTable {
 
   public Collection<Symbol> values() {
     return symbols.values();
+  }
+
+  public void addPseudo(Pseudo pseudo) {
+    put(pseudo.identifier(), new Symbol(pseudo.identifier(), pseudo.type(), Attribute.LOCAL_ATTR));
+  }
+
+  @Override
+  public String toString() {
+    return symbols.toString();
   }
 }

@@ -13,6 +13,7 @@ import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
 import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
+import com.plasstech.lang.c.typecheck.SymbolTable;
 
 public class TackyToAsmCodeGenTest {
 
@@ -93,6 +94,25 @@ public class TackyToAsmCodeGenTest {
     System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
   }
 
+  @Test
+  public void typeBeforeStorageClass() {
+    String program = """
+        int static foo(void) {
+          return 3;
+        }
+
+        int static bar = 4;
+
+        int main(void) {
+          int extern foo(void);
+          int extern bar;
+          return foo() + bar;
+        }
+        """;
+    printAsm(generateAsm(program));
+    System.err.println(Joiner.on("\n").join(asmProgramNode.topLevelNodes()));
+  }
+
   private static void printAsm(List<String> asm) {
     System.out.println(Joiner.on("\n").join(asm));
   }
@@ -101,15 +121,16 @@ public class TackyToAsmCodeGenTest {
     Scanner s = new Scanner(input);
     Parser p = new Parser(s);
     Program prog = p.parse();
-    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+    SymbolTable symbolTable = new SymbolTable();
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(symbolTable);
     prog = semanticAnalyzer.validate(prog);
-    TackyProgram tp = new TackyCodeGen(semanticAnalyzer.symbolTable()).generate(prog);
-    TackyToAsmCodeGen tackyToAsmCodeGen = new TackyToAsmCodeGen(semanticAnalyzer.symbolTable());
+    TackyProgram tp = new TackyCodeGen(symbolTable).generate(prog);
+    TackyToAsmCodeGen tackyToAsmCodeGen = new TackyToAsmCodeGen(symbolTable);
     AsmState asmState = tackyToAsmCodeGen.generate(tp);
     assertThat(asmState).isNotNull();
     System.err.println(asmState.backendSymbolTable());
     asmProgramNode = asmState.program();
     assertThat(asmProgramNode).isNotNull();
-    return new CodeEmission(semanticAnalyzer.symbolTable()).generate(asmProgramNode);
+    return new CodeEmission(symbolTable).generate(asmProgramNode);
   }
 }

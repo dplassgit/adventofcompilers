@@ -94,7 +94,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   // Page 261
   private TackyVar makeTackyVariable(String name, Type type) {
-    TackyVar dst = new TackyVar(UniqueId.makeUnique(name));
+    TackyVar dst = new TackyVar(UniqueId.makeUnique(name), type);
     symbolTable.put(dst.identifier(), new Symbol(dst.identifier(), type, Attribute.LOCAL_ATTR));
     return dst;
   }
@@ -140,7 +140,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(Var n) {
-    return new TackyVar(n.identifier());
+    return new TackyVar(n.identifier(), n.type());
   }
 
   @Override
@@ -153,7 +153,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(VarDecl n) {
-    TackyVar dst = new TackyVar(n.name());
+    TackyVar dst = new TackyVar(n.name(), n.type());
     if (!(n.hasStorageClass(StorageClass.STATIC)) || n.hasStorageClass(StorageClass.EXTERN)) {
       // Do not generate code for var decls with storage class static or extern (page 234)
       if (n.init().isPresent()) {

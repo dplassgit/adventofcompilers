@@ -30,7 +30,8 @@ public class Driver {
   }
 
   private Program program;
-  private final SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer();
+  private final SymbolTable symbolTable = new SymbolTable();
+  private final SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(symbolTable);
 
   private void run(String args[]) {
     try {
@@ -85,27 +86,23 @@ public class Driver {
     return input;
   }
 
-  private SymbolTable symbolTable() {
-    return semanticAnalyzer.symbolTable();
-  }
-
   private void tackyCodeGen(Scanner s) {
     validate(s);
     // This doesn't output anything.
-    new TackyCodeGen(symbolTable()).generate(program);
+    new TackyCodeGen(symbolTable).generate(program);
   }
 
   private List<String> generateAsm(Scanner s) {
     validate(s);
-    TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
-    AsmState state = new TackyToAsmCodeGen(symbolTable()).generate(tp);
-    return new CodeEmission(symbolTable()).generate(state.program());
+    TackyProgram tp = new TackyCodeGen(symbolTable).generate(program);
+    AsmState state = new TackyToAsmCodeGen(symbolTable).generate(tp);
+    return new CodeEmission(symbolTable).generate(state.program());
   }
 
   private AsmProgram codeGen(Scanner s) {
     validate(s);
-    TackyProgram tp = new TackyCodeGen(symbolTable()).generate(program);
-    TackyToAsmCodeGen tackyToAsmCodeGen = new TackyToAsmCodeGen(symbolTable());
+    TackyProgram tp = new TackyCodeGen(symbolTable).generate(program);
+    TackyToAsmCodeGen tackyToAsmCodeGen = new TackyToAsmCodeGen(symbolTable);
     AsmState asmState = tackyToAsmCodeGen.generate(tp);
     return asmState.program();
   }

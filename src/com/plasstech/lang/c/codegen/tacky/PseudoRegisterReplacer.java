@@ -44,6 +44,10 @@ public class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
     this.currentProcOffset = currentProcOffset;
   }
 
+  public int currentProcOffset() {
+    return currentProcOffset;
+  }
+
   // Maps from pseudo register name to offset
   private Map<String, Integer> pseudoMapping = new HashMap<>();
 
@@ -53,17 +57,17 @@ public class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
       AsmSymtabEntry entry = symbolTable.get(name);
       if (entry instanceof ObjEntry oe) {
         if (oe.type() == AssemblyType.Longword) {
-          currentProcOffset += 4;
+          currentProcOffset = currentProcOffset() + 4;
         } else if (oe.type() == AssemblyType.Quadword) {
           // TODO: need to round up
-          currentProcOffset += 8;
+          currentProcOffset = currentProcOffset() + 8;
         }
       } else {
         throw new IllegalStateException(
             "Unknown backend symbol type " + entry + " for pseudo name " + name + " symbol table "
                 + symbolTable);
       }
-      offset = -currentProcOffset;
+      offset = -currentProcOffset();
       pseudoMapping.put(name, offset);
     }
     return offset;
@@ -76,6 +80,7 @@ public class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
       case Stack s -> s;
       case Pseudo p -> {
         AsmSymtabEntry s = symbolTable.get(p.identifier());
+        // unclear if this is right p. 237
         if (s instanceof ObjEntry oe) {
           if (oe.isStatic()) {
             yield new Data(oe.name());

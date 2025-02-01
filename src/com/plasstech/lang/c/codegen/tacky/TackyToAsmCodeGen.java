@@ -69,8 +69,10 @@ public class TackyToAsmCodeGen {
       String paramName = function.params().get(i);
       Symbol symbol = symbolTable.get(paramName);
       Type type = symbol.type();
+      Pseudo pseudo = new Pseudo(paramName, type);
+      symbolTable.addPseudo(pseudo);
       instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.ARG_REGISTERS.get(i),
-          new Pseudo(paramName)));
+          pseudo));
     }
     // Copy stack to param names.
     int offset = 16;
@@ -79,8 +81,9 @@ public class TackyToAsmCodeGen {
       String paramName = function.params().get(i);
       Symbol symbol = symbolTable.get(paramName);
       Type type = symbol.type();
-      instructions.add(
-          new Mov(AssemblyType.from(type), new Stack(offset), new Pseudo(paramName)));
+      Pseudo pseudo = new Pseudo(paramName, type);
+      symbolTable.addPseudo(pseudo);
+      instructions.add(new Mov(AssemblyType.from(type), new Stack(offset), pseudo));
       offset += 8;
     }
     // 4 because they're ints now??? that's not right
@@ -94,17 +97,18 @@ public class TackyToAsmCodeGen {
 
     PseudoRegisterReplacer siv =
         new PseudoRegisterReplacer(new BackendSymbolTable(symbolTable), currentProcOffset);
-    FixupVisitor mfv = new FixupVisitor();
+    FixupVisitor fv = new FixupVisitor();
     instructions.addAll(opInstructions);
     instructions = instructions.stream()
         // remap from Pseudo -> Stack, and get the total # of bytes.
         .map(asmNode -> asmNode.accept(siv))
         // map mov stack1, stack2 -> mov stack1, r10; mov r10, stack2 etc
-        .map(asmNode -> asmNode.accept(mfv)) // returns a list for each instruction
+        .map(asmNode -> asmNode.accept(fv)) // returns a list for each instruction
         .flatMap(List::stream)
         .collect(Collectors.toList());
 
     // Prepend an AllocateStack with the appropriate number of bytes (if it's > 0)
+    currentProcOffset = siv.currentProcOffset();
     if (currentProcOffset != 0) {
       // Round this up to the nearest 16.
       currentProcOffset = (int) (Math.ceil(currentProcOffset / 16.0) * 16);
