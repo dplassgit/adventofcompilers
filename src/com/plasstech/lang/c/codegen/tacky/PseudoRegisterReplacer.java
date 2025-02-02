@@ -98,7 +98,7 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
   @Override
   public Instruction visit(Mov op) {
     Operand newSrc = remap(op.src());
-    Operand newDest = remap(op.dest());
+    Operand newDest = remap(op.dst());
     return new Mov(op.type(), newSrc, newDest);
   }
 
@@ -115,8 +115,8 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
 
   @Override
   public Instruction visit(AsmBinary op) {
-    Operand newLeft = remap(op.left());
-    Operand newRight = remap(op.right());
+    Operand newLeft = remap(op.src());
+    Operand newRight = remap(op.dst());
     return new AsmBinary(op.operator(), op.type(), newLeft, newRight);
   }
 
@@ -172,7 +172,7 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
   @Override
   public Instruction visit(Push op) {
     Operand newOperand = remap(op.operand());
-    return new Push(newOperand);
+    return new Push(op.type(), newOperand);
   }
 
   @Override

@@ -115,7 +115,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
       case STAR -> "imul" + n.type().suffix();
       default -> throw new IllegalStateException("Bad binary operator " + n.operator().name());
     };
-    emit("%s %s, %s", instruction, n.left(), n.right());
+    emit("%s %s, %s", instruction, n.src(), n.dst());
     return null;
   }
 

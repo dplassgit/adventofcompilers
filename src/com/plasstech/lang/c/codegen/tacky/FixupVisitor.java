@@ -33,36 +33,58 @@ import com.plasstech.lang.c.codegen.SetCC;
 class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   @Override
   public List<Instruction> visit(Mov n) {
-    // Can't mov stack to stack: use r10 as an intermediary. See page 42.
-    if (n.src().inMemory() && n.dest().inMemory()) {
+    boolean needsIntermediary =
+        n.dst().inMemory() &&
+            (n.src().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src())));
+    if (needsIntermediary) {
+      // Can't mov stack to stack: use r10 as an intermediary. See page 42.
+      // Can't movq from immediate that is bigger than 32 bits. Page 268
       return ImmutableList.of(
           new Mov(n.type(), n.src(), R10),
-          new Mov(n.type(), R10, n.dest()));
+          new Mov(n.type(), R10, n.dst()));
     }
     return ImmutableList.of(n);
+  }
+
+  private static boolean immOutOfRange(Operand operand) {
+    if (operand instanceof Imm source) {
+      long val = source.value();
+      return val > Integer.MAX_VALUE || val < Integer.MIN_VALUE;
+    }
+    return false;
   }
 
   @Override
   public List<Instruction> visit(AsmBinary n) {
     switch (n.operator()) {
       case PLUS:
-      case MINUS:
-        // Can't add or subtract stack and stack; use r10. See page 64
-        if (n.left().inMemory() && n.right().inMemory()) {
+      case MINUS: {
+        boolean needsIntermediary =
+            n.dst().inMemory() &&
+                (n.src().inMemory()
+                    || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src())));
+        if (needsIntermediary) {
+          // Can't add or subtract stack and stack; use r10. See page 64
+          // Or, if left or right is an immediate that is bigger than 32 bits, need to fixup. Page 268
           return ImmutableList.of(
-              new Mov(n.type(), n.left(), R10),
-              new AsmBinary(n.operator(), n.type(), R10, n.right()));
+              new Mov(n.type(), n.src(), R10),
+              new AsmBinary(n.operator(), n.type(), R10, n.dst()));
         }
+      }
         break;
 
-      case STAR:
+      case STAR: {
         // Can't mul into stack; use r11. See page 65
-        if (n.right().inMemory()) {
+        // Also can't mul with a 64-bit immediate. Page 26. 
+        boolean needsIntermediary =
+            n.dst().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src()));
+        if (needsIntermediary) {
           return ImmutableList.of(
-              new Mov(n.type(), n.right(), R11), // NOTYPO
-              new AsmBinary(n.operator(), n.type(), n.left(), R11),
-              new Mov(n.type(), R11, n.right()));
+              new Mov(n.type(), n.dst(), R11), // NOTYPO
+              new AsmBinary(n.operator(), n.type(), n.src(), R11),
+              new Mov(n.type(), R11, n.dst()));
         }
+      }
         break;
 
       default:
@@ -114,13 +136,15 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(Cmp n) {
-    // Fix if both operands are in memory; use r10. See page 88
-    if (n.left().inMemory() && n.right().inMemory()) {
+    // Fix if both operands are in memory; use r10. See page 88, 268
+    boolean needsIntermediary = (n.left().inMemory() && n.right().inMemory()) ||
+        (n.type() == AssemblyType.Quadword && immOutOfRange(n.left()));
+    if (needsIntermediary) {
       return ImmutableList.of(
           new Mov(n.type(), n.left(), R10),
           new Cmp(n.type(), R10, n.right()));
     }
-    // Fix if the second operand is a constant. See page 88
+    // Fix if the second operand is a constant. See page 88.
     if (n.right() instanceof Imm) {
       return ImmutableList.of(
           new Mov(n.type(), n.right(), R11),
@@ -151,6 +175,11 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(Push n) {
+    if (n.type() == AssemblyType.Quadword && immOutOfRange(n.operand())) {
+      return ImmutableList.of(
+          new Mov(AssemblyType.Quadword, n.operand(), R10),
+          new Push(AssemblyType.Quadword, R10));
+    }
     return ImmutableList.of(n);
   }
 

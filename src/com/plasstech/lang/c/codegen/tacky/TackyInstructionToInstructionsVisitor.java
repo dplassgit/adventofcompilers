@@ -94,27 +94,27 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   @Override
   public List<Instruction> visit(TackyBinary op) {
     List<Instruction> instructions = new ArrayList<>();
-    Operand src1 = toOperand(op.src1());
-    Operand src2 = toOperand(op.src2());
+    Operand left = toOperand(op.left());
+    Operand right = toOperand(op.right());
     Operand dst = toOperand(op.dst());
     TokenType operator = op.operator();
-    AssemblyType src1Type = assemblyType(op.src1());
+    AssemblyType leftType = assemblyType(op.left());
     AssemblyType dstType = assemblyType(op.dst());
     switch (operator) {
       case SLASH:
       case PERCENT:
-        // mov (src1, register(ax))
-        instructions.add(new Mov(src1Type, src1, RegisterOperand.RAX));
+        // mov (left, register(ax))
+        instructions.add(new Mov(leftType, left, RegisterOperand.RAX));
         // cdq
-        instructions.add(new Cdq(src1Type));
-        // idiv(src2)
-        instructions.add(new Idiv(src1Type, src2));
+        instructions.add(new Cdq(leftType));
+        // idiv(right)
+        instructions.add(new Idiv(leftType, right));
         if (operator == TokenType.SLASH) {
           // mov(reg(ax), dst)
-          instructions.add(new Mov(src1Type, RegisterOperand.RAX, dst));
+          instructions.add(new Mov(leftType, RegisterOperand.RAX, dst));
         } else {
           // mov(reg(dx), dst)  for modulo
-          instructions.add(new Mov(src1Type, RegisterOperand.RDX, dst));
+          instructions.add(new Mov(leftType, RegisterOperand.RDX, dst));
         }
         break;
 
@@ -125,7 +125,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case LEQ:
       case NEQ:
         // Page 86
-        instructions.add(new Cmp(src1Type, src2, src1));
+        instructions.add(new Cmp(leftType, right, left));
         instructions.add(new Mov(dstType, ZERO, dst));
         instructions.add(new SetCC(CondCode.from(operator), dst));
         break;
@@ -134,11 +134,11 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case MINUS:
       case STAR:
         // For +, -, *: 
-        // First move src1 to dest
-        instructions.add(new Mov(src1Type, src1, dst));
-        // Then use dest and src2 with the operator
+        // First move left to dest
+        instructions.add(new Mov(leftType, left, dst));
+        // Then use right and dest with the operator
         // Are these types right?!
-        instructions.add(new AsmBinary(op.operator(), src1Type, src2, dst));
+        instructions.add(new AsmBinary(op.operator(), leftType, right, dst));
         break;
 
       default:
@@ -229,14 +229,14 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
       if (srcType == AssemblyType.Quadword) {
-        instructions.add(new Push(argOp));
+        instructions.add(new Push(srcType, argOp));
       } else {
         switch (argOp) {
-          case RegisterOperand ro -> instructions.add(new Push(argOp));
-          case Imm imm -> instructions.add(new Push(argOp));
+          case RegisterOperand ro -> instructions.add(new Push(srcType, argOp));
+          case Imm imm -> instructions.add(new Push(srcType, argOp));
           default -> {
             instructions.add(new Mov(AssemblyType.Longword, argOp, RegisterOperand.RAX));
-            instructions.add(new Push(RegisterOperand.RAX));
+            instructions.add(new Push(srcType, RegisterOperand.RAX));
           }
         }
       }

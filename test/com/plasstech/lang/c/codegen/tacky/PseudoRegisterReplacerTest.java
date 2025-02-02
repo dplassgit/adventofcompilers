@@ -25,10 +25,10 @@ public class PseudoRegisterReplacerTest {
     PseudoRegisterReplacer prp = new PseudoRegisterReplacer(bst, 0);
     Mov newMov1 =
         (Mov) prp.visit(new Mov(AssemblyType.Longword, new Imm(0), new Pseudo("foo", Type.INT)));
-    assertThat(newMov1.dest()).isEqualTo(new Stack(-4));
+    assertThat(newMov1.dst()).isEqualTo(new Stack(-4));
     Mov newMov2 =
         (Mov) prp.visit(new Mov(AssemblyType.Quadword, new Imm(1), new Pseudo("bar", Type.LONG)));
-    assertThat(newMov2.dest()).isEqualTo(new Stack(-16));
+    assertThat(newMov2.dst()).isEqualTo(new Stack(-16));
     assertThat(prp.currentProcOffset()).isEqualTo(16);
   }
 
@@ -41,10 +41,10 @@ public class PseudoRegisterReplacerTest {
     PseudoRegisterReplacer prp = new PseudoRegisterReplacer(bst, 0);
     Mov newMov1 =
         (Mov) prp.visit(new Mov(AssemblyType.Quadword, new Imm(1), new Pseudo("bar", Type.LONG)));
-    assertThat(newMov1.dest()).isEqualTo(new Stack(-8));
+    assertThat(newMov1.dst()).isEqualTo(new Stack(-8));
     Mov newMov2 =
         (Mov) prp.visit(new Mov(AssemblyType.Longword, new Imm(0), new Pseudo("foo", Type.INT)));
-    assertThat(newMov2.dest()).isEqualTo(new Stack(-12));
+    assertThat(newMov2.dst()).isEqualTo(new Stack(-12));
     assertThat(prp.currentProcOffset()).isEqualTo(12);
   }
 }
