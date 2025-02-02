@@ -43,6 +43,14 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
           new Mov(n.type(), n.src(), R10),
           new Mov(n.type(), R10, n.dst()));
     }
+    if (n.type() == AssemblyType.Longword && immOutOfRange(n.src())) {
+      // placate the assembler. P 268
+      long value = ((Imm) n.src()).value();
+      // I don't know if this will work for negative numbers. Shrug.
+      int intVal = (int) value;
+      return ImmutableList.of(
+          new Mov(n.type(), new Imm(intVal), n.dst()));
+    }
     return ImmutableList.of(n);
   }
 

@@ -20,7 +20,7 @@ import com.plasstech.lang.c.lex.TokenType;
 
 public class FixupVisitorTest {
   private static final Data GLOBAL = new Data("global");
-  private static final Imm LONG_IMM = new Imm(12345678901L);
+  private static final Imm LONG_IMM = new Imm(4294967299L);
   private FixupVisitor fv = new FixupVisitor();
 
   @Test
@@ -49,6 +49,14 @@ public class FixupVisitorTest {
     Movsx op = new Movsx(GLOBAL, R11);
     List<Instruction> instructions = fv.visit(op);
     assertThat(instructions).containsExactly(op);
+  }
+
+  @Test
+  public void movLongTruncates() {
+    Mov op = new Mov(AssemblyType.Longword, LONG_IMM, R10);
+    List<Instruction> instructions = fv.visit(op);
+    Mov expected = new Mov(AssemblyType.Longword, new Imm(3), R10);
+    assertThat(instructions).containsExactly(expected);
   }
 
   @Test
