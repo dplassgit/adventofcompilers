@@ -74,17 +74,17 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
     emit(".align %d", n.alignment());
     emit0("%s:", n.name());
     if (n.init().valueAsLong() == 0) {
-      emit(".zero 4");
+      emit(".zero %d", n.init().bytes());
     } else {
-      emit(".long %d", n.init().valueAsLong());
+      emit(".%s %d", n.init().name(), n.init().valueAsLong());
     }
     return null;
   }
 
   @Override
   public Void visit(Mov n) {
-    // I'm sure I hate this.
-    emit(n.toString());
+    // Suffix added page 270
+    emit("mov%s %s, %s", n.type().suffix(), n.src().toString(n.type()), n.dst().toString(n.type()));
     return null;
   }
 
@@ -99,42 +99,54 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   @Override
   public Void visit(AsmUnary n) {
     String instruction = switch (n.operator()) {
-      case MINUS -> "negl";
-      case TWIDDLE -> "notl";
+      case MINUS -> "neg";
+      case TWIDDLE -> "not";
       default -> throw new IllegalStateException("Bad unary operator " + n.operator());
     };
-    emit("%s %s", instruction, n.operand().toString());
+    // Suffix added page 270
+    emit("%s%s %s", instruction, n.type().suffix(), n.operand().toString(n.type()));
     return null;
   }
 
   @Override
   public Void visit(AsmBinary n) {
     String instruction = switch (n.operator()) {
-      case MINUS -> "sub" + n.type().suffix();
-      case PLUS -> "add" + n.type().suffix();
-      case STAR -> "imul" + n.type().suffix();
+      case MINUS -> "sub";
+      case PLUS -> "add";
+      case STAR -> "imul";
       default -> throw new IllegalStateException("Bad binary operator " + n.operator().name());
     };
-    emit("%s %s, %s", instruction, n.src(), n.dst());
+    // Suffix added page 270
+    emit("%s%s %s, %s", instruction, n.type().suffix(), n.src().toString(n.type()),
+        n.dst().toString(n.type()));
     return null;
   }
 
   @Override
   public Void visit(Idiv n) {
-    emit("idivl %s", n.operand());
+    emit("idiv%s %s", n.type().suffix(), n.operand().toString(n.type()));
     return null;
   }
 
   @Override
   public Void visit(Cdq n) {
-    emit("cdq");
+    switch (n.type()) {
+      case Longword:
+        emit("cdq");
+        break;
+
+      case Quadword:
+        emit("cqo");
+        break;
+    }
     return null;
   }
 
   @Override
   public Void visit(Cmp n) {
     // Page 89
-    emit("cmpl %s, %s", n.left(), n.right());
+    emit("cmp%s %s, %s", n.type().suffix(), n.left().toString(n.type()),
+        n.right().toString(n.type()));
     return null;
   }
 
@@ -168,9 +180,10 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Push n) {
+    // Suffixes added page 270
     switch (n.operand()) {
-      case RegisterOperand ro -> emit("pushq %s", ro.toString(8));
-      case Imm imm -> emit("pushq %s", imm.toString());
+      case RegisterOperand ro -> emit("push%s %s", n.type().suffix(), ro.toString(n.type()));
+      case Imm imm -> emit("push%s %s", n.type().suffix(), imm.toString(n.type()));
       default ->
         throw new IllegalArgumentException("Unexpected value: " + n.operand());
     }
@@ -190,6 +203,9 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Movsx op) {
-    throw new UnsupportedOperationException("movsx not implemented");
+    // Page 270
+    emit("movslq %s, %s", op.src().toString(AssemblyType.Longword),
+        op.dst().toString(AssemblyType.Quadword));
+    return null;
   }
 }

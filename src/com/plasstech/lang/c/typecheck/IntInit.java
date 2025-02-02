@@ -5,4 +5,14 @@ public record IntInit(int value) implements StaticInit {
   public long valueAsLong() {
     return value;
   }
+
+  @Override
+  public int bytes() {
+    return 4;
+  }
+
+  @Override
+  public String name() {
+    return "long";
+  }
 }
