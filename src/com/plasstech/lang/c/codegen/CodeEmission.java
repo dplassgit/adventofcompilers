@@ -180,13 +180,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Push n) {
-    // Suffixes added page 270
-    switch (n.operand()) {
-      case RegisterOperand ro -> emit("push%s %s", n.type().suffix(), ro.toString(n.type()));
-      case Imm imm -> emit("push%s %s", n.type().suffix(), imm.toString(n.type()));
-      default ->
-        throw new IllegalArgumentException("Unexpected value: " + n.operand());
-    }
+    emit("pushq %s", n.operand().toString(8));
     return null;
   }
 

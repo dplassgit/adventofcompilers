@@ -229,14 +229,14 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
       if (srcType == AssemblyType.Quadword) {
-        instructions.add(new Push(srcType, argOp));
+        instructions.add(new Push(argOp));
       } else {
         switch (argOp) {
-          case RegisterOperand ro -> instructions.add(new Push(srcType, argOp));
-          case Imm imm -> instructions.add(new Push(srcType, argOp));
+          case RegisterOperand ro -> instructions.add(new Push(argOp));
+          case Imm imm -> instructions.add(new Push(argOp));
           default -> {
             instructions.add(new Mov(AssemblyType.Longword, argOp, RegisterOperand.RAX));
-            instructions.add(new Push(srcType, RegisterOperand.RAX));
+            instructions.add(new Push(RegisterOperand.RAX));
           }
         }
       }

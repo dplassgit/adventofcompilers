@@ -26,6 +26,7 @@ import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Movsx;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Push;
+import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 
@@ -83,14 +84,14 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
       case STAR: {
         // Can't mul into stack; use r11. See page 65
-        // Also can't mul with a 64-bit immediate. Page 26. 
+        // Also can't mul with a 64-bit immediate. Page 268. 
         boolean needsIntermediary =
             n.dst().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src()));
         if (needsIntermediary) {
           return ImmutableList.of(
-              new Mov(n.type(), n.dst(), R11), // NOTYPO
-              new AsmBinary(n.operator(), n.type(), n.src(), R11),
-              new Mov(n.type(), R11, n.dst()));
+              new Mov(n.type(), n.src(), RegisterOperand.R11), // NOTYPO
+              new AsmBinary(n.operator(), n.type(), n.dst(), RegisterOperand.R11),
+              new Mov(n.type(), RegisterOperand.R11, n.dst()));
         }
       }
         break;
@@ -144,19 +145,38 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(Cmp n) {
-    // Fix if both operands are in memory; use r10. See page 88, 268
-    boolean needsIntermediary = (n.left().inMemory() && n.right().inMemory()) ||
-        (n.type() == AssemblyType.Quadword && immOutOfRange(n.left()));
-    if (needsIntermediary) {
-      return ImmutableList.of(
-          new Mov(n.type(), n.left(), R10),
-          new Cmp(n.type(), R10, n.right()));
-    }
-    // Fix if the second operand is a constant. See page 88.
+    // Fix if the second operand is a constant. See page 88, 268
     if (n.right() instanceof Imm) {
+      if (n.type() == AssemblyType.Quadword && immOutOfRange(n.left())) {
+        return ImmutableList.of(
+            new Mov(n.type(), n.left(), R10),
+            new Mov(n.type(), n.right(), R11),
+            new Cmp(n.type(), R10, R11));
+      }
+
+      // convert cmp foo, 10234567
+      // to:
+      // mov 1023454326, r11
+      // cmp foo, r11
       return ImmutableList.of(
           new Mov(n.type(), n.right(), R11),
           new Cmp(n.type(), n.left(), R11));
+    }
+    // Fix if both operands are in memory; use r10. See page 88
+    boolean needsIntermediary = (n.left().inMemory() && n.right().inMemory() ||
+        (n.type() == AssemblyType.Quadword && immOutOfRange(n.left())));
+    if (needsIntermediary) {
+      // convert cmp foo, bar to:
+      // mov foo, r10
+      // cmp r10, bar
+      // and also
+
+      // cmp 1234, bar to
+      // mov 123, r10
+      // cmp r10, bar
+      return ImmutableList.of(
+          new Mov(n.type(), n.left(), R10),
+          new Cmp(n.type(), R10, n.right()));
     }
     return ImmutableList.of(n);
   }
@@ -183,10 +203,10 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(Push n) {
-    if (n.type() == AssemblyType.Quadword && immOutOfRange(n.operand())) {
+    if (immOutOfRange(n.operand())) {
       return ImmutableList.of(
           new Mov(AssemblyType.Quadword, n.operand(), R10),
-          new Push(AssemblyType.Quadword, R10));
+          new Push(R10));
     }
     return ImmutableList.of(n);
   }

@@ -19,11 +19,11 @@ public record AsmBinary(TokenType operator, AssemblyType type, Operand src, Oper
   @Override
   public final String toString() {
     String instruction = switch (operator) {
-      case MINUS -> "sub" + type.suffix();
-      case PLUS -> "add" + type.suffix();
-      case STAR -> "imul" + type.suffix();
+      case MINUS -> "sub";
+      case PLUS -> "add";
+      case STAR -> "imul";
       default -> throw new IllegalStateException("Bad binary operator " + operator.name());
     };
-    return String.format("%s %s, %s", instruction, src.toString(), dst.toString());
+    return String.format("%s%s %s, %s", instruction, type.suffix(), src.toString(), dst.toString());
   }
 }

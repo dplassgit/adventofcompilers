@@ -172,7 +172,7 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
   @Override
   public Instruction visit(Push op) {
     Operand newOperand = remap(op.operand());
-    return new Push(op.type(), newOperand);
+    return new Push(newOperand);
   }
 
   @Override

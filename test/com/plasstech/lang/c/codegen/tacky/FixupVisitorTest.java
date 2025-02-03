@@ -20,7 +20,8 @@ import com.plasstech.lang.c.lex.TokenType;
 
 public class FixupVisitorTest {
   private static final Data GLOBAL = new Data("global");
-  private static final Imm LONG_IMM = new Imm(4294967299L);
+  // this is 3 when converted to a 32-bit int
+  private static final Imm LONG_IMM_3 = new Imm(4294967299L);
   private FixupVisitor fv = new FixupVisitor();
 
   @Test
@@ -53,7 +54,7 @@ public class FixupVisitorTest {
 
   @Test
   public void movLongTruncates() {
-    Mov op = new Mov(AssemblyType.Longword, LONG_IMM, R10);
+    Mov op = new Mov(AssemblyType.Longword, LONG_IMM_3, R10);
     List<Instruction> instructions = fv.visit(op);
     Mov expected = new Mov(AssemblyType.Longword, new Imm(3), R10);
     assertThat(instructions).containsExactly(expected);
@@ -61,40 +62,40 @@ public class FixupVisitorTest {
 
   @Test
   public void addLongToReg() {
-    AsmBinary addBig = new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, LONG_IMM, R10);
+    AsmBinary addBig = new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, LONG_IMM_3, R10);
     List<Instruction> instructions = fv.visit(addBig);
     assertThat(instructions).containsExactly(addBig);
   }
 
   @Test
   public void addLongToMemory() {
-    AsmBinary addBig = new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, LONG_IMM, GLOBAL);
+    AsmBinary addBig = new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, LONG_IMM_3, GLOBAL);
     List<Instruction> instructions = fv.visit(addBig);
     assertThat(instructions).containsExactly(
-        new Mov(AssemblyType.Quadword, LONG_IMM, R10),
+        new Mov(AssemblyType.Quadword, LONG_IMM_3, R10),
         new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, R10, GLOBAL));
   }
 
   @Test
   public void pushLong() {
-    Push push = new Push(AssemblyType.Longword, new Imm(1));
+    Push push = new Push(new Imm(1));
     List<Instruction> instructions = fv.visit(push);
     assertThat(instructions).containsExactly(push);
   }
 
   @Test
   public void pushSmallQuadword() {
-    Push push = new Push(AssemblyType.Quadword, new Imm(1));
+    Push push = new Push(new Imm(1));
     List<Instruction> instructions = fv.visit(push);
     assertThat(instructions).containsExactly(push);
   }
 
   @Test
   public void pushBigQuadword() {
-    Push push = new Push(AssemblyType.Quadword, LONG_IMM);
+    Push push = new Push(LONG_IMM_3);
     List<Instruction> instructions = fv.visit(push);
     assertThat(instructions).containsExactly(
-        new Mov(AssemblyType.Quadword, LONG_IMM, R10),
-        new Push(AssemblyType.Quadword, R10));
+        new Mov(AssemblyType.Quadword, LONG_IMM_3, R10),
+        new Push(R10));
   }
 }
