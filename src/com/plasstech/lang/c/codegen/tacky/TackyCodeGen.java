@@ -221,8 +221,9 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public TackyVal visit(Conditional n) {
+    // Page 127
     // evaluate conditional. if false, jump to "else".
-    TackyVar result = makeTackyVariable("cond_result", Type.INT);
+    TackyVar result = makeTackyVariable("cond_result", n.type()); // WAS: int
     String falseLabel = UniqueId.makeUnique("cond_false");
     String endLabel = UniqueId.makeUnique("cond_end");
 
@@ -374,14 +375,14 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(Cast n) {
     // p 260
     TackyVal result = n.exp().accept(this);
-    Type t = n.targetType();
-    if (t.equals(n.exp().type())) {
+    Type targetType = n.targetType();
+    if (targetType.equals(n.exp().type())) {
       return result;
     }
     TackyVar dst = makeTackyVariable("cast_to_" + n.targetType().name(), n.type());
-    if (t.equals(Type.LONG)) {
+    if (targetType.equals(Type.LONG)) {
       emit(new TackySignExtend(result, dst));
-    } else if (t.equals(Type.INT)) {
+    } else if (targetType.equals(Type.INT)) {
       emit(new TackyTruncate(result, dst));
     } else {
       throw new UnsupportedOperationException("Cannot generate cast");

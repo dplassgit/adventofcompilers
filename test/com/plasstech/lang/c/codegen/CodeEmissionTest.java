@@ -27,7 +27,9 @@ public class CodeEmissionTest {
     prog = semanticAnalyzer.validate(prog);
     TackyCodeGen cg = new TackyCodeGen(symtab);
     TackyProgram program = cg.generate(prog);
-    System.err.println(program);
+    for (var tl : program.topLevelDefinitions()) {
+      System.err.println(tl);
+    }
     TackyToAsmCodeGen cg2 = new TackyToAsmCodeGen(symtab);
     AsmState asmState = cg2.generate(program);
     CodeEmission ce = new CodeEmission(symtab);
@@ -64,6 +66,36 @@ public class CodeEmissionTest {
              */
             return 255l < 8589934593l;
         }""";
+    List<String> asm = generate(input);
+    System.err.println(Joiner.on('\n').join(asm));
+  }
+
+  @Test
+  public void compareMixed() {
+    String input = """
+        long along;
+        int anint;
+
+        int conditional(void) {
+            /* When a conditional expression includes both int and long branches,
+             * make sure the int type is promoted to a long, rather than the long being
+             * converted to an int
+             */
+            long result = 1 ? along : anint;
+            return (result == 8589934592l);
+        }
+
+        int main(void) {
+            along = 8589934592l; // 2^33
+            anint = 10;
+            if (!conditional()) {
+                // It is returning here
+                return 4;
+            }
+
+            return 0;
+        }
+        """;
     List<String> asm = generate(input);
     System.err.println(Joiner.on('\n').join(asm));
   }
