@@ -5,4 +5,9 @@ public record Push(Operand operand) implements Instruction {
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String toString() {
+    return String.format("pushq %s", operand().toString(8));
+  }
 }

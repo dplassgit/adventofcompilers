@@ -26,8 +26,13 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
     return emitted;
   }
 
-  private void emit(String pattern, Object... params) {
+  private Void emit(Instruction i) {
+    return emit(i.toString());
+  }
+
+  private Void emit(String pattern, Object... params) {
     emit0("  " + pattern, params);
+    return null;
   }
 
   private void emit0(String pattern, Object... params) {
@@ -42,8 +47,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   @Override
   public Void visit(AsmProgram n) {
     n.topLevelNodes().forEach(fn -> fn.accept(this));
-    emit(".section .note.GNU-stack,\"\",@progbits");
-    return null;
+    return emit(".section .note.GNU-stack,\"\",@progbits");
   }
 
   @Override
@@ -83,9 +87,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Mov n) {
-    // Suffix added page 270
-    emit("mov%s %s, %s", n.type().suffix(), n.src().toString(n.type()), n.dst().toString(n.type()));
-    return null;
+    return emit(n);
   }
 
   @Override
@@ -98,108 +100,64 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(AsmUnary n) {
-    String instruction = switch (n.operator()) {
-      case MINUS -> "neg";
-      case TWIDDLE -> "not";
-      default -> throw new IllegalStateException("Bad unary operator " + n.operator());
-    };
-    // Suffix added page 270
-    emit("%s%s %s", instruction, n.type().suffix(), n.operand().toString(n.type()));
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(AsmBinary n) {
-    String instruction = switch (n.operator()) {
-      case MINUS -> "sub";
-      case PLUS -> "add";
-      case STAR -> "imul";
-      default -> throw new IllegalStateException("Bad binary operator " + n.operator().name());
-    };
-    // Suffix added page 270
-    emit("%s%s %s, %s", instruction, n.type().suffix(), n.src().toString(n.type()),
-        n.dst().toString(n.type()));
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Idiv n) {
-    emit("idiv%s %s", n.type().suffix(), n.operand().toString(n.type()));
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Cdq n) {
-    switch (n.type()) {
-      case Longword:
-        emit("cdq");
-        break;
-
-      case Quadword:
-        emit("cqo");
-        break;
-    }
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Cmp n) {
-    // Page 89
-    emit("cmp%s %s, %s", n.type().suffix(), n.left().toString(n.type()),
-        n.right().toString(n.type()));
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Jmp n) {
-    // Page 89
-    emit("jmp .L%s", n.label());
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(JmpCC n) {
-    // Page 89
-    emit("j%s .L%s", n.cc().name().toLowerCase(), n.label());
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(SetCC n) {
-    // Page 89
-    emit("set%s %s", n.cc().name().toLowerCase(), n.dest().toString(1));
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Label n) {
-    // Page 89
-    emit0(".L%s:", n.label());
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Push n) {
-    emit("pushq %s", n.operand().toString(8));
-    return null;
+    return emit(n);
   }
 
   @Override
   public Void visit(Call n) {
     Symbol s = symbolTable.get(n.identifier());
-    boolean external = false;
-    if (s != null) {
-      external = !s.attribute().defined();
-    }
+    boolean external = s != null && !s.attribute().defined();
     emit("call %s%s", n.identifier(), external ? "@PLT" : "");
     return null;
   }
 
   @Override
-  public Void visit(Movsx op) {
-    // Page 270
-    emit("movslq %s, %s", op.src().toString(AssemblyType.Longword),
-        op.dst().toString(AssemblyType.Quadword));
-    return null;
+  public Void visit(Movsx n) {
+    return emit(n);
   }
 }

@@ -24,6 +24,8 @@ public record AsmBinary(TokenType operator, AssemblyType type, Operand src, Oper
       case STAR -> "imul";
       default -> throw new IllegalStateException("Bad binary operator " + operator.name());
     };
-    return String.format("%s%s %s, %s", instruction, type.suffix(), src.toString(), dst.toString());
+    // Suffix added page 270
+    return String.format("%s%s %s, %s", instruction, type.suffix(), src.toString(type()),
+        dst.toString(type()));
   }
 }
