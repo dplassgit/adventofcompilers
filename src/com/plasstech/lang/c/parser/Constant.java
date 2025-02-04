@@ -1,6 +1,8 @@
 package com.plasstech.lang.c.parser;
 
 import com.google.common.base.Preconditions;
+import com.google.common.primitives.UnsignedInteger;
+import com.google.common.primitives.UnsignedLong;
 import com.plasstech.lang.c.typecheck.Type;
 
 public record Constant<T extends Number>(T value, Type type) implements Exp {
@@ -10,6 +12,14 @@ public record Constant<T extends Number>(T value, Type type) implements Exp {
 
   public static Constant<Long> of(long value) {
     return new Constant<Long>(value, Type.LONG);
+  }
+
+  public static Constant<UnsignedInteger> ofUnsignedInt(int value) {
+    return new Constant<UnsignedInteger>(UnsignedInteger.fromIntBits(value), Type.UNSIGNED_INT);
+  }
+
+  public static Constant<UnsignedLong> ofUnsignedLong(long value) {
+    return new Constant<UnsignedLong>(UnsignedLong.fromLongBits(value), Type.UNSIGNED_LONG);
   }
 
   @Override

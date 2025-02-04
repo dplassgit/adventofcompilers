@@ -51,8 +51,11 @@ public class ScannerTest {
 
   @Test
   public void nextTokenKeywords() {
-    Scanner s =
-        new Scanner("int return void if else do while for break continue extern static long");
+    Scanner s = new Scanner("""
+        int return void if else do while for break continue
+        extern static long
+        signed unsigned
+        """);
     Token t = s.nextToken();
     assertThat(t.type()).isEqualTo(TokenType.INT);
     assertThat(t.isKeyword()).isTrue();
@@ -68,6 +71,8 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EXTERN);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.STATIC);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.LONG);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.SIGNED);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.UNSIGNED);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
 
@@ -102,6 +107,21 @@ public class ScannerTest {
   }
 
   @Test
+  public void nextTokenIntUnsignedConstant() {
+    Scanner s = new Scanner("0U 1U 23u");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_INT_LITERAL);
+    assertThat(t.value()).isEqualTo("0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_INT_LITERAL);
+    assertThat(t.value()).isEqualTo("1");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_INT_LITERAL);
+    assertThat(t.value()).isEqualTo("23");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
   public void nextTokenLongConstant() {
     Scanner s = new Scanner("0L 1L 123123123123l");
     Token t = s.nextToken();
@@ -112,6 +132,21 @@ public class ScannerTest {
     assertThat(t.value()).isEqualTo("1");
     t = s.nextToken();
     assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.value()).isEqualTo("123123123123");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenUnsignedLongConstant() {
+    Scanner s = new Scanner("0UL 1lu 123123123123LU");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_LONG_LITERAL);
+    assertThat(t.value()).isEqualTo("0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_LONG_LITERAL);
+    assertThat(t.value()).isEqualTo("1");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_LONG_LITERAL);
     assertThat(t.value()).isEqualTo("123123123123");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }

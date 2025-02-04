@@ -437,6 +437,21 @@ public class Parser {
         yield Constant.of(value);
       }
 
+      case UNSIGNED_INT_LITERAL -> {
+        String valueAsString = token.value();
+        expect(TokenType.UNSIGNED_INT_LITERAL);
+        int valueAsInt = Integer.parseInt(valueAsString);
+        // Not sure if this is right
+        yield Constant.ofUnsignedInt(valueAsInt);
+      }
+
+      case UNSIGNED_LONG_LITERAL -> {
+        String valueAsString = token.value();
+        expect(TokenType.UNSIGNED_LONG_LITERAL);
+        long value = Long.parseLong(valueAsString);
+        yield Constant.ofUnsignedLong(value);
+      }
+
       case MINUS, TWIDDLE, BANG -> {
         // Unary
         advance();

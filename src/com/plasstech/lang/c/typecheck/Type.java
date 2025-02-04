@@ -14,6 +14,8 @@ public interface Type {
 
   Type INT = new SimpleType("int");
   Type LONG = new SimpleType("long");
+  Type UNSIGNED_INT = new SimpleType("unsigned int");
+  Type UNSIGNED_LONG = new SimpleType("unsigned long");
   Type NO_TYPE = new SimpleType("no type");
 
   static Type fromTokenType(TokenType type) {

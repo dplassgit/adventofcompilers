@@ -164,18 +164,39 @@ public class Scanner {
       advance();
     }
     boolean longConstant = false;
+    boolean unsignedConstant = false;
     if (cc == 'L' || cc == 'l') {
       // long constant
       advance();
       longConstant = true;
+      if (cc == 'U' || cc == 'u') {
+        // unsigned constant
+        advance();
+        unsignedConstant = true;
+      }
+    } else if (cc == 'U' || cc == 'u') {
+      // unsigned constant
+      advance();
+      unsignedConstant = true;
+      if (cc == 'L' || cc == 'l') {
+        // long constant
+        advance();
+        longConstant = true;
+      }
     }
     if (Character.isLetter(cc) || cc == '.') {
       return error("Illegal character " + cc);
     }
 
     String value = sb.toString();
+    if (unsignedConstant && longConstant) {
+      return new Token(TokenType.UNSIGNED_LONG_LITERAL, value);
+    }
     if (longConstant) {
       return new Token(TokenType.LONG_LITERAL, value);
+    }
+    if (unsignedConstant) {
+      return new Token(TokenType.UNSIGNED_INT_LITERAL, value);
     }
     return new Token(TokenType.INT_LITERAL, value);
   }
