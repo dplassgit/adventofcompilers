@@ -26,7 +26,6 @@ import com.plasstech.lang.c.codegen.Mov;
 import com.plasstech.lang.c.codegen.Movsx;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Push;
-import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 
@@ -89,9 +88,9 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
             n.dst().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src()));
         if (needsIntermediary) {
           return ImmutableList.of(
-              new Mov(n.type(), n.src(), RegisterOperand.R11), // NOTYPO
-              new AsmBinary(n.operator(), n.type(), n.dst(), RegisterOperand.R11),
-              new Mov(n.type(), RegisterOperand.R11, n.dst()));
+              new Mov(n.type(), n.src(), R11), // NOTYPO
+              new AsmBinary(n.operator(), n.type(), n.dst(), R11),
+              new Mov(n.type(), R11, n.dst()));
         }
       }
         break;

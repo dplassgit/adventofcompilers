@@ -6,8 +6,8 @@ import com.plasstech.lang.c.typecheck.Type;
  * Page 261.
  */
 public enum AssemblyType {
-  Longword("l"),
-  Quadword("q");
+  Longword("l"), // 4 bytes
+  Quadword("q"); // 8 bytes
 
   private final String suffix;
 
@@ -16,9 +16,9 @@ public enum AssemblyType {
   }
 
   public static AssemblyType from(Type type) {
-    if (type.equals(Type.LONG)) {
+    if (type.equals(Type.LONG) || type.equals(Type.UNSIGNED_LONG)) {
       return Quadword;
-    } else if (type.equals(Type.INT)) {
+    } else if (type.equals(Type.INT) || type.equals(Type.UNSIGNED_INT)) {
       return Longword;
     }
     throw new IllegalStateException(

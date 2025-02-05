@@ -233,14 +233,9 @@ public class TackyCodeGenTest {
         """;
     TackyProgram tp = generate(input);
     assertThat(tp.topLevelDefinitions()).hasSize(1);
-    for (var tld : tp.topLevelDefinitions()) {
-      if (tld instanceof TackyFunction fn) {
-        List<TackyInstruction> instructions = fn.body();
-        assertThat(instructions.size()).isGreaterThan(0);
-      } else {
-        fail("Expected TackyFunctionDef");
-      }
-    }
+    TackyFunction fn = (TackyFunction) tp.topLevelDefinitions().get(0);
+    List<TackyInstruction> instructions = fn.body();
+    assertThat(instructions.size()).isGreaterThan(0);
   }
 
   @Test
@@ -312,9 +307,9 @@ public class TackyCodeGenTest {
     Program prog = new Parser(new Scanner(input)).parse();
     prog = semanticAnalyzer.validate(prog);
     TackyCodeGen cg = new TackyCodeGen(symtab);
-    Collection<Symbol> beforeGeneration = ImmutableSet.copyOf(symtab.values());
+    Collection<Symbol> beforeGenerationSymbols = ImmutableSet.copyOf(symtab.values());
     cg.generate(prog);
-    assertThat(beforeGeneration).isEqualTo(ImmutableSet.copyOf(symtab.values()));
+    assertThat(beforeGenerationSymbols).isEqualTo(ImmutableSet.copyOf(symtab.values()));
   }
 
   @Test
@@ -342,8 +337,8 @@ public class TackyCodeGenTest {
     Program prog = p.parse();
     prog = semanticAnalyzer.validate(prog);
     TackyCodeGen cg = new TackyCodeGen(symtab);
-    Collection<Symbol> beforeGeneration = ImmutableSet.copyOf(symtab.values());
+    Collection<Symbol> beforeGenerationSymbols = ImmutableSet.copyOf(symtab.values());
     cg.generate(prog);
-    assertThat(beforeGeneration).isNotEqualTo(symtab.values());
+    assertThat(beforeGenerationSymbols).isNotEqualTo(symtab.values());
   }
 }
