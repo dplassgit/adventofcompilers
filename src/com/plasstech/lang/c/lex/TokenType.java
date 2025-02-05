@@ -19,10 +19,7 @@ public enum TokenType {
   SIGNED(true),
   IDENTIFIER,
   //  STRING_LITERAL,
-  UNSIGNED_LONG_LITERAL, // I hate this
-  UNSIGNED_INT_LITERAL, // This too.
-  INT_LITERAL,
-  LONG_LITERAL,
+  NUMERIC_LITERAL,
   OBRACE("{"),
   CBRACE("}"),
   OPAREN("("),

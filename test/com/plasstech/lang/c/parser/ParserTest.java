@@ -977,7 +977,7 @@ public class ParserTest {
   public void chapter10FnDefinitionWithStorageClass() {
     // This isn't allowed by the type checker but the parser allows it.
     String input = """
-        extern  int fn(void) {
+        extern int fn(void) {
           return 0;
         }
         """;

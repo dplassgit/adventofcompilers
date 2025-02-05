@@ -2,6 +2,8 @@ package com.plasstech.lang.c.lex;
 
 import java.util.Optional;
 
+import com.plasstech.lang.c.typecheck.Type;
+
 public class Scanner {
   private final String text;
   private int loc; // absolute location in text
@@ -190,15 +192,15 @@ public class Scanner {
 
     String value = sb.toString();
     if (unsignedConstant && longConstant) {
-      return new Token(TokenType.UNSIGNED_LONG_LITERAL, value);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_LONG);
     }
     if (longConstant) {
-      return new Token(TokenType.LONG_LITERAL, value);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.LONG);
     }
     if (unsignedConstant) {
-      return new Token(TokenType.UNSIGNED_INT_LITERAL, value);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_INT);
     }
-    return new Token(TokenType.INT_LITERAL, value);
+    return new Token(TokenType.NUMERIC_LITERAL, value, Type.INT);
   }
 
   private Token error(String message) {

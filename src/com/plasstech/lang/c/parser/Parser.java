@@ -418,38 +418,29 @@ public class Parser {
         yield result;
       }
 
-      case INT_LITERAL -> {
+      case NUMERIC_LITERAL -> {
         String valueAsString = token.value();
-        expect(TokenType.INT_LITERAL);
+        Type vt = token.varType();
+        expect(TokenType.NUMERIC_LITERAL);
         long valueAsLong = Long.parseLong(valueAsString);
-        if (valueAsLong <= 2147483647) {
-          int value = Integer.parseInt(valueAsString);
-          yield Constant.of(value);
-        } else {
+        if (vt.equals(Type.INT)) {
+          if (valueAsLong <= 2147483647L) {
+            int valueAsInt = Integer.parseInt(valueAsString);
+            yield Constant.of(valueAsInt);
+          } else {
+            yield Constant.of(valueAsLong);
+          }
+        } else if (vt.equals(Type.LONG)) {
           yield Constant.of(valueAsLong);
+        } else if (vt.equals(Type.UNSIGNED_INT)) {
+          // Not sure if this is right
+          int valueAsInt = Integer.parseInt(valueAsString);
+          yield Constant.ofUnsignedInt(valueAsInt);
+        } else if (vt.equals(Type.UNSIGNED_LONG)) {
+          yield Constant.ofUnsignedLong(valueAsLong);
+        } else {
+          throw new IllegalStateException("Unknown token type " + token.varType());
         }
-      }
-
-      case LONG_LITERAL -> {
-        String valueAsString = token.value();
-        expect(TokenType.LONG_LITERAL);
-        long value = Long.parseLong(valueAsString);
-        yield Constant.of(value);
-      }
-
-      case UNSIGNED_INT_LITERAL -> {
-        String valueAsString = token.value();
-        expect(TokenType.UNSIGNED_INT_LITERAL);
-        int valueAsInt = Integer.parseInt(valueAsString);
-        // Not sure if this is right
-        yield Constant.ofUnsignedInt(valueAsInt);
-      }
-
-      case UNSIGNED_LONG_LITERAL -> {
-        String valueAsString = token.value();
-        expect(TokenType.UNSIGNED_LONG_LITERAL);
-        long value = Long.parseLong(valueAsString);
-        yield Constant.ofUnsignedLong(value);
       }
 
       case MINUS, TWIDDLE, BANG -> {

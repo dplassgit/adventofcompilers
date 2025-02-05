@@ -5,6 +5,8 @@ import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
 
+import com.plasstech.lang.c.typecheck.Type;
+
 public class ScannerTest {
 
   @Test
@@ -95,13 +97,16 @@ public class ScannerTest {
   public void nextTokenIntConstant() {
     Scanner s = new Scanner("0 1 23");
     Token t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.INT_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.INT);
     assertThat(t.value()).isEqualTo("0");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.INT_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.INT);
     assertThat(t.value()).isEqualTo("1");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.INT_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.INT);
     assertThat(t.value()).isEqualTo("23");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
@@ -110,13 +115,16 @@ public class ScannerTest {
   public void nextTokenIntUnsignedConstant() {
     Scanner s = new Scanner("0U 1U 23u");
     Token t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_INT_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.UNSIGNED_INT);
     assertThat(t.value()).isEqualTo("0");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_INT_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.UNSIGNED_INT);
     assertThat(t.value()).isEqualTo("1");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_INT_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.UNSIGNED_INT);
     assertThat(t.value()).isEqualTo("23");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
@@ -125,13 +133,16 @@ public class ScannerTest {
   public void nextTokenLongConstant() {
     Scanner s = new Scanner("0L 1L 123123123123l");
     Token t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.LONG);
     assertThat(t.value()).isEqualTo("0");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.LONG);
     assertThat(t.value()).isEqualTo("1");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.LONG_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.LONG);
     assertThat(t.value()).isEqualTo("123123123123");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
@@ -140,13 +151,16 @@ public class ScannerTest {
   public void nextTokenUnsignedLongConstant() {
     Scanner s = new Scanner("0UL 1lu 123123123123LU");
     Token t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_LONG_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.UNSIGNED_LONG);
     assertThat(t.value()).isEqualTo("0");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_LONG_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.UNSIGNED_LONG);
     assertThat(t.value()).isEqualTo("1");
     t = s.nextToken();
-    assertThat(t.type()).isEqualTo(TokenType.UNSIGNED_LONG_LITERAL);
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.UNSIGNED_LONG);
     assertThat(t.value()).isEqualTo("123123123123");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
   }
