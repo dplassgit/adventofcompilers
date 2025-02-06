@@ -14,12 +14,12 @@ public record Constant<T extends Number>(T value, Type type) implements Exp {
     return new Constant<Long>(value, Type.LONG);
   }
 
-  public static Constant<UnsignedInteger> ofUnsignedInt(int value) {
-    return new Constant<UnsignedInteger>(UnsignedInteger.fromIntBits(value), Type.UNSIGNED_INT);
+  public static Constant<UnsignedInteger> ofUnsignedInt(String value) {
+    return new Constant<UnsignedInteger>(UnsignedInteger.valueOf(value), Type.UNSIGNED_INT);
   }
 
-  public static Constant<UnsignedLong> ofUnsignedLong(long value) {
-    return new Constant<UnsignedLong>(UnsignedLong.fromLongBits(value), Type.UNSIGNED_LONG);
+  public static Constant<UnsignedLong> ofUnsignedLong(String value) {
+    return new Constant<UnsignedLong>(UnsignedLong.valueOf(value), Type.UNSIGNED_LONG);
   }
 
   @Override

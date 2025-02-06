@@ -1187,8 +1187,29 @@ public class ParserTest {
           return p2;
         }
         """;
-    Program prog = parse(input);
-    System.err.println(prog);
+    parse(input);
+  }
+
+  @Test
+  public void chapter12CastToUnsigned() {
+    String input = """
+        long int main(int p) {
+          long p2 = (unsigned long) p;
+          return p2;
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
+  public void chapter12CastToSigned() {
+    String input = """
+        long int main(int p) {
+          long p2 = (signed long) p;
+          return p2;
+        }
+        """;
+    parse(input);
   }
 
   @Test
@@ -1222,5 +1243,120 @@ public class ParserTest {
     VarDecl vd = (VarDecl) prog.declarations().get(0);
     Exp rhs = vd.init().get();
     assertThat(rhs).isEqualTo(Constant.of(123123123123L));
+  }
+
+  @Test
+  public void longIntGlobal() {
+    String input = """
+        long int a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void intLongGlobal() {
+    String input = """
+        int long a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void intIntGlobal() {
+    String input = """
+        int int a;
+        """;
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    assertThat(exception.getMessage()).contains("twice");
+  }
+
+  @Test
+  public void unsignedSignedIntGlobal() {
+    String input = """
+        unsigned signed int a;
+        """;
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    assertThat(exception.getMessage()).contains("both unsigned and signed");
+  }
+
+  @Test
+  public void unsignedIntGlobal() {
+    String input = """
+        unsigned int a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.UNSIGNED_INT);
+    }
+  }
+
+  @Test
+  public void signedIntGlobal() {
+    String input = """
+        signed int a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.INT);
+    }
+  }
+
+  @Test
+  public void unsignedLongGlobal() {
+    String input = """
+        unsigned long a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.UNSIGNED_LONG);
+    }
+  }
+
+  @Test
+  public void signedLongGlobal() {
+    String input = """
+        signed long a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void signedLongIntGlobal() {
+    String input = """
+        signed long int a;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.LONG);
+    }
+  }
+
+  @Test
+  public void implicitUlToInt() {
+    String input = """
+        int a = 9223372036854775813ul;
+        """;
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.INT);
+      assertThat(vd.init().get()).isEqualTo(Constant.ofUnsignedLong("9223372036854775813"));
+    }
   }
 }

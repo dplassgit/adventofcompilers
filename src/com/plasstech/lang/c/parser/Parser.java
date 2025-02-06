@@ -1,5 +1,6 @@
 package com.plasstech.lang.c.parser;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -10,6 +11,8 @@ import java.util.Set;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.UnsignedInteger;
+import com.google.common.primitives.UnsignedLong;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.Token;
 import com.plasstech.lang.c.lex.TokenType;
@@ -38,11 +41,13 @@ public class Parser {
     return new Program(fileLevelDecls);
   }
 
-  private List<Type> parseTypeSpecifiers() {
-    List<Type> types = new ArrayList<>();
-    while (token.type() != TokenType.EOF
-        && (token.type() == TokenType.INT || token.type() == TokenType.LONG)) {
-      types.add(Type.fromTokenType(token.type()));
+  private static final Set<TokenType> TYPE_SPECIFIERS =
+      ImmutableSet.of(TokenType.INT, TokenType.LONG, TokenType.SIGNED, TokenType.UNSIGNED);
+
+  private List<TokenType> parseTypeSpecifiers() {
+    List<TokenType> types = new ArrayList<>();
+    while (token.type() != TokenType.EOF && TYPE_SPECIFIERS.contains(token.type())) {
+      types.add(token.type());
       advance();
     }
 
@@ -55,13 +60,13 @@ public class Parser {
         expect(TokenType.VOID);
         yield ImmutableList.of();
       }
-      case INT, LONG -> {
+      case INT, LONG, SIGNED, UNSIGNED -> {
         List<Param> params = new ArrayList<>();
         while (token.type() != TokenType.EOF) {
           if (params.size() > 0) {
             expect(TokenType.COMMA);
           }
-          // Ugh, gotta do the stupid long int thing here too
+          // Convert one or more type specifiers into a type
           Type type = extractType(parseTypeSpecifiers());
           if (token.type() != TokenType.IDENTIFIER) {
             error("Expected identifier, saw " + token);
@@ -98,7 +103,9 @@ public class Parser {
   private static final ImmutableSet<TokenType> DECL_STARTERS = ImmutableSet.of(
       TokenType.INT,
       TokenType.LONG,
-      // TokenType.VOID, unclear if this is allowed as of Chapter 10
+      TokenType.UNSIGNED,
+      TokenType.SIGNED,
+      TokenType.VOID, // unclear if this is allowed as of Chapter 10
       TokenType.EXTERN,
       TokenType.STATIC);
 
@@ -232,10 +239,9 @@ public class Parser {
 
   private TypeAndStorageClass parseTypeAndStorageClass() {
     List<StorageClass> storageClasses = new ArrayList<>();
-    List<Type> types = new ArrayList<>();
+    List<TokenType> typeSpecifiers = new ArrayList<>();
     while (token.type() == TokenType.EOF
-        // I kind of hate this
-        || token.type() == TokenType.INT || token.type() == TokenType.LONG
+        || TYPE_SPECIFIERS.contains(token.type())
         || token.type() == TokenType.EXTERN || token.type() == TokenType.STATIC) {
       switch (token.type()) {
         case EOF:
@@ -244,7 +250,10 @@ public class Parser {
 
         case INT:
         case LONG:
-          types.addAll(parseTypeSpecifiers());
+        case UNSIGNED:
+        case SIGNED:
+          typeSpecifiers.add(token.type());
+          advance();
           break;
 
         case STATIC:
@@ -262,40 +271,39 @@ public class Parser {
       error("Too many storage classes: %s", storageClasses.toString());
       return null;
     }
-    Type type = extractType(types);
+    Type type = extractType(typeSpecifiers);
     if (storageClasses.size() == 0) {
       return new TypeAndStorageClass(type);
     }
     return new TypeAndStorageClass(type, storageClasses.get(0));
   }
 
-  private static final Set<Type> INT_LONG = ImmutableSet.of(Type.INT, Type.LONG);
-
-  private Type extractType(List<Type> types) {
-    if (types.size() == 0) {
+  private static Type extractType(List<TokenType> typeSpecifiers) {
+    if (typeSpecifiers.size() == 0) {
       error("Must specify a type");
       return null;
     }
-    // ing, or long (or short)
-    if (types.size() == 1) {
-      return types.get(0);
-    }
-    if (types.size() > 2) {
-      error("Too many types specified (maximum 2). Saw: %s", types.toString());
+    Set<TokenType> uniqueSpecifiers = new HashSet<>(typeSpecifiers);
+    if (uniqueSpecifiers.contains(TokenType.UNSIGNED)
+        && uniqueSpecifiers.contains(TokenType.SIGNED)) {
+      error("Cannot specify both unsigned and signed: %s", typeSpecifiers);
       return null;
     }
-    Set<Type> uniqueTypes = new HashSet<>(types);
-    // Can only be int, long or long, int
-    if (uniqueTypes.size() == 1) {
-      error("Can only specify long int or int long; saw %s", types.toString());
+    if (uniqueSpecifiers.size() != typeSpecifiers.size()) {
+      error("Cannot have the same specifier twice: %s", typeSpecifiers);
       return null;
     }
-    if (uniqueTypes.equals(INT_LONG)) {
-      // it's int long or long int
+    if (uniqueSpecifiers.contains(TokenType.UNSIGNED)
+        && uniqueSpecifiers.contains(TokenType.LONG)) {
+      return Type.UNSIGNED_LONG;
+    }
+    if (uniqueSpecifiers.contains(TokenType.UNSIGNED)) {
+      return Type.UNSIGNED_INT;
+    }
+    if (uniqueSpecifiers.contains(TokenType.LONG)) {
       return Type.LONG;
     }
-    error("Should never get here; types list was %s", types.toString());
-    return null;
+    return Type.INT;
   }
 
   // int var [ = exp] ;
@@ -400,7 +408,7 @@ public class Parser {
       case OPAREN -> {
         advance();
         Exp result = switch (token.type()) {
-          case INT, LONG -> {
+          case INT, LONG, UNSIGNED, SIGNED -> {
             // cast
             Type type = extractType(parseTypeSpecifiers());
             expect(TokenType.CPAREN);
@@ -422,25 +430,47 @@ public class Parser {
         String valueAsString = token.value();
         Type vt = token.varType();
         expect(TokenType.NUMERIC_LITERAL);
-        long valueAsLong = Long.parseLong(valueAsString);
+
+        BigInteger bigInt = new BigInteger(valueAsString);
+        // From page 250 and page 278. This is bloody confusing.
+        if (bigInt.compareTo(UnsignedLong.MAX_VALUE.bigIntegerValue()) > 1) {
+          error("Constant is too large to represent as an int or long: %s", valueAsString);
+          yield null;
+        }
+
+        boolean fitsInInt = bigInt.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) != 1;
+        boolean fitsInLong = bigInt.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) != 1;
         if (vt.equals(Type.INT)) {
-          if (valueAsLong <= 2147483647L) {
+          if (fitsInInt) {
+            // It will fit in an int.
             int valueAsInt = Integer.parseInt(valueAsString);
             yield Constant.of(valueAsInt);
-          } else {
+          }
+          // we asked for int, but it won't fit in int, it's a long.
+          if (fitsInLong) {
+            long valueAsLong = Long.parseLong(valueAsString);
             yield Constant.of(valueAsLong);
           }
-        } else if (vt.equals(Type.LONG)) {
-          yield Constant.of(valueAsLong);
-        } else if (vt.equals(Type.UNSIGNED_INT)) {
-          // Not sure if this is right
-          int valueAsInt = Integer.parseInt(valueAsString);
-          yield Constant.ofUnsignedInt(valueAsInt);
-        } else if (vt.equals(Type.UNSIGNED_LONG)) {
-          yield Constant.ofUnsignedLong(valueAsLong);
-        } else {
-          throw new IllegalStateException("Unknown token type " + token.varType());
+          error("Too big for a long: %s", valueAsString);
         }
+        if (vt.equals(Type.LONG)) {
+          if (fitsInLong) {
+            long valueAsLong = Long.parseLong(valueAsString);
+            yield Constant.of(valueAsLong);
+          }
+          // if it won't fit in long, this is an error.
+          error("Too big for a long: %s", valueAsString);
+        }
+        if (vt.equals(Type.UNSIGNED_LONG)) {
+          yield Constant.ofUnsignedLong(valueAsString);
+        }
+        boolean fitsInUnsignedInt =
+            bigInt.compareTo(UnsignedInteger.MAX_VALUE.bigIntegerValue()) != 1;
+        // maybe unsigned int, or maybe unsigned long
+        if (fitsInUnsignedInt) {
+          yield Constant.ofUnsignedInt(valueAsString);
+        }
+        yield Constant.ofUnsignedLong(valueAsString);
       }
 
       case MINUS, TWIDDLE, BANG -> {
@@ -477,7 +507,7 @@ public class Parser {
     return new FunctionCall(variableName, args);
   }
 
-  private void error(String message, Object... params) {
+  private static void error(String message, Object... params) {
     throw new ParserException(String.format(message, params));
   }
 
