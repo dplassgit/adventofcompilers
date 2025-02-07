@@ -15,4 +15,11 @@ public record FunDecl(String name, FunType funType, List<String> paramNames, Opt
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
+
+  public BlockItem nthItem(int i) {
+    if (body.isEmpty()) {
+      return null;
+    }
+    return body.get().items().get(i);
+  }
 }

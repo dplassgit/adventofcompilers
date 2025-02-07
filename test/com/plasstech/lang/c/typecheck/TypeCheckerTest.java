@@ -259,7 +259,7 @@ public class TypeCheckerTest {
         """;
     Program program = validate(input);
     FunDecl fd = (FunDecl) program.declarations().get(0);
-    Return r = (Return) fd.body().get().items().get(0);
+    Return r = (Return) fd.nthItem(0);
     assertThat(r.exp().type()).isEqualTo(Type.INT);
   }
 
@@ -273,7 +273,7 @@ public class TypeCheckerTest {
         """;
     Program program = validate(input);
     FunDecl fd = (FunDecl) program.declarations().get(0);
-    Return r = (Return) fd.body().get().items().get(1);
+    Return r = (Return) fd.nthItem(1);
     assertThat(r.exp().type()).isEqualTo(Type.LONG);
   }
 
@@ -287,7 +287,7 @@ public class TypeCheckerTest {
         """;
     Program program = validate(input);
     FunDecl fd = (FunDecl) program.declarations().get(0);
-    Return r = (Return) fd.body().get().items().get(1);
+    Return r = (Return) fd.nthItem(1);
     assertThat(r.exp().type()).isEqualTo(Type.INT);
   }
 
@@ -330,5 +330,93 @@ public class TypeCheckerTest {
     SemanticAnalyzerException e =
         assertThrows(SemanticAnalyzerException.class, () -> validate(input));
     assertThat(e.getMessage()).contains("Conflicting types for 'foo'");
+  }
+
+  @Test
+  public void unsignedIntAndIntBecomesUnsignedInt() {
+    String input = """
+        unsigned int main(unsigned int a) {
+          int b = 1;
+          return b + a;
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.nthItem(1);
+    assertThat(r.exp().type()).isEqualTo(Type.UNSIGNED_INT);
+  }
+
+  @Test
+  public void unsignedIntAndUnsignedLongBecomesUnsignedLong() {
+    String input = """
+        unsigned long main(unsigned long a) {
+          unsigned int b = 1u;
+          return b + a;
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.nthItem(1);
+    assertThat(r.exp().type()).isEqualTo(Type.UNSIGNED_LONG);
+  }
+
+  @Test
+  public void unsignedIntAndLongBecomesLong() {
+    String input = """
+        unsigned int main(unsigned int a) {
+          long b = 1L;
+          return b + a; // it actually IS a long but then it gets cast AGAIN to the return type
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.nthItem(1);
+    assertThat(r.exp().type()).isEqualTo(Type.UNSIGNED_INT);
+  }
+
+  @Test
+  public void unsignedLongAndLongBecomesUnsignedLong() {
+    String input = """
+        unsigned long main(unsigned long a) {
+          signed long b = 1L;
+          return b + a;
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return r = (Return) fd.nthItem(1);
+    assertThat(r.exp().type()).isEqualTo(Type.UNSIGNED_LONG);
+  }
+
+  @Test
+  public void staticInitUnsignedIntOverflow() {
+    String input = """
+        static unsigned int u = 4294967299L;
+        """;
+    validate(input);
+    Symbol u = symbols.get("u");
+    StaticAttr attr = (StaticAttr) u.attribute();
+    assertThat(attr.init()).isInstanceOf(Initializer.class);
+    Initializer initialValue = (Initializer) attr.init();
+    assertThat(initialValue.staticInit()).isInstanceOf(UIntInit.class);
+    UIntInit staticInit = (UIntInit) initialValue.staticInit();
+    // whoa, this actually works. Thanks Java.
+    assertThat(staticInit.value()).isEqualTo(3);
+  }
+
+  @Test
+  public void staticInitIntOverflow() {
+    String input = """
+        static int u = 4294967246u;
+        """;
+    validate(input);
+    Symbol u = symbols.get("u");
+    StaticAttr attr = (StaticAttr) u.attribute();
+    assertThat(attr.init()).isInstanceOf(Initializer.class);
+    Initializer initialValue = (Initializer) attr.init();
+    assertThat(initialValue.staticInit()).isInstanceOf(IntInit.class);
+    IntInit staticInit = (IntInit) initialValue.staticInit();
+    // whoa, this actually works. Thanks Java.
+    assertThat(staticInit.value()).isEqualTo(-50);
   }
 }

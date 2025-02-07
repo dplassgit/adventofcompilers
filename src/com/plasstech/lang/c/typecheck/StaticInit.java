@@ -5,5 +5,6 @@ public interface StaticInit {
 
   long valueAsLong();
 
+  // Name for the asm generation
   String name();
 }

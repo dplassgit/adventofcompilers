@@ -1,28 +1,26 @@
 package com.plasstech.lang.c.typecheck;
 
-import com.plasstech.lang.c.lex.TokenType;
-
 public interface Type {
   String name();
 
-  record SimpleType(String name) implements Type {
+  default int size() {
+    return 0;
+  }
+
+  default boolean signed() {
+    return false;
+  }
+
+  record SimpleType(String name, int size, boolean signed) implements Type {
     @Override
     public final String toString() {
       return name;
     }
   }
 
-  Type INT = new SimpleType("int");
-  Type LONG = new SimpleType("long");
-  Type UNSIGNED_INT = new SimpleType("unsigned int");
-  Type UNSIGNED_LONG = new SimpleType("unsigned long");
-  Type NO_TYPE = new SimpleType("no type");
-
-  static Type fromTokenType(TokenType type) {
-    return switch (type) {
-      case INT -> INT;
-      case LONG -> LONG;
-      default -> throw new IllegalArgumentException("Unexpected value: " + type);
-    };
-  }
+  Type INT = new SimpleType("int", 32, true);
+  Type LONG = new SimpleType("long", 64, true);
+  Type UNSIGNED_INT = new SimpleType("unsigned int", 32, false);
+  Type UNSIGNED_LONG = new SimpleType("unsigned long", 64, false);
+  Type NO_TYPE = new SimpleType("no type", 0, false);
 }

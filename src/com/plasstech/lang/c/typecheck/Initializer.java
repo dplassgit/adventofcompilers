@@ -11,6 +11,13 @@ public record Initializer(StaticInit staticInit) implements InitialValue {
     if (type.equals(Type.LONG)) {
       return new Initializer(new LongInit(value));
     }
+    // Not sure if this is right. Page 280
+    if (type.equals(Type.UNSIGNED_INT)) {
+      return new Initializer(new UIntInit((int) value));
+    }
+    if (type.equals(Type.UNSIGNED_LONG)) {
+      return new Initializer(new ULongInit(value));
+    }
     throw new IllegalStateException("Cannot create of type " + type.toString());
   }
 

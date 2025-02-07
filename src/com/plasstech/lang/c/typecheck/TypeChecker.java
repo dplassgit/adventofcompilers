@@ -210,6 +210,13 @@ public class TypeChecker implements Validator {
         if (ci.type().equals(Type.LONG)) {
           yield Optional.of(ci.asLong());
         }
+        // Page 280. Not sure if this is right.
+        if (ci.type().equals(Type.UNSIGNED_INT)) {
+          yield Optional.of(ci.asLong());
+        }
+        if (ci.type().equals(Type.UNSIGNED_LONG)) {
+          yield Optional.of(ci.asLong());
+        }
         throw new IllegalArgumentException("Unexpected value: " + ci.type());
       }
       default -> Optional.empty();
@@ -254,12 +261,21 @@ public class TypeChecker implements Validator {
     return new Return(convertTo(typeCheckExp(r.exp()), currentRetType));
   }
 
-  // Page 254
-  private static Type getCommonType(Type t1, Type t2) {
-    if (t1.equals(t2)) {
-      return t1;
+  // Page 254, 280
+  private static Type getCommonType(Type type1, Type type2) {
+    if (type1.equals(type2)) {
+      return type1;
     }
-    return Type.LONG;
+    if (type1.size() == type2.size()) {
+      if (type1.signed()) {
+        return type2;
+      }
+      return type1;
+    }
+    if (type1.size() > type2.size()) {
+      return type1;
+    }
+    return type2;
   }
 
   // Page 255
