@@ -375,17 +375,21 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(Cast n) {
     // p 260
     TackyVal result = n.exp().accept(this);
+    Type innerType = n.exp().type();
     Type targetType = n.targetType();
-    if (targetType.equals(n.exp().type())) {
+    if (targetType.equals(innerType)) {
       return result;
     }
-    TackyVar dst = makeTackyVariable("cast_to_" + n.targetType().name(), n.type());
-    if (targetType.equals(Type.LONG)) {
-      emit(new TackySignExtend(result, dst));
-    } else if (targetType.equals(Type.INT)) {
+    // page 282
+    TackyVar dst = makeTackyVariable("cast_to_" + targetType.name(), targetType);
+    if (targetType.size() == innerType.size()) {
+      emit(new TackyCopy(result, dst));
+    } else if (targetType.size() < innerType.size()) {
       emit(new TackyTruncate(result, dst));
+    } else if (innerType.signed()) {
+      emit(new TackySignExtend(result, dst));
     } else {
-      throw new UnsupportedOperationException("Cannot generate cast");
+      emit(new TackyZeroExtend(result, dst));
     }
     return dst;
   }
