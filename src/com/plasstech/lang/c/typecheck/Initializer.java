@@ -6,14 +6,14 @@ package com.plasstech.lang.c.typecheck;
 public record Initializer(StaticInit staticInit) implements InitialValue {
   public static Initializer of(long value, Type type) {
     if (type.equals(Type.INT)) {
-      return new Initializer(new IntInit((int) value));
+      return new Initializer(new IntInit(value));
     }
     if (type.equals(Type.LONG)) {
       return new Initializer(new LongInit(value));
     }
     // Not sure if this is right. Page 280
     if (type.equals(Type.UNSIGNED_INT)) {
-      return new Initializer(new UIntInit((int) value));
+      return new Initializer(new UIntInit(value));
     }
     if (type.equals(Type.UNSIGNED_LONG)) {
       return new Initializer(new ULongInit(value));

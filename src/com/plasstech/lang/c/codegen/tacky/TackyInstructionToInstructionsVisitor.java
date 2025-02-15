@@ -122,7 +122,9 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
           }
         } else {
           // page 288
-          // mov (left, register(ax))
+          // mov (left, register(ax)) (above)
+          // mov 0, rdx
+          instructions.add(new Mov(leftType, new Imm(0), RegisterOperand.RDX));
           // div(right)
           instructions.add(new Div(leftType, right));
           if (operator == TokenType.SLASH) {
