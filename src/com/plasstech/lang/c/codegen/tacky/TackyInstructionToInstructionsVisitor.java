@@ -11,6 +11,7 @@ import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.CondCode;
+import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -18,6 +19,7 @@ import com.plasstech.lang.c.codegen.Jmp;
 import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
+import com.plasstech.lang.c.codegen.MovZeroExtend;
 import com.plasstech.lang.c.codegen.Movsx;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Pseudo;
@@ -94,6 +96,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   @Override
   public List<Instruction> visit(TackyBinary op) {
     List<Instruction> instructions = new ArrayList<>();
+
     Operand left = toOperand(op.left());
     Operand right = toOperand(op.right());
     Operand dst = toOperand(op.dst());
@@ -105,16 +108,30 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case PERCENT:
         // mov (left, register(ax))
         instructions.add(new Mov(leftType, left, RegisterOperand.RAX));
-        // cdq
-        instructions.add(new Cdq(leftType));
-        // idiv(right)
-        instructions.add(new Idiv(leftType, right));
-        if (operator == TokenType.SLASH) {
-          // mov(reg(ax), dst)
-          instructions.add(new Mov(leftType, RegisterOperand.RAX, dst));
+        if (op.left().type().signed()) {
+          // cdq
+          instructions.add(new Cdq(leftType));
+          // idiv(right)
+          instructions.add(new Idiv(leftType, right));
+          if (operator == TokenType.SLASH) {
+            // mov(reg(ax), dst)
+            instructions.add(new Mov(leftType, RegisterOperand.RAX, dst));
+          } else {
+            // mov(reg(dx), dst)  for modulo
+            instructions.add(new Mov(leftType, RegisterOperand.RDX, dst));
+          }
         } else {
-          // mov(reg(dx), dst)  for modulo
-          instructions.add(new Mov(leftType, RegisterOperand.RDX, dst));
+          // page 288
+          // mov (left, register(ax))
+          // div(right)
+          instructions.add(new Div(leftType, right));
+          if (operator == TokenType.SLASH) {
+            // mov(reg(ax), dst)
+            instructions.add(new Mov(leftType, RegisterOperand.RAX, dst));
+          } else {
+            // mov(reg(dx), dst)  for modulo
+            instructions.add(new Mov(leftType, RegisterOperand.RDX, dst));
+          }
         }
         break;
 
@@ -127,7 +144,9 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
         // Page 86
         instructions.add(new Cmp(leftType, right, left));
         instructions.add(new Mov(dstType, ZERO, dst));
-        instructions.add(new SetCC(CondCode.from(operator), dst));
+        // page 288 adds signed
+        boolean signed = op.left().type().signed();
+        instructions.add(new SetCC(CondCode.from(operator, signed), dst));
         break;
 
       case PLUS:
@@ -272,5 +291,11 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     // page 263
     return ImmutableList
         .of(new Mov(AssemblyType.Longword, toOperand(op.src()), toOperand(op.dst())));
+  }
+
+  @Override
+  public List<Instruction> visit(TackyZeroExtend op) {
+    // page 288ff
+    return ImmutableList.of(new MovZeroExtend(toOperand(op.src()), toOperand(op.dst())));
   }
 }

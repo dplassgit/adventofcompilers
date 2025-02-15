@@ -16,6 +16,7 @@ import com.plasstech.lang.c.codegen.AssemblyType;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
+import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -23,6 +24,7 @@ import com.plasstech.lang.c.codegen.Jmp;
 import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
+import com.plasstech.lang.c.codegen.MovZeroExtend;
 import com.plasstech.lang.c.codegen.Movsx;
 import com.plasstech.lang.c.codegen.Operand;
 import com.plasstech.lang.c.codegen.Push;
@@ -108,6 +110,17 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       return ImmutableList.of(
           new Mov(n.type(), n.operand(), R10),
           new Idiv(n.type(), R10));
+    }
+    return ImmutableList.of(n);
+  }
+
+  @Override
+  public List<Instruction> visit(Div n) {
+    // Can't divide by a constant; use r10 as an intermediary. See page 290
+    if (n.operand() instanceof Imm) {
+      return ImmutableList.of(
+          new Mov(n.type(), n.operand(), R10),
+          new Div(n.type(), R10));
     }
     return ImmutableList.of(n);
   }
@@ -231,5 +244,20 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
           new Mov(AssemblyType.Quadword, R11, dst));
     }
     return ImmutableList.of(op);
+  }
+
+  @Override
+  public List<Instruction> visit(MovZeroExtend op) {
+    // Page 290
+    if (op.dst().inMemory()) {
+      // if dest is memory, rewrite to two:
+      //  1. mov(longword, src, reg 11)
+      //  2. mov(quadword, r11, dest)
+      return ImmutableList.of(
+          new Mov(AssemblyType.Longword, op.src(), R11),
+          new Mov(AssemblyType.Quadword, R11, op.dst()));
+    }
+    // dest is a register: rewrite to mov longword src, dst
+    return ImmutableList.of(new Mov(AssemblyType.Longword, op.src(), op.dst()));
   }
 }

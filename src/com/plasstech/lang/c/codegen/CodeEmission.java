@@ -77,6 +77,9 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
     }
     emit(".align %d", n.alignment());
     emit0("%s:", n.name());
+
+    // These seem to be independent of signed-ness
+    // Page 291
     if (n.init().valueAsLong() == 0) {
       emit(".zero %d", n.init().bytes());
     } else {
@@ -159,5 +162,15 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   @Override
   public Void visit(Movsx n) {
     return emit(n);
+  }
+
+  @Override
+  public Void visit(MovZeroExtend op) {
+    throw new UnsupportedOperationException("movzeroextend");
+  }
+
+  @Override
+  public Void visit(Div op) {
+    return emit(op);
   }
 }

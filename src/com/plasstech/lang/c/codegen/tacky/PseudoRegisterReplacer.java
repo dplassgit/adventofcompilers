@@ -16,6 +16,7 @@ import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.Data;
+import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
 import com.plasstech.lang.c.codegen.Instruction;
@@ -23,6 +24,7 @@ import com.plasstech.lang.c.codegen.Jmp;
 import com.plasstech.lang.c.codegen.JmpCC;
 import com.plasstech.lang.c.codegen.Label;
 import com.plasstech.lang.c.codegen.Mov;
+import com.plasstech.lang.c.codegen.MovZeroExtend;
 import com.plasstech.lang.c.codegen.Movsx;
 import com.plasstech.lang.c.codegen.ObjEntry;
 import com.plasstech.lang.c.codegen.Operand;
@@ -190,5 +192,18 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
     Operand newSrc = remap(op.src());
     Operand newDest = remap(op.dst());
     return new Movsx(newSrc, newDest);
+  }
+
+  @Override
+  public Instruction visit(MovZeroExtend op) {
+    Operand newSrc = remap(op.src());
+    Operand newDest = remap(op.dst());
+    return new MovZeroExtend(newSrc, newDest);
+  }
+
+  @Override
+  public Instruction visit(Div op) {
+    Operand newOperand = remap(op.operand());
+    return new Div(op.type(), newOperand);
   }
 }

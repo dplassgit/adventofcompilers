@@ -12,7 +12,12 @@ public enum CondCode {
   G,
   GE,
   L,
-  LE;
+  LE,
+  // Page 287
+  A,
+  AE,
+  B,
+  BE;
 
   private static final Map<TokenType, CondCode> FROM_TOKEN_TYPE = ImmutableMap.of(
       TokenType.EQEQ, E,
@@ -22,7 +27,20 @@ public enum CondCode {
       TokenType.LT, L,
       TokenType.LEQ, LE);
 
-  public static CondCode from(TokenType operator) {
-    return FROM_TOKEN_TYPE.get(operator);
+  // Page 289
+  private static final Map<TokenType, CondCode> FROM_TOKEN_TYPE_UNSIGNED = ImmutableMap.of(
+      TokenType.EQEQ, E,
+      TokenType.NEQ, NE,
+      TokenType.GT, A,
+      TokenType.GEQ, AE,
+      TokenType.LT, B,
+      TokenType.LEQ, BE);
+
+  public static CondCode from(TokenType operator, boolean signed) {
+    if (signed) {
+      return FROM_TOKEN_TYPE.get(operator);
+    } else {
+      return FROM_TOKEN_TYPE_UNSIGNED.get(operator);
+    }
   }
 }

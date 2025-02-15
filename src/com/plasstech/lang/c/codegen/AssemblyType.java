@@ -16,6 +16,7 @@ public enum AssemblyType {
   }
 
   public static AssemblyType from(Type type) {
+    // page 289
     if (type.equals(Type.LONG) || type.equals(Type.UNSIGNED_LONG)) {
       return Quadword;
     } else if (type.equals(Type.INT) || type.equals(Type.UNSIGNED_INT)) {

@@ -45,9 +45,9 @@ public class TackyToAsmCodeGen {
             case TackyFunction fn -> generateFn(fn);
             case TackyStaticVariable sv -> {
               int alignment;
-              if (sv.type().equals(Type.LONG)) {
+              if (sv.type().equals(Type.LONG) || sv.type().equals(Type.UNSIGNED_LONG)) {
                 alignment = 8;
-              } else if (sv.type().equals(Type.INT)) {
+              } else if (sv.type().equals(Type.INT) || sv.type().equals(Type.UNSIGNED_INT)) {
                 alignment = 4;
               } else {
                 throw new IllegalStateException("Unknown static type " + sv.type());

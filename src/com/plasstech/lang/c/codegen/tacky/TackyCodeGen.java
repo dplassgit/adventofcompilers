@@ -136,6 +136,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
 
   @Override
   public <T extends Number> TackyVal visit(Constant<T> n) {
+    // this may be the error - something about subtracting 2^32?
     return new TackyConstant(n.type(), n.asLong());
   }
 

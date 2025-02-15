@@ -35,6 +35,10 @@ public interface AsmNode {
     R visit(Call op);
 
     R visit(Movsx op);
+
+    R visit(MovZeroExtend op);
+
+    R visit(Div op);
   }
 
   <R> R accept(Visitor<R> visitor);
