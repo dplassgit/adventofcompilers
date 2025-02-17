@@ -17,6 +17,7 @@ public enum TokenType {
   LONG(true),
   UNSIGNED(true),
   SIGNED(true),
+  DOUBLE(true),
   IDENTIFIER,
   //  STRING_LITERAL,
   NUMERIC_LITERAL,

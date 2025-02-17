@@ -5,11 +5,20 @@
 # Inputs: /path/to/program.c
 # Outputs: /path/to/program (executable)
 
-# Use last argument as filepath.
-filepath=${!#}
+last=${!#}
+library=""
+# Library linking added page 301
+if [[ $last == '-lm' ]]; then
+	library="-lm"
+	# second to last arg.
+	filepath="${@:(-2):1}"
+else
+	filepath="$last"
+fi
+
 # Strip the extension
 base="${filepath%.*}"
-# echo "Compiling $base (.c)"
+echo "Compiling $base (.c)"
 
 # Preprocess
 gcc -E -P $base.c -o $base.i
@@ -23,9 +32,9 @@ else
 	rv=$?
 	if [[ $rv == '0' ]]; then
 		if [[ $1 == '-c' ]]; then
-			gcc -c $base.s -o $base.o
+			gcc -c $base.s -o $base.o $library
 		else
-			gcc $base.s -o $base
+			gcc $base.s -o $base $library
 		fi
 	fi
 	if [[ $1 != '-S' ]]; then 
