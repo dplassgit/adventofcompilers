@@ -28,3 +28,4 @@ lib/*
 examples/*
 !examples/*.c
 .classpath
+/bin/

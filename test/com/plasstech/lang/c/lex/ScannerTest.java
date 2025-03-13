@@ -4,9 +4,13 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.Assert.assertThrows;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import com.google.testing.junit.testparameterinjector.TestParameter;
+import com.google.testing.junit.testparameterinjector.TestParameterInjector;
 import com.plasstech.lang.c.typecheck.Type;
 
+@RunWith(TestParameterInjector.class)
 public class ScannerTest {
 
   @Test
@@ -166,11 +170,9 @@ public class ScannerTest {
   }
 
   @Test
-  public void nextTokenBadIntConstant() {
-    assertThrows(ScannerException.class, () -> new Scanner("0a").nextToken());
-    assertThrows(ScannerException.class, () -> new Scanner("23B").nextToken());
-    assertThrows(ScannerException.class, () -> new Scanner("234.").nextToken());
-    assertThrows(ScannerException.class, () -> new Scanner("234L.").nextToken());
+  public void nextTokenBadIntConstant(
+      @TestParameter({"0a", "23B", "234L."}) String token) {
+    assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
   }
 
   @Test
@@ -239,5 +241,70 @@ public class ScannerTest {
     assertThrows(ScannerException.class, () -> new Scanner(".").nextToken());
     assertThrows(ScannerException.class, () -> new Scanner("\\").nextToken());
     assertThrows(ScannerException.class, () -> new Scanner("/*").nextToken());
+  }
+
+  @Test
+  public void nextTokenDoubleConstants() {
+    Scanner s = new Scanner("1. 1.0 0.1 .1");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("1.");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("1.0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("0.1");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo(".1");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenDoubleConstantsWeird() {
+    Scanner s = new Scanner(".00004 00.000005");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo(".00004");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("00.000005");
+    t = s.nextToken();
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenDoubleConstantsWithExp() {
+    Scanner s = new Scanner("1E0 1.0E0 0.1E+1 .1e-123");
+    Token t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("1E0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("1.0E0");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo("0.1E+1");
+    t = s.nextToken();
+    assertThat(t.type()).isEqualTo(TokenType.NUMERIC_LITERAL);
+    assertThat(t.varType()).isEqualTo(Type.DOUBLE);
+    assertThat(t.value()).isEqualTo(".1e-123");
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);
+  }
+
+  @Test
+  public void nextTokenBadFloats(
+      @TestParameter({"1.e-10x", "2._", "1E2x", "1.0e10.0"}) String token) {
+    assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
   }
 }

@@ -10,5 +10,8 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
 	<classpathentry kind="lib" path="lib/truth-1.4.4.jar" sourcepath="lib/truth-1.4.4-sources.jar"/>
 	<classpathentry kind="lib" path="lib/guava-33.0.0-jre.jar" sourcepath="lib/guava-33.0.0-jre-sources.jar"/>
+	<classpathentry kind="lib" path="lib/test-parameter-injector-1.0.jar"/>
+	<classpathentry kind="lib" path="lib/failureaccess-1.0.1.jar"/>
+	<classpathentry kind="lib" path="lib/guava-testlib-33.0.0-jre.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

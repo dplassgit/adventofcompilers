@@ -40,7 +40,7 @@ public class Scanner {
       return maybeEof.get();
     }
 
-    if (Character.isDigit(cc)) {
+    if (Character.isDigit(cc) || cc == '.') {
       return makeNumber();
     }
     if (Character.isLetter(cc) || cc == '_') {
@@ -160,37 +160,66 @@ public class Scanner {
   }
 
   private Token makeNumber() {
-    StringBuilder sb = new StringBuilder();
-    while (Character.isDigit(cc) || cc == '_') {
-      sb.append(cc);
+    String value = "";
+    boolean parsingDouble = cc == '.';
+    if (cc == '.') {
+      // Leading dot in a floating point constant
+      value += cc;
       advance();
+    }
+    value += makeInt();
+    if (value.equals(".")) {
+      return error("Illegal character '.'");
     }
     boolean longConstant = false;
     boolean unsignedConstant = false;
-    if (cc == 'L' || cc == 'l') {
-      // long constant
-      advance();
-      longConstant = true;
-      if (cc == 'U' || cc == 'u') {
-        // unsigned constant
-        advance();
-        unsignedConstant = true;
-      }
-    } else if (cc == 'U' || cc == 'u') {
-      // unsigned constant
-      advance();
-      unsignedConstant = true;
+    char prevC = cc;
+    if (value.length() > 0 && !parsingDouble) {
       if (cc == 'L' || cc == 'l') {
         // long constant
         advance();
         longConstant = true;
+        if (cc == 'U' || cc == 'u') {
+          // unsigned constant
+          advance();
+          unsignedConstant = true;
+        }
+      } else if (cc == 'U' || cc == 'u') {
+        // unsigned constant
+        advance();
+        unsignedConstant = true;
+        if (cc == 'L' || cc == 'l') {
+          // long constant
+          advance();
+          longConstant = true;
+        }
       }
     }
-    if (Character.isLetter(cc) || cc == '.') {
-      return error("Illegal character " + cc);
+    // Page 302-304
+    if ((cc == '.' || cc == 'E' || cc == 'e')
+        && (prevC == 'L' || prevC == 'l' || prevC == 'U' || prevC == 'u')) {
+      // I kind of hate this.
+      return error(
+          "Illegal character " + prevC + " before dot in floating point constant " + value);
+    }
+    if (cc == '.') {
+      value += cc;
+      advance();
+      parsingDouble = true;
+      // ###. (trailing dot) so far
+      value += makeInt();
+    }
+    parsingDouble |= (cc == 'E' || cc == 'e');
+    if (parsingDouble) {
+      // Could be ###.###[Ee][+-]?###
+      value += makeOptionalExponent();
+    } else if (Character.isLetter(cc)) {
+      return error("Illegal character " + cc + " in floating point constant " + value);
+    }
+    if (parsingDouble) {
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.DOUBLE);
     }
 
-    String value = sb.toString();
     if (unsignedConstant && longConstant) {
       return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_LONG);
     }
@@ -201,6 +230,47 @@ public class Scanner {
       return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_INT);
     }
     return new Token(TokenType.NUMERIC_LITERAL, value, Type.INT);
+  }
+
+  // Returns the exponent (if any). Assumes the next character is E or e, a non-number-starter:
+  // [Ee][+-]?int
+  // Throws if the following character (after the int) is "illegal", but it's possible I got it
+  // wrong...
+  private String makeOptionalExponent() {
+    String value = "";
+    if (cc == 'E' || cc == 'e') {
+      value += cc;
+      advance();
+      if (cc == '+' || cc == '-') {
+        value += cc;
+        advance();
+      }
+      String exp = makeInt();
+      if (exp.length() == 0) {
+        error("Invalid floating point constant: " + value);
+      }
+      value += exp;
+    }
+    // gah. the trailing characters of a float constant can only be certain things and I can't
+    // remember what they are... let's guess
+    if (cc == '.' || Character.isAlphabetic(cc) || cc == '_') {
+      error("Invalid character after floating point constant: " + cc);
+    }
+    return value;
+  }
+
+  // Returns the next sequence of just numbers or underscores. Throws exception if leading
+  // underscore.
+  private String makeInt() {
+    String sb = "";
+    if (cc == '_') {
+      error("Cannot start number with underscore");
+    }
+    while (Character.isDigit(cc) || cc == '_') {
+      sb += cc;
+      advance();
+    }
+    return sb;
   }
 
   private Token error(String message) {
