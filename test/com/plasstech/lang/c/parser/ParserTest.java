@@ -6,11 +6,15 @@ import static org.junit.Assert.assertThrows;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
+import com.google.testing.junit.testparameterinjector.TestParameter;
+import com.google.testing.junit.testparameterinjector.TestParameterInjector;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.typecheck.Type;
 
+@RunWith(TestParameterInjector.class)
 public class ParserTest {
 
   private static Program parse(String input) {
@@ -50,7 +54,8 @@ public class ParserTest {
   @Test
   public void missingCloseBrace() {
     String input = "int main(void) { return 1;";
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -62,13 +67,15 @@ public class ParserTest {
   @Test
   public void missingSemi() {
     String input = "int main(void) { return 1}";
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
   public void chapter1ExtraCode() {
     String input = "int main(void) { return 1;} int";
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -134,7 +141,8 @@ public class ParserTest {
           return -;
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -144,7 +152,8 @@ public class ParserTest {
           return (-);
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -154,7 +163,8 @@ public class ParserTest {
           return --3;
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -776,7 +786,8 @@ public class ParserTest {
           }
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -787,7 +798,8 @@ public class ParserTest {
           }
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -821,7 +833,8 @@ public class ParserTest {
     String input = """
         int main2(int a, ) {}
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -829,7 +842,8 @@ public class ParserTest {
     String input = """
         int main2(int) {}
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -837,7 +851,8 @@ public class ParserTest {
     String input = """
         int main2(void, void) {}
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -866,7 +881,8 @@ public class ParserTest {
         int main2(void) {
           return main2(
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -876,7 +892,8 @@ public class ParserTest {
           return main2(a+b b*a+3);
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -886,7 +903,8 @@ public class ParserTest {
           return main2(a,b,);
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -896,7 +914,8 @@ public class ParserTest {
           return main2(a,b);
         }
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -904,7 +923,8 @@ public class ParserTest {
     String input = """
         main2(a+b b*a+3);
         """;
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -1009,6 +1029,15 @@ public class ParserTest {
     String input = """
         int int a;
         """;
+    assertThrows(ParserException.class, () -> parse(input));
+  }
+
+  @Test
+  public void chapter13BadTypesWithDouble(
+      @TestParameter(
+        {"int double", "double double", "unsigned double", "signed double", "double int"}
+      ) String spec) {
+    String input = String.format("%s a", spec);
     assertThrows(ParserException.class, () -> parse(input));
   }
 
@@ -1246,6 +1275,29 @@ public class ParserTest {
   }
 
   @Test
+  public void chapter13Double() {
+    String input = """
+        double a = 123123123123.;
+        """;
+    Program prog = parse(input);
+    VarDecl vd = (VarDecl) prog.declarations().get(0);
+    assertThat(vd.type()).isEqualTo(Type.DOUBLE);
+    Exp rhs = vd.init().get();
+    assertThat(rhs).isEqualTo(Constant.of(123123123123.));
+  }
+
+  @Test
+  public void chapter13Cast() {
+    String input = """
+        long int main(int p) {
+          double p2 = (double) p;
+          return p2;
+        }
+        """;
+    parse(input);
+  }
+
+  @Test
   public void longIntGlobal() {
     String input = """
         long int a;
@@ -1284,7 +1336,7 @@ public class ParserTest {
         unsigned signed int a;
         """;
     ParserException exception = assertThrows(ParserException.class, () -> parse(input));
-    assertThat(exception.getMessage()).contains("both unsigned and signed");
+    assertThat(exception.getMessage()).contains("both `unsigned` and `signed`");
   }
 
   @Test

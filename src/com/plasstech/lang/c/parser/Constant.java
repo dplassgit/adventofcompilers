@@ -6,6 +6,10 @@ import com.google.common.primitives.UnsignedLong;
 import com.plasstech.lang.c.typecheck.Type;
 
 public record Constant<T extends Number>(T value, Type type) implements Exp {
+  public static Constant<Double> of(double value) {
+    return new Constant<Double>(value, Type.DOUBLE);
+  }
+
   public static Constant<Integer> of(int value) {
     return new Constant<Integer>(value, Type.INT);
   }
@@ -20,6 +24,10 @@ public record Constant<T extends Number>(T value, Type type) implements Exp {
 
   public static Constant<UnsignedLong> ofUnsignedLong(String value) {
     return new Constant<UnsignedLong>(UnsignedLong.valueOf(value), Type.UNSIGNED_LONG);
+  }
+
+  public static Constant<Double> ofDouble(String value) {
+    return new Constant<Double>(Double.parseDouble(value), Type.DOUBLE);
   }
 
   @Override

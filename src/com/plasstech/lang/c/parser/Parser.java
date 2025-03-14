@@ -42,7 +42,8 @@ public class Parser {
   }
 
   private static final Set<TokenType> TYPE_SPECIFIERS =
-      ImmutableSet.of(TokenType.INT, TokenType.LONG, TokenType.SIGNED, TokenType.UNSIGNED);
+      ImmutableSet.of(TokenType.DOUBLE, TokenType.INT, TokenType.LONG, TokenType.SIGNED,
+          TokenType.UNSIGNED);
 
   private List<TokenType> parseTypeSpecifiers() {
     List<TokenType> types = new ArrayList<>();
@@ -60,7 +61,7 @@ public class Parser {
         expect(TokenType.VOID);
         yield ImmutableList.of();
       }
-      case INT, LONG, SIGNED, UNSIGNED -> {
+      case DOUBLE, INT, LONG, SIGNED, UNSIGNED -> {
         List<Param> params = new ArrayList<>();
         while (token.type() != TokenType.EOF) {
           if (params.size() > 0) {
@@ -69,7 +70,7 @@ public class Parser {
           // Convert one or more type specifiers into a type
           Type type = extractType(parseTypeSpecifiers());
           if (token.type() != TokenType.IDENTIFIER) {
-            error("Expected identifier, saw " + token);
+            error("Expected identifier, saw `%s`", token.value());
             break;
           }
           params.add(new Param(token.value(), type));
@@ -80,7 +81,10 @@ public class Parser {
         }
         yield params;
       }
-      default -> throw new IllegalArgumentException("Unexpected value: " + token.type());
+      default -> {
+        error("Unexpected value: " + token.type());
+        yield null;
+      }
     };
   }
 
@@ -101,13 +105,15 @@ public class Parser {
   }
 
   private static final ImmutableSet<TokenType> DECL_STARTERS = ImmutableSet.of(
+      TokenType.DOUBLE,
+      TokenType.EXTERN,
       TokenType.INT,
       TokenType.LONG,
-      TokenType.UNSIGNED,
       TokenType.SIGNED,
-      TokenType.VOID, // unclear if this is allowed as of Chapter 10
-      TokenType.EXTERN,
-      TokenType.STATIC);
+      TokenType.STATIC,
+      TokenType.UNSIGNED,
+      TokenType.VOID // unclear if this is allowed as of Chapter 10
+  );
 
   private BlockItem parseBlockItem() {
     // Is there a better way to do this? I fear...
@@ -119,18 +125,18 @@ public class Parser {
 
   private Statement parseStatement() {
     Statement item = switch (token.type()) {
+      case BREAK -> parseBreak();
+      case CONTINUE -> parseContinue();
+      case DO -> parseDo();
+      case FOR -> parseFor();
+      case IF -> parseIf();
+      case OBRACE -> new Compound(parseBlock());
       case RETURN -> parseReturn();
       case SEMICOLON -> {
         advance();
         yield new NullStatement();
       }
-      case IF -> parseIf();
-      case CONTINUE -> parseContinue();
-      case BREAK -> parseBreak();
       case WHILE -> parseWhile();
-      case DO -> parseDo();
-      case FOR -> parseFor();
-      case OBRACE -> new Compound(parseBlock());
       default -> parseExpAsStatement();
     };
     return item;
@@ -244,24 +250,24 @@ public class Parser {
         || TYPE_SPECIFIERS.contains(token.type())
         || token.type() == TokenType.EXTERN || token.type() == TokenType.STATIC) {
       switch (token.type()) {
-        case EOF:
-          error("Unexpected EOF");
-          return null;
-
+        case DOUBLE:
         case INT:
         case LONG:
-        case UNSIGNED:
         case SIGNED:
-        case DOUBLE:
+        case UNSIGNED:
           typeSpecifiers.add(token.type());
           advance();
           break;
 
-        case STATIC:
         case EXTERN:
+        case STATIC:
           storageClasses.add(StorageClass.of(token.type()));
           advance();
           break;
+
+        case EOF:
+          error("Unexpected EOF");
+          return null;
 
         default:
           // needs to break out of the while loop?
@@ -279,19 +285,26 @@ public class Parser {
     return new TypeAndStorageClass(type, storageClasses.get(0));
   }
 
-  private static Type extractType(List<TokenType> typeSpecifiers) {
+  private Type extractType(List<TokenType> typeSpecifiers) {
     if (typeSpecifiers.size() == 0) {
       error("Must specify a type");
       return null;
     }
     Set<TokenType> uniqueSpecifiers = new HashSet<>(typeSpecifiers);
+    if (typeSpecifiers.contains(TokenType.DOUBLE)) {
+      if (typeSpecifiers.size() == 1) {
+        return Type.DOUBLE;
+      }
+      error("Cannot combine `double` with other type specifiers: %s", typeSpecifiers);
+      return null;
+    }
     if (uniqueSpecifiers.contains(TokenType.UNSIGNED)
         && uniqueSpecifiers.contains(TokenType.SIGNED)) {
-      error("Cannot specify both unsigned and signed: %s", typeSpecifiers);
+      error("Cannot specify both `unsigned` and `signed`: %s", typeSpecifiers);
       return null;
     }
     if (uniqueSpecifiers.size() != typeSpecifiers.size()) {
-      error("Cannot have the same specifier twice: %s", typeSpecifiers);
+      error("Cannot include the same specifier twice: %s", typeSpecifiers);
       return null;
     }
     if (uniqueSpecifiers.contains(TokenType.UNSIGNED)
@@ -409,7 +422,7 @@ public class Parser {
       case OPAREN -> {
         advance();
         Exp result = switch (token.type()) {
-          case INT, LONG, UNSIGNED, SIGNED -> {
+          case DOUBLE, INT, LONG, SIGNED, UNSIGNED -> {
             // cast
             Type type = extractType(parseTypeSpecifiers());
             expect(TokenType.CPAREN);
@@ -432,46 +445,50 @@ public class Parser {
         Type vt = token.varType();
         expect(TokenType.NUMERIC_LITERAL);
 
-        BigInteger bigInt = new BigInteger(valueAsString);
-        // From page 250 and page 278. This is bloody confusing.
-        if (bigInt.compareTo(UnsignedLong.MAX_VALUE.bigIntegerValue()) > 1) {
-          error("Constant is too large to represent as an int or long: %s", valueAsString);
-          yield null;
-        }
+        if (!vt.equals(Type.DOUBLE)) {
+          BigInteger bigInt = new BigInteger(valueAsString);
+          // From page 250 and page 278. This is bloody confusing.
+          if (bigInt.compareTo(UnsignedLong.MAX_VALUE.bigIntegerValue()) > 1) {
+            error("Constant is too large to represent as an int or long: %s", valueAsString);
+            yield null;
+          }
 
-        boolean fitsInInt = bigInt.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) != 1;
-        boolean fitsInLong = bigInt.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) != 1;
-        if (vt.equals(Type.INT)) {
-          if (fitsInInt) {
-            // It will fit in an int.
-            int valueAsInt = Integer.parseInt(valueAsString);
-            yield Constant.of(valueAsInt);
+          boolean fitsInInt = bigInt.compareTo(BigInteger.valueOf(Integer.MAX_VALUE)) != 1;
+          boolean fitsInLong = bigInt.compareTo(BigInteger.valueOf(Long.MAX_VALUE)) != 1;
+          if (vt.equals(Type.INT)) {
+            if (fitsInInt) {
+              // It will fit in an int.
+              int valueAsInt = Integer.parseInt(valueAsString);
+              yield Constant.of(valueAsInt);
+            }
+            // we asked for int, but it won't fit in int, it's a long.
+            if (fitsInLong) {
+              long valueAsLong = Long.parseLong(valueAsString);
+              yield Constant.of(valueAsLong);
+            }
+            error("Too big for a long: %s", valueAsString);
           }
-          // we asked for int, but it won't fit in int, it's a long.
-          if (fitsInLong) {
-            long valueAsLong = Long.parseLong(valueAsString);
-            yield Constant.of(valueAsLong);
+          if (vt.equals(Type.LONG)) {
+            if (fitsInLong) {
+              long valueAsLong = Long.parseLong(valueAsString);
+              yield Constant.of(valueAsLong);
+            }
+            // if it won't fit in long, this is an error.
+            error("Too big for a long: %s", valueAsString);
           }
-          error("Too big for a long: %s", valueAsString);
-        }
-        if (vt.equals(Type.LONG)) {
-          if (fitsInLong) {
-            long valueAsLong = Long.parseLong(valueAsString);
-            yield Constant.of(valueAsLong);
+          if (vt.equals(Type.UNSIGNED_LONG)) {
+            yield Constant.ofUnsignedLong(valueAsString);
           }
-          // if it won't fit in long, this is an error.
-          error("Too big for a long: %s", valueAsString);
-        }
-        if (vt.equals(Type.UNSIGNED_LONG)) {
+          boolean fitsInUnsignedInt =
+              bigInt.compareTo(UnsignedInteger.MAX_VALUE.bigIntegerValue()) != 1;
+          // maybe unsigned int, or maybe unsigned long
+          if (fitsInUnsignedInt) {
+            yield Constant.ofUnsignedInt(valueAsString);
+          }
           yield Constant.ofUnsignedLong(valueAsString);
+        } else {
+          yield Constant.ofDouble(valueAsString);
         }
-        boolean fitsInUnsignedInt =
-            bigInt.compareTo(UnsignedInteger.MAX_VALUE.bigIntegerValue()) != 1;
-        // maybe unsigned int, or maybe unsigned long
-        if (fitsInUnsignedInt) {
-          yield Constant.ofUnsignedInt(valueAsString);
-        }
-        yield Constant.ofUnsignedLong(valueAsString);
       }
 
       case MINUS, TWIDDLE, BANG -> {
@@ -482,7 +499,7 @@ public class Parser {
       }
 
       default -> {
-        error("Unexpected token %s; expected type, unary operator or identifier", tt.text);
+        error("Unexpected token `%s`; expected type, unary operator or identifier", tt.text);
         yield null;
       }
     };
@@ -508,8 +525,11 @@ public class Parser {
     return new FunctionCall(variableName, args);
   }
 
-  private static void error(String message, Object... params) {
-    throw new ParserException(String.format(message, params));
+  private void error(String message, Object... params) {
+    String formattedMessage = String.format(message, params);
+    String messageWithPos = String.format("Line %d, column %d: %s", token.pos().line(),
+        token.pos().column(), formattedMessage);
+    throw new ParserException(messageWithPos);
   }
 
   private void expect(TokenType tt) {
