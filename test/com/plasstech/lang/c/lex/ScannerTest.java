@@ -172,7 +172,9 @@ public class ScannerTest {
   @Test
   public void nextTokenBadIntConstant(
       @TestParameter({"0a", "23B", "234L."}) String token) {
-    assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
+    ScannerException exception =
+        assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -236,11 +238,11 @@ public class ScannerTest {
   }
 
   @Test
-  public void nextTokenBadSymbol() {
-    assertThrows(ScannerException.class, () -> new Scanner("@").nextToken());
-    assertThrows(ScannerException.class, () -> new Scanner(".").nextToken());
-    assertThrows(ScannerException.class, () -> new Scanner("\\").nextToken());
-    assertThrows(ScannerException.class, () -> new Scanner("/*").nextToken());
+  public void nextTokenBadSymbol(
+      @TestParameter({"@", ".", "\\", "/*"}) String token) {
+    ScannerException exception =
+        assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -305,6 +307,8 @@ public class ScannerTest {
   @Test
   public void nextTokenBadFloats(
       @TestParameter({"1.e-10x", "2._", "1E2x", "1.0e10.0"}) String token) {
-    assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
+    ScannerException exception =
+        assertThrows(ScannerException.class, () -> new Scanner(token).nextToken());
+    System.err.println(exception.getMessage());
   }
 }

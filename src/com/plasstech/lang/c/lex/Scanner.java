@@ -8,6 +8,7 @@ public class Scanner {
   private final String text;
   private int loc; // absolute location in text
   private char cc;
+  private int line = 1, column = 0;
 
   public Scanner(String text) {
     this.text = text;
@@ -22,6 +23,7 @@ public class Scanner {
       cc = 0;
     }
     loc++;
+    column++;
     return cc;
   }
 
@@ -56,6 +58,10 @@ public class Scanner {
   private Optional<Token> skipWhitespace() {
     while (true) {
       while (cc == ' ' || cc == '\n' || cc == '\t' || cc == '\r') {
+        if (cc == '\n' || cc == '\r') {
+          line++;
+          column = 0;
+        }
         advance();
       }
       if (cc != '/') {
@@ -72,6 +78,8 @@ public class Scanner {
         if (cc == 0) {
           return Optional.of(eofToken());
         }
+        line++;
+        column = 0;
         advance(); // eat the \n
         continue;
       }
@@ -100,8 +108,8 @@ public class Scanner {
     }
   }
 
-  private static Token eofToken() {
-    return new Token(TokenType.EOF, "");
+  private Token eofToken() {
+    return new Token(TokenType.EOF, "", new Position(line, column));
   }
 
   private Token makeSymbol() {
@@ -113,12 +121,12 @@ public class Scanner {
       Optional<TokenType> tt = findSymbolByString(twoCharSymbol);
       if (tt.isPresent()) {
         advance();
-        return new Token(tt.get(), twoCharSymbol);
+        return new Token(tt.get(), twoCharSymbol, new Position(line, column));
       }
     }
     Optional<TokenType> tt = findSymbolByString(symbol);
     if (tt.isPresent()) {
-      return new Token(tt.get(), symbol);
+      return new Token(tt.get(), symbol, new Position(line, column));
     }
     return error("Illegal character " + symbol);
   }
@@ -150,13 +158,13 @@ public class Scanner {
         // all lower case
         TokenType maybeTt = TokenType.valueOf(value.toUpperCase());
         if (maybeTt.isKeyword) {
-          return new Token(maybeTt, value);
+          return new Token(maybeTt, value, new Position(line, column));
         }
       }
     } catch (Exception e) {
     }
     // Not a keyword, must be a variable.
-    return new Token(TokenType.IDENTIFIER, value);
+    return new Token(TokenType.IDENTIFIER, value, new Position(line, column));
   }
 
   private Token makeNumber() {
@@ -169,7 +177,7 @@ public class Scanner {
     }
     value += makeInt();
     if (value.equals(".")) {
-      return error("Illegal character '.'");
+      return error("Illegal floating point constant '.'");
     }
     boolean longConstant = false;
     boolean unsignedConstant = false;
@@ -199,8 +207,7 @@ public class Scanner {
     if ((cc == '.' || cc == 'E' || cc == 'e')
         && (prevC == 'L' || prevC == 'l' || prevC == 'U' || prevC == 'u')) {
       // I kind of hate this.
-      return error(
-          "Illegal character " + prevC + " before dot in floating point constant " + value);
+      return error("Illegal floating point constant " + value + prevC + '.');
     }
     if (cc == '.') {
       value += cc;
@@ -214,22 +221,24 @@ public class Scanner {
       // Could be ###.###[Ee][+-]?###
       value += makeOptionalExponent();
     } else if (Character.isLetter(cc)) {
-      return error("Illegal character " + cc + " in floating point constant " + value);
+      return error("Illegal floating point constant " + value + cc);
     }
     if (parsingDouble) {
-      return new Token(TokenType.NUMERIC_LITERAL, value, Type.DOUBLE);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.DOUBLE, new Position(line, column));
     }
 
     if (unsignedConstant && longConstant) {
-      return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_LONG);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_LONG,
+          new Position(line, column));
     }
     if (longConstant) {
-      return new Token(TokenType.NUMERIC_LITERAL, value, Type.LONG);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.LONG, new Position(line, column));
     }
     if (unsignedConstant) {
-      return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_INT);
+      return new Token(TokenType.NUMERIC_LITERAL, value, Type.UNSIGNED_INT,
+          new Position(line, column));
     }
-    return new Token(TokenType.NUMERIC_LITERAL, value, Type.INT);
+    return new Token(TokenType.NUMERIC_LITERAL, value, Type.INT, new Position(line, column));
   }
 
   // Returns the exponent (if any). Assumes the next character is E or e, a non-number-starter:
@@ -274,6 +283,6 @@ public class Scanner {
   }
 
   private Token error(String message) {
-    throw new ScannerException(message);
+    throw new ScannerException(new Position(line, column), message);
   }
 }

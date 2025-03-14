@@ -252,6 +252,7 @@ public class Parser {
         case LONG:
         case UNSIGNED:
         case SIGNED:
+        case DOUBLE:
           typeSpecifiers.add(token.type());
           advance();
           break;
