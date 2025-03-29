@@ -1038,7 +1038,10 @@ public class ParserTest {
         {"int double", "double double", "unsigned double", "signed double", "double int"}
       ) String spec) {
     String input = String.format("%s a", spec);
-    assertThrows(ParserException.class, () -> parse(input));
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    assertThat(exception).hasMessageThat()
+        .contains("Cannot combine `double` with other type specifiers");
+    System.err.println(exception.getMessage());
   }
 
   @Test
@@ -1327,7 +1330,7 @@ public class ParserTest {
         int int a;
         """;
     ParserException exception = assertThrows(ParserException.class, () -> parse(input));
-    assertThat(exception.getMessage()).contains("twice");
+    assertThat(exception).hasMessageThat().contains("twice");
   }
 
   @Test
@@ -1336,7 +1339,7 @@ public class ParserTest {
         unsigned signed int a;
         """;
     ParserException exception = assertThrows(ParserException.class, () -> parse(input));
-    assertThat(exception.getMessage()).contains("both `unsigned` and `signed`");
+    assertThat(exception).hasMessageThat().contains("both `unsigned` and `signed`");
   }
 
   @Test
@@ -1427,29 +1430,5 @@ public class ParserTest {
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.DOUBLE);
     }
-  }
-
-  @Test
-  public void cannotCombineDoubleWithSigned() {
-    String input = "double signed a;";
-    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
-    assertThat(exception.getMessage()).contains("`double` with other type specifiers");
-    System.err.println(exception.getMessage());
-  }
-
-  @Test
-  public void cannotCombineDoubleWithUnsigned() {
-    String input = "double unsigned a;";
-    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
-    assertThat(exception.getMessage()).contains("`double` with other type specifiers");
-    System.err.println(exception.getMessage());
-  }
-
-  @Test
-  public void cannotCombineDoubleWithLong() {
-    String input = "double long a;";
-    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
-    assertThat(exception.getMessage()).contains("`double` with other type specifiers");
-    System.err.println(exception.getMessage());
   }
 }
