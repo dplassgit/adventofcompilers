@@ -1346,6 +1346,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.UNSIGNED_INT);
     }
@@ -1358,6 +1359,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.INT);
     }
@@ -1370,6 +1372,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.UNSIGNED_LONG);
     }
@@ -1382,6 +1385,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.LONG);
     }
@@ -1394,6 +1398,7 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.LONG);
     }
@@ -1406,9 +1411,45 @@ public class ParserTest {
         """;
     Program prog = parse(input);
     Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
     if (first instanceof VarDecl vd) {
       assertThat(vd.type()).isEqualTo(Type.INT);
       assertThat(vd.init().get()).isEqualTo(Constant.ofUnsignedLong("9223372036854775813"));
     }
+  }
+
+  @Test
+  public void doubleDecl() {
+    String input = "double a;";
+    Program prog = parse(input);
+    Declaration first = prog.declarations().get(0);
+    assertThat(first).isInstanceOf(VarDecl.class);
+    if (first instanceof VarDecl vd) {
+      assertThat(vd.type()).isEqualTo(Type.DOUBLE);
+    }
+  }
+
+  @Test
+  public void cannotCombineDoubleWithSigned() {
+    String input = "double signed a;";
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    assertThat(exception.getMessage()).contains("`double` with other type specifiers");
+    System.err.println(exception.getMessage());
+  }
+
+  @Test
+  public void cannotCombineDoubleWithUnsigned() {
+    String input = "double unsigned a;";
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    assertThat(exception.getMessage()).contains("`double` with other type specifiers");
+    System.err.println(exception.getMessage());
+  }
+
+  @Test
+  public void cannotCombineDoubleWithLong() {
+    String input = "double long a;";
+    ParserException exception = assertThrows(ParserException.class, () -> parse(input));
+    assertThat(exception.getMessage()).contains("`double` with other type specifiers");
+    System.err.println(exception.getMessage());
   }
 }

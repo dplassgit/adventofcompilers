@@ -290,7 +290,6 @@ public class Parser {
       error("Must specify a type");
       return null;
     }
-    Set<TokenType> uniqueSpecifiers = new HashSet<>(typeSpecifiers);
     if (typeSpecifiers.contains(TokenType.DOUBLE)) {
       if (typeSpecifiers.size() == 1) {
         return Type.DOUBLE;
@@ -298,6 +297,7 @@ public class Parser {
       error("Cannot combine `double` with other type specifiers: %s", typeSpecifiers);
       return null;
     }
+    Set<TokenType> uniqueSpecifiers = new HashSet<>(typeSpecifiers);
     if (uniqueSpecifiers.contains(TokenType.UNSIGNED)
         && uniqueSpecifiers.contains(TokenType.SIGNED)) {
       error("Cannot specify both `unsigned` and `signed`: %s", typeSpecifiers);
