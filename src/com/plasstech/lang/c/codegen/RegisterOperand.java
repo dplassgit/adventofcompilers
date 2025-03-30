@@ -12,13 +12,18 @@ public record RegisterOperand(Register register) implements Operand {
     RDX("dl", "edx"),
     RDI("dil", "edi"),
     RSI("sil", "esi"),
-    R8("r8b", "r8d"),
-    R9("r9b", "r9d"),
-    R10("r10b", "r10d"),
-    R11("r11b", "r11d");
+    R8("r8"),
+    R9("r9"),
+    R10("r10"),
+    R11("r11");
 
     private final String string1;
     private final String string4;
+
+    Register(String name) {
+      this.string1 = name + "b";
+      this.string4 = name + "d";
+    }
 
     Register(String string1, String string4) {
       this.string1 = string1;

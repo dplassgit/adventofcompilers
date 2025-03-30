@@ -39,7 +39,7 @@ public class BackendSymbolTable {
         }
         case SimpleType st -> {
           AssemblyType assemblyType = AssemblyType.from(s.type());
-          put(s.name(), new ObjEntry(s.name(), assemblyType, s.attribute() instanceof StaticAttr));//.isGlobal()));
+          put(s.name(), new ObjEntry(s.name(), assemblyType, s.attribute() instanceof StaticAttr));
         }
         default -> throw new IllegalArgumentException("Unexpected value: " + s.type());
       }
