@@ -12,4 +12,9 @@ public record Var(String identifier, Type type) implements Exp {
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String readableString() {
+    return identifier;
+  }
 }

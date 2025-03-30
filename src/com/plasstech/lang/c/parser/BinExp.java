@@ -12,4 +12,11 @@ public record BinExp(Exp left, TokenType operator, Exp right, Type type) impleme
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String readableString() {
+    // This isn't perfect because of parentheses, but so what.
+    return String.format("%s %s %s", left.readableString(), operator.text,
+        right.readableString());
+  }
 }

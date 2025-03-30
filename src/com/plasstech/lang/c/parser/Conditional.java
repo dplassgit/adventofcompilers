@@ -16,4 +16,10 @@ public record Conditional(Exp condition, Exp left, Exp right, Type type) impleme
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String readableString() {
+    return String.format("%s ? %s : %s", condition.readableString(), left.readableString(),
+        right.readableString());
+  }
 }

@@ -12,4 +12,9 @@ public record Cast(Type targetType, Exp exp) implements Exp {
   public Type type() {
     return targetType();
   }
+
+  @Override
+  public String readableString() {
+    return String.format("(%s) %s", targetType.toString(), exp.readableString());
+  }
 }

@@ -7,6 +7,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import com.plasstech.lang.c.lex.Scanner;
+import com.plasstech.lang.c.parser.Cast;
 import com.plasstech.lang.c.parser.FunDecl;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
@@ -418,5 +419,98 @@ public class TypeCheckerTest {
     IntInit staticInit = (IntInit) initialValue.staticInit();
     // whoa, this actually works. Thanks Java.
     assertThat(staticInit.value()).isEqualTo(-50);
+  }
+
+  @Test
+  public void longAndDoubleBecomesDouble() {
+    String input = """
+        long main(double a) {
+          long b = 1L;
+          return b + a; // really cast(b+a,long)
+        }
+        """;
+    Program program = validate(input);
+    FunDecl fd = (FunDecl) program.declarations().get(0);
+    Return rv = (Return) fd.nthItem(1);
+    Cast cast = (Cast) rv.exp();
+    assertThat(cast.exp().type()).isEqualTo(Type.DOUBLE);
+  }
+
+  @Test
+  public void doubleLocal() {
+    String input = """
+        double main(void) {
+          double b = 1.0;
+          return b;
+        }
+        """;
+    validate(input);
+    Symbol b = symbols.get("b");
+    Attribute attribute = b.attribute();
+    assertThat(attribute).isEqualTo(Attribute.LOCAL_ATTR);
+  }
+
+  @Test
+  public void doubleTwiddle() {
+    String input = """
+        double main(double a) {
+          return ~a;
+        }
+        """;
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Cannot take bitwise complement of double: a");
+  }
+
+  @Test
+  public void doubleMod() {
+    String input = """
+        double main(double a) {
+          return a%1;
+        }
+        """;
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Cannot take modulo of double: a % 1");
+  }
+
+  @Test
+  public void doubleMod2() {
+    String input = """
+        double main(double a) {
+          return 1%a;
+        }
+        """;
+    SemanticAnalyzerException e =
+        assertThrows(SemanticAnalyzerException.class, () -> validate(input));
+    assertThat(e.getMessage()).contains("Cannot take modulo of double: 1 % a");
+  }
+
+  @Test
+  public void staticInitDouble() {
+    String input = """
+        static double static_dbl = 123.456;
+        """;
+    validate(input);
+    Symbol staticDbl = symbols.get("static_dbl");
+    StaticAttr attr = (StaticAttr) staticDbl.attribute();
+    assertThat(attr.isGlobal()).isFalse();
+    Initializer initialValue = (Initializer) attr.init();
+    DoubleInit staticInit = (DoubleInit) initialValue.staticInit();
+    assertThat(staticInit.value()).isEqualTo(123.456);
+  }
+
+  @Test
+  public void initDouble() {
+    String input = """
+        double dbl = 123.456;
+        """;
+    validate(input);
+    Symbol dbl = symbols.get("dbl");
+    StaticAttr attr = (StaticAttr) dbl.attribute();
+    assertThat(attr.isGlobal()).isTrue();
+    Initializer initialValue = (Initializer) attr.init();
+    DoubleInit staticInit = (DoubleInit) initialValue.staticInit();
+    assertThat(staticInit.value()).isEqualTo(123.456);
   }
 }

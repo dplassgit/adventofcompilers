@@ -4,4 +4,8 @@ import com.plasstech.lang.c.typecheck.Type;
 
 public interface Exp extends AstNode {
   Type type();
+
+  default String readableString() {
+    return toString();
+  }
 }

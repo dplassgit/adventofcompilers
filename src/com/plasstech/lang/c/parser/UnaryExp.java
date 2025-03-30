@@ -12,4 +12,9 @@ public record UnaryExp(TokenType operator, Exp exp, Type type) implements Exp {
   public <R> R accept(Visitor<R> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String readableString() {
+    return String.format("%s%s", operator.text, exp.readableString());
+  }
 }

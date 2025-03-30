@@ -14,4 +14,9 @@ public record Assignment(Exp lvalue, Exp rvalue, Type type) implements Exp {
   public <T> T accept(Visitor<T> visitor) {
     return visitor.visit(this);
   }
+
+  @Override
+  public String readableString() {
+    return String.format("%s = %s", lvalue.readableString(), rvalue.readableString());
+  }
 }

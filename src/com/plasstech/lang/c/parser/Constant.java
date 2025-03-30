@@ -48,4 +48,9 @@ public record Constant<T extends Number>(T value, Type type) implements Exp {
   public long asLong() {
     return value.longValue();
   }
+
+  public double asDouble() {
+    Preconditions.checkState(type.equals(Type.DOUBLE));
+    return value.doubleValue();
+  }
 }

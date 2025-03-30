@@ -111,12 +111,11 @@ public class TypeChecker implements Validator {
   private Declaration typeCheckFileScopeVarDecl(VarDecl decl) {
     InitialValue initialValue = InitialValue.NO_INITIALIZER;
     // Figure out initial IV
-    Optional<Long> initialLong = getDeclInitialValue(decl);
+    Optional<Number> initialNumber = getDeclInitialValue(decl);
     Optional<Exp> newInit = decl.init();
 
-    // Something about subtracting 2^32 if it's an int but won't fit in an int?
-    if (initialLong.isPresent()) {
-      initialValue = Initializer.of(initialLong.get(), decl.type());
+    if (initialNumber.isPresent()) {
+      initialValue = Initializer.of(initialNumber.get(), decl.type());
     } else if (decl.init().isEmpty()) {
       if (decl.hasStorageClass(StorageClass.EXTERN)) {
         initialValue = InitialValue.NO_INITIALIZER;
@@ -197,7 +196,7 @@ public class TypeChecker implements Validator {
     return false;
   }
 
-  private Optional<Long> getDeclInitialValue(VarDecl decl) {
+  private Optional<Number> getDeclInitialValue(VarDecl decl) {
     if (decl.init().isEmpty()) {
       return Optional.empty();
     }
@@ -210,12 +209,15 @@ public class TypeChecker implements Validator {
         if (ci.type().equals(Type.LONG)) {
           yield Optional.of(ci.asLong());
         }
-        // Page 280. Not sure if this is right.
+        // Page 280.
         if (ci.type().equals(Type.UNSIGNED_INT)) {
           yield Optional.of(ci.asLong());
         }
         if (ci.type().equals(Type.UNSIGNED_LONG)) {
           yield Optional.of(ci.asLong());
+        }
+        if (ci.type().equals(Type.DOUBLE)) {
+          yield Optional.of(ci.asDouble());
         }
         throw new IllegalArgumentException("Unexpected value: " + ci.type());
       }
@@ -265,6 +267,10 @@ public class TypeChecker implements Validator {
   private static Type getCommonType(Type type1, Type type2) {
     if (type1.equals(type2)) {
       return type1;
+    }
+    if (type1.equals(Type.DOUBLE) || type2.equals(Type.DOUBLE)) {
+      // Page 308
+      return Type.DOUBLE;
     }
     if (type1.size() == type2.size()) {
       if (type1.signed()) {
@@ -351,7 +357,7 @@ public class TypeChecker implements Validator {
       }
     } else if (decl.hasStorageClass(StorageClass.STATIC)) {
       InitialValue initialValue = InitialValue.NO_INITIALIZER;
-      Optional<Long> maybeConst = getDeclInitialValue(decl);
+      Optional<Number> maybeConst = getDeclInitialValue(decl);
       if (maybeConst.isPresent()) {
         initialValue = Initializer.of(maybeConst.get(), decl.type());
       } else if (decl.init().isEmpty()) {
@@ -386,7 +392,13 @@ public class TypeChecker implements Validator {
     Exp typedInner = typeCheckExp(u.exp());
     return switch (u.operator()) {
       case BANG -> new UnaryExp(u.operator(), typedInner, Type.INT);
-      default -> new UnaryExp(u.operator(), typedInner, typedInner.type());
+      default -> {
+        if (u.operator() == TokenType.TWIDDLE && typedInner.type().equals(Type.DOUBLE)) {
+          error("Cannot take bitwise complement of double: %s",
+              typedInner.readableString());
+        }
+        yield new UnaryExp(u.operator(), typedInner, typedInner.type());
+      }
     };
   }
 
@@ -409,6 +421,9 @@ public class TypeChecker implements Validator {
       return new BinExp(typedE1, e.operator(), typedE2, Type.INT);
     }
     Type commonType = getCommonType(typedE1.type(), typedE2.type());
+    if (commonType.equals(Type.DOUBLE) && e.operator() == TokenType.PERCENT) {
+      error("Cannot take modulo of double: %s", e.readableString());
+    }
     Exp convertedE1 = convertTo(typedE1, commonType);
     Exp convertedE2 = convertTo(typedE2, commonType);
     if (!ARITHMETIC_OPS.contains(e.operator())) {
