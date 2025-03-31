@@ -7,8 +7,11 @@ import java.util.Collection;
 import java.util.List;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.testing.junit.testparameterinjector.TestParameter;
+import com.google.testing.junit.testparameterinjector.TestParameterInjector;
 import com.plasstech.lang.c.lex.Scanner;
 import com.plasstech.lang.c.parser.Parser;
 import com.plasstech.lang.c.parser.Program;
@@ -16,6 +19,7 @@ import com.plasstech.lang.c.typecheck.SemanticAnalyzer;
 import com.plasstech.lang.c.typecheck.Symbol;
 import com.plasstech.lang.c.typecheck.SymbolTable;
 
+@RunWith(TestParameterInjector.class)
 public class TackyCodeGenTest {
   private SymbolTable symtab = new SymbolTable();
 
@@ -320,8 +324,7 @@ public class TackyCodeGenTest {
           return i;
         }
         """;
-    TackyProgram tp = generate(input);
-    System.err.println(tp);
+    generate(input);
   }
 
   @Test
@@ -340,5 +343,73 @@ public class TackyCodeGenTest {
     Collection<Symbol> beforeGenerationSymbols = ImmutableSet.copyOf(symtab.values());
     cg.generate(prog);
     assertThat(beforeGenerationSymbols).isNotEqualTo(symtab.values());
+  }
+
+  private void assertCastClass(String input, Class<?> clazz) {
+    SemanticAnalyzer semanticAnalyzer = new SemanticAnalyzer(symtab);
+    Parser p = new Parser(new Scanner(input));
+    Program prog = p.parse();
+    prog = semanticAnalyzer.validate(prog);
+    TackyCodeGen cg = new TackyCodeGen(symtab);
+    TackyProgram tp = cg.generate(prog);
+    TackyFunction tf = (TackyFunction) tp.topLevelDefinitions().get(0);
+    TackyInstruction tackyInstruction = tf.body().get(0);
+    assertThat(tackyInstruction).isInstanceOf(clazz);
+  }
+
+  @Test
+  public void generateToDoubleSigned(
+      @TestParameter(
+        {"int", "long"}
+      ) String inputType) {
+    String input = String.format("""
+          double main(%s i) {
+            double d = (double)i;
+            return d;
+          }
+        """, inputType);
+    assertCastClass(input, TackyIntToDouble.class);
+  }
+
+  @Test
+  public void generateToDoubleUnsigned(
+      @TestParameter(
+        {"unsigned int", "unsigned long"}
+      ) String inputType) {
+    String input = String.format("""
+          double main(%s i) {
+            double d = (double)i;
+            return d;
+          }
+        """, inputType);
+    assertCastClass(input, TackyUIntToDouble.class);
+  }
+
+  @Test
+  public void generateFromDoubleSigned(
+      @TestParameter(
+        {"int", "long"}
+      ) String inputType) {
+    String input = String.format("""
+          %s main(double d) {
+            %s i = (%s)d;
+            return i;
+          }
+        """, inputType, inputType, inputType);
+    assertCastClass(input, TackyDoubleToInt.class);
+  }
+
+  @Test
+  public void generateFromDoubleUnsigned(
+      @TestParameter(
+        {"unsigned int", "unsigned long"}
+      ) String inputType) {
+    String input = String.format("""
+          %s main(double d) {
+            %s i = (%s)d;
+            return i;
+          }
+        """, inputType, inputType, inputType);
+    assertCastClass(input, TackyDoubleToUInt.class);
   }
 }

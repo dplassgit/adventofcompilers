@@ -383,7 +383,22 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
     }
     // page 282
     TackyVar dst = makeTackyVariable("cast_to_" + targetType.name(), targetType);
-    if (targetType.size() == innerType.size()) {
+    if (innerType.equals(Type.DOUBLE)) {
+      // implied page 310
+      // from double to...
+      if (targetType.signed()) {
+        emit(new TackyDoubleToInt(result, dst));
+      } else {
+        emit(new TackyDoubleToUInt(result, dst));
+      }
+    } else if (targetType.equals(Type.DOUBLE)) {
+      // implied page 310
+      if (innerType.signed()) {
+        emit(new TackyIntToDouble(result, dst));
+      } else {
+        emit(new TackyUIntToDouble(result, dst));
+      }
+    } else if (targetType.size() == innerType.size()) {
       emit(new TackyCopy(result, dst));
     } else if (targetType.size() < innerType.size()) {
       emit(new TackyTruncate(result, dst));

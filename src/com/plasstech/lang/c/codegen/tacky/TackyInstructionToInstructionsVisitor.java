@@ -300,4 +300,24 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     // page 288ff
     return ImmutableList.of(new MovZeroExtend(toOperand(op.src()), toOperand(op.dst())));
   }
+
+  @Override
+  public List<Instruction> visit(TackyDoubleToInt op) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  @Override
+  public List<Instruction> visit(TackyDoubleToUInt op) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  @Override
+  public List<Instruction> visit(TackyIntToDouble op) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
+
+  @Override
+  public List<Instruction> visit(TackyUIntToDouble op) {
+    throw new UnsupportedOperationException("Not implemented");
+  }
 }

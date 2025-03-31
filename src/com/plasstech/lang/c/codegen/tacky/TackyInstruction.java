@@ -9,7 +9,13 @@ interface TackyInstruction {
 
     R visit(TackyCopy op);
 
+    R visit(TackyDoubleToInt op);
+
+    R visit(TackyDoubleToUInt op);
+
     R visit(TackyFunCall op);
+
+    R visit(TackyIntToDouble op);
 
     R visit(TackyJump op);
 
@@ -26,6 +32,8 @@ interface TackyInstruction {
     R visit(TackyTruncate op);
 
     R visit(TackyUnary op);
+
+    R visit(TackyUIntToDouble op);
 
     R visit(TackyZeroExtend op);
   }
