@@ -377,7 +377,7 @@ public class Parser {
           .put(TokenType.GEQ, 35)
           .put(TokenType.EQEQ, 30)
           .put(TokenType.NEQ, 30)
-          .put(TokenType.DOUBLE_AMP, 10)
+          .put(TokenType.DOUBLE_AMPERSAND, 10)
           .put(TokenType.DOUBLE_BAR, 5)
           .put(TokenType.QUESTION, 3)
           .put(TokenType.EQ, 1).build();

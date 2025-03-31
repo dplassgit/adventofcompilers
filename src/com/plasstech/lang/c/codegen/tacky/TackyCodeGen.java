@@ -183,7 +183,7 @@ public class TackyCodeGen implements AstNode.Visitor<TackyVal> {
   public TackyVal visit(BinExp n) {
     TackyVal src1 = n.left().accept(this);
     TackyVar dst = makeTackyVariable("binexp_result", n.type());
-    if (n.operator() == TokenType.DOUBLE_AMP) {
+    if (n.operator() == TokenType.DOUBLE_AMPERSAND) {
       // Short circuit
       String falseLabel = UniqueId.makeUnique("and_false");
       emit(new TackyJumpZero(src1, falseLabel));

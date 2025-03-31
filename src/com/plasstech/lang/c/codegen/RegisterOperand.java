@@ -6,7 +6,7 @@ import com.google.common.collect.ImmutableList;
 
 public record RegisterOperand(Register register) implements Operand {
   private enum Register {
-    RSP("rsp", "rsp"),
+    RSP,
     RAX("al", "eax"),
     RCX("cl", "ecx"),
     RDX("dl", "edx"),
@@ -15,7 +15,17 @@ public record RegisterOperand(Register register) implements Operand {
     R8("r8"),
     R9("r9"),
     R10("r10"),
-    R11("r11");
+    R11("r11"),
+    XMM0,
+    XMM1,
+    XMM2,
+    XMM3,
+    XMM4,
+    XMM5,
+    XMM6,
+    XMM7,
+    XMM14,
+    XMM015;
 
     private final String string1;
     private final String string4;
@@ -28,6 +38,11 @@ public record RegisterOperand(Register register) implements Operand {
     Register(String string1, String string4) {
       this.string1 = string1;
       this.string4 = string4;
+    }
+
+    Register() {
+      this.string1 = name();
+      this.string4 = name();
     }
 
     String toString(int bytes) {

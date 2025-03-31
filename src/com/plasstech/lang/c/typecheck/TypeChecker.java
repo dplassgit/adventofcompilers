@@ -416,7 +416,7 @@ public class TypeChecker implements Validator {
   private Exp typeCheckBinExp(BinExp e) {
     Exp typedE1 = typeCheckExp(e.left());
     Exp typedE2 = typeCheckExp(e.right());
-    if (e.operator() == TokenType.DOUBLE_AMP || e.operator() == TokenType.DOUBLE_BAR) {
+    if (e.operator() == TokenType.DOUBLE_AMPERSAND || e.operator() == TokenType.DOUBLE_BAR) {
       // 'and' and 'or' always become "int"
       return new BinExp(typedE1, e.operator(), typedE2, Type.INT);
     }

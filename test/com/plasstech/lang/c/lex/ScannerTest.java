@@ -192,8 +192,8 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.STAR);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.SLASH);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.PERCENT);
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMP);
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.AMP);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMPERSAND);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.AMPERSAND);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_BAR);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.BAR);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.BANG);
@@ -215,8 +215,8 @@ public class ScannerTest {
     Scanner s = new Scanner("---&&&|||");
     assertThat(s.nextToken().type()).isEqualTo(TokenType.DECREMENT);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.MINUS);
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMP);
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.AMP);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMPERSAND);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.AMPERSAND);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_BAR);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.BAR);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.EOF);

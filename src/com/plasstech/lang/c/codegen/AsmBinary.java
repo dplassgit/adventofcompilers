@@ -22,6 +22,14 @@ public record AsmBinary(TokenType operator, AssemblyType type, Operand src, Oper
       case MINUS -> "sub";
       case PLUS -> "add";
       case STAR -> "imul";
+      case HAT -> "xor";
+      case SLASH -> {
+        // should only be for double types
+        if (!type.equals(AssemblyType.Double)) {
+          throw new IllegalStateException("Must use this version of / with doubles");
+        }
+        yield "div";
+      }
       default -> throw new IllegalStateException("Bad binary operator " + operator.name());
     };
     // Suffix added page 270
