@@ -173,4 +173,19 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   public Void visit(Div op) {
     return emit(op);
   }
+
+  @Override
+  public Void visit(Cvttsd2si op) {
+    throw new UnsupportedOperationException("cvttsd2si");
+  }
+
+  @Override
+  public Void visit(Cvtsi2sd op) {
+    throw new UnsupportedOperationException("cvtsi2sd");
+  }
+
+  @Override
+  public Void visit(AsmStaticConstant op) {
+    throw new UnsupportedOperationException("AsmStaticConstant");
+  }
 }

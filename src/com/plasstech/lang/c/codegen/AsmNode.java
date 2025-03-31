@@ -2,11 +2,17 @@ package com.plasstech.lang.c.codegen;
 
 public interface AsmNode {
   interface Visitor<R> {
+    R visit(Cvttsd2si op);
+
+    R visit(Cvtsi2sd op);
+
     R visit(AsmBinary op);
 
     R visit(AsmFunction op);
 
     R visit(AsmProgram op);
+
+    R visit(AsmStaticConstant op);
 
     R visit(AsmStaticVariable op);
 

@@ -10,7 +10,8 @@ public interface Operand {
   default String toString(AssemblyType type) {
     return switch (type) {
       case Longword -> toString(4);
-      case Quadword -> toString(8);
+      case Quadword, Double -> toString(8);
+      default -> throw new IllegalArgumentException("Unexpected value: " + type);
     };
   }
 }

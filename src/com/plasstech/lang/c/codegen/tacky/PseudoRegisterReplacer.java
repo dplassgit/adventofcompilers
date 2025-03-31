@@ -7,6 +7,7 @@ import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmNode;
 import com.plasstech.lang.c.codegen.AsmProgram;
+import com.plasstech.lang.c.codegen.AsmStaticConstant;
 import com.plasstech.lang.c.codegen.AsmStaticVariable;
 import com.plasstech.lang.c.codegen.AsmSymtabEntry;
 import com.plasstech.lang.c.codegen.AsmUnary;
@@ -15,6 +16,8 @@ import com.plasstech.lang.c.codegen.BackendSymbolTable;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
+import com.plasstech.lang.c.codegen.Cvtsi2sd;
+import com.plasstech.lang.c.codegen.Cvttsd2si;
 import com.plasstech.lang.c.codegen.Data;
 import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
@@ -205,5 +208,20 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
   public Instruction visit(Div op) {
     Operand newOperand = remap(op.operand());
     return new Div(op.type(), newOperand);
+  }
+
+  @Override
+  public Instruction visit(Cvttsd2si op) {
+    throw new UnsupportedOperationException("cvttsd2si");
+  }
+
+  @Override
+  public Instruction visit(Cvtsi2sd op) {
+    throw new UnsupportedOperationException("cvtsi2sd");
+  }
+
+  @Override
+  public Instruction visit(AsmStaticConstant op) {
+    throw new UnsupportedOperationException("AsmStaticConstant");
   }
 }

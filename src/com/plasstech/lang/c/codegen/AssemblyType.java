@@ -3,11 +3,12 @@ package com.plasstech.lang.c.codegen;
 import com.plasstech.lang.c.typecheck.Type;
 
 /**
- * Page 261.
+ * Page 261, 324
  */
 public enum AssemblyType {
   Longword("l"), // 4 bytes
-  Quadword("q"); // 8 bytes
+  Quadword("q"), // 8 bytes
+  Double("d"); // 8 bytes (?)!
 
   private final String suffix;
 
@@ -21,6 +22,9 @@ public enum AssemblyType {
       return Quadword;
     } else if (type.equals(Type.INT) || type.equals(Type.UNSIGNED_INT)) {
       return Longword;
+    } else if (type.equals(Type.DOUBLE)) {
+      // Page 324
+      return Double;
     }
     throw new IllegalStateException(
         "Unknown type " + type.toString() + " for conversion to assembly type");

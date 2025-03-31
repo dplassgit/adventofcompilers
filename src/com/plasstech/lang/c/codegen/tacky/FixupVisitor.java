@@ -10,12 +10,15 @@ import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmNode;
 import com.plasstech.lang.c.codegen.AsmProgram;
+import com.plasstech.lang.c.codegen.AsmStaticConstant;
 import com.plasstech.lang.c.codegen.AsmStaticVariable;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.AssemblyType;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
+import com.plasstech.lang.c.codegen.Cvtsi2sd;
+import com.plasstech.lang.c.codegen.Cvttsd2si;
 import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
@@ -259,5 +262,20 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
     }
     // dest is a register: rewrite to mov longword src, dst
     return ImmutableList.of(new Mov(AssemblyType.Longword, op.src(), op.dst()));
+  }
+
+  @Override
+  public List<Instruction> visit(Cvttsd2si op) {
+    throw new UnsupportedOperationException("cvttsd2si");
+  }
+
+  @Override
+  public List<Instruction> visit(Cvtsi2sd op) {
+    throw new UnsupportedOperationException("cvtsi2sd");
+  }
+
+  @Override
+  public List<Instruction> visit(AsmStaticConstant op) {
+    throw new UnsupportedOperationException("AsmStaticConstant");
   }
 }
