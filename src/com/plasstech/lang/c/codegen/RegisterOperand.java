@@ -3,6 +3,7 @@ package com.plasstech.lang.c.codegen;
 import java.util.List;
 
 import com.google.common.collect.ImmutableList;
+import com.plasstech.lang.c.typecheck.Type;
 
 public record RegisterOperand(String name, String name1, String name4) implements Operand {
   public RegisterOperand(String name) {
@@ -32,6 +33,15 @@ public record RegisterOperand(String name, String name1, String name4) implement
 
   public static final List<RegisterOperand> ARG_REGISTERS = ImmutableList.of(
       RDI, RSI, RDX, RCX, R8, R9);
+  public static final List<RegisterOperand> DOUBLE_ARG_REGISTERS = ImmutableList.of(
+      XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6);
+
+  public static final List<RegisterOperand> argRegisters(Type type) {
+    if (type.equals(Type.DOUBLE)) {
+      return DOUBLE_ARG_REGISTERS;
+    }
+    return ARG_REGISTERS;
+  }
 
   private String nameToString(int bytes) {
     if (bytes == 1) {

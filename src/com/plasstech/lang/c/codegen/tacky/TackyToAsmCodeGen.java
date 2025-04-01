@@ -45,9 +45,11 @@ public class TackyToAsmCodeGen {
             case TackyFunction fn -> generateFn(fn);
             case TackyStaticVariable sv -> {
               int alignment;
-              if (sv.type().equals(Type.LONG) || sv.type().equals(Type.UNSIGNED_LONG)) {
+              Type type = sv.type();
+              if (type.equals(Type.LONG) || type.equals(Type.UNSIGNED_LONG)
+                  || type.equals(Type.DOUBLE)) {
                 alignment = 8;
-              } else if (sv.type().equals(Type.INT) || sv.type().equals(Type.UNSIGNED_INT)) {
+              } else if (type.equals(Type.INT) || type.equals(Type.UNSIGNED_INT)) {
                 alignment = 4;
               } else {
                 throw new IllegalStateException("Unknown static type " + sv.type());
@@ -69,7 +71,7 @@ public class TackyToAsmCodeGen {
       String paramName = function.params().get(i);
       Symbol symbol = symbolTable.get(paramName);
       Type type = symbol.type();
-      instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.ARG_REGISTERS.get(i),
+      instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.argRegisters(type).get(i),
           new Pseudo(paramName, type)));
     }
     // Copy stack to param names.

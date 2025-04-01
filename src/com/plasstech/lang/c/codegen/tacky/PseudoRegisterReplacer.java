@@ -38,8 +38,8 @@ import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.codegen.Stack;
 
+/** Replace pseudo operands to stack references. See page 42. */
 class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
-  /** Replace pseudo operands to stack references. See page 42. */
   private final BackendSymbolTable symbolTable;
   private int currentProcOffset;
 
@@ -69,6 +69,7 @@ class PseudoRegisterReplacer implements AsmNode.Visitor<Instruction> {
           }
           currentProcOffset += 8;
         }
+        // TODO: deal with doubles
       } else {
         throw new IllegalStateException(
             "Unknown backend symbol type " + entry + " for pseudo name " + name + " symbol table "

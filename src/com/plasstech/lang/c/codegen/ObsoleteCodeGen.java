@@ -15,7 +15,7 @@ import com.plasstech.lang.c.parser.StorageClass;
 /**
  * Input: Program (AST). Output: AsmProgramNode (ASM AST) Mostly obsolete, only used in chapter 1?
  */
-public class CodeGen {
+public class ObsoleteCodeGen {
   public AsmProgram generate(Program program) {
     List<AsmTopLevel> fns = program.funDecls().stream().map(fn -> generate(fn)).toList();
     return new AsmProgram(fns);

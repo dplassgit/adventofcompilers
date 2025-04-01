@@ -42,6 +42,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
         n.dst().inMemory() &&
             (n.src().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src())));
     if (needsIntermediary) {
+      // TODO: deal with doubles
       // Can't mov stack to stack: use r10 as an intermediary. See page 42.
       // Can't movq from immediate that is bigger than 32 bits. Page 268
       return ImmutableList.of(
@@ -79,6 +80,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
         if (needsIntermediary) {
           // Can't add or subtract stack and stack; use r10. See page 64
           // Or, if left or right is an immediate that is bigger than 32 bits, need to fixup. Page 268
+          // TODO: deal with doubles
           return ImmutableList.of(
               new Mov(n.type(), n.src(), R10),
               new AsmBinary(n.operator(), n.type(), R10, n.dst()));
@@ -92,6 +94,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
         boolean needsIntermediary =
             n.dst().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src()));
         if (needsIntermediary) {
+          // TODO: deal with doubles
           return ImmutableList.of(
               new Mov(n.type(), n.src(), R11), // NOTYPO
               new AsmBinary(n.operator(), n.type(), n.dst(), R11),
@@ -110,6 +113,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   public List<Instruction> visit(Idiv n) {
     // Can't divide by a constant; use r10 as an intermediary. See page 64
     if (n.operand() instanceof Imm) {
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(n.type(), n.operand(), R10),
           new Idiv(n.type(), R10));
@@ -121,6 +125,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   public List<Instruction> visit(Div n) {
     // Can't divide by a constant; use r10 as an intermediary. See page 290
     if (n.operand() instanceof Imm) {
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(n.type(), n.operand(), R10),
           new Div(n.type(), R10));
@@ -163,6 +168,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
     // Fix if the second operand is a constant. See page 88, 268
     if (n.right() instanceof Imm) {
       if (n.type() == AssemblyType.Quadword && immOutOfRange(n.left())) {
+        // TODO: deal with doubles
         return ImmutableList.of(
             new Mov(n.type(), n.left(), R10),
             new Mov(n.type(), n.right(), R11),
@@ -173,6 +179,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       // to:
       // mov 1023454326, r11
       // cmp foo, r11
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(n.type(), n.right(), R11),
           new Cmp(n.type(), n.left(), R11));
@@ -189,6 +196,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       // cmp 1234, bar to
       // mov 123, r10
       // cmp r10, bar
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(n.type(), n.left(), R10),
           new Cmp(n.type(), R10, n.right()));
@@ -219,6 +227,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   @Override
   public List<Instruction> visit(Push n) {
     if (immOutOfRange(n.operand())) {
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(AssemblyType.Quadword, n.operand(), R10),
           new Push(R10));
@@ -241,6 +250,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       // mov src to reg 10
       // movsx reg 10, reg 11
       // mov r11 to dest
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(AssemblyType.Longword, src, R10),
           new Movsx(R10, R11),
@@ -256,6 +266,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       // if dest is memory, rewrite to two:
       //  1. mov(longword, src, reg 11)
       //  2. mov(quadword, r11, dest)
+      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(AssemblyType.Longword, op.src(), R11),
           new Mov(AssemblyType.Quadword, R11, op.dst()));

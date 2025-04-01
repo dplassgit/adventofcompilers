@@ -81,6 +81,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand dst = toOperand(op.dst());
     AssemblyType dstType = assemblyType(op.dst());
     AssemblyType srcType = assemblyType(op.src());
+    // TODO: deal with doubles
     if (op.operator() == TokenType.BANG) {
       // Page 86, 265
       instructions.add(new Cmp(srcType, ZERO, src));
@@ -105,6 +106,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     AssemblyType dstType = assemblyType(op.dst());
     switch (operator) {
       case SLASH:
+        // TODO: deal with doubles
       case PERCENT:
         // mov (left, register(ax))
         instructions.add(new Mov(leftType, left, RegisterOperand.RAX));
@@ -148,12 +150,15 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
         instructions.add(new Mov(dstType, ZERO, dst));
         // page 288 adds signed
         boolean signed = op.left().type().signed();
+        // TODO: deal with doubles
         instructions.add(new SetCC(CondCode.from(operator, signed), dst));
         break;
 
       case PLUS:
       case MINUS:
       case STAR:
+        // TODO: deal with doubles
+
         // For +, -, *: 
         // First move left to dest
         instructions.add(new Mov(leftType, left, dst));
@@ -172,6 +177,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
   public List<Instruction> visit(TackyReturn op) {
     AssemblyType srcType = assemblyType(op.val());
     Operand operand = toOperand(op.val());
+    // TODO: deal with doubles
     return ImmutableList.of(
         new Mov(srcType, operand, RegisterOperand.RAX),
         new Ret());
@@ -236,8 +242,9 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
     // Pass args in registers
     for (int i = 0; i < numRegArgs; ++i) {
-      RegisterOperand register = RegisterOperand.ARG_REGISTERS.get(i);
       TackyVal arg = op.args().get(i);
+      // TODO: deal with doubles
+      RegisterOperand register = RegisterOperand.ARG_REGISTERS.get(i);
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
       instructions.add(new Mov(srcType, argOp, register));
@@ -250,12 +257,14 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
       if (srcType == AssemblyType.Quadword) {
+        // TODO: deal with doubles
         instructions.add(new Push(argOp));
       } else {
         switch (argOp) {
           case RegisterOperand ro -> instructions.add(new Push(argOp));
           case Imm imm -> instructions.add(new Push(argOp));
           default -> {
+            // TODO: deal with doubles
             instructions.add(new Mov(AssemblyType.Longword, argOp, RegisterOperand.RAX));
             instructions.add(new Push(RegisterOperand.RAX));
           }
@@ -277,6 +286,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     // retrieve return value
     Operand dest = toOperand(op.dst());
     AssemblyType dstType = assemblyType(op.dst());
+    // TODO: deal with doubles
     instructions.add(new Mov(dstType, RegisterOperand.RAX, dest));
 
     return instructions;
