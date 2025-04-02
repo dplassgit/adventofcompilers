@@ -109,6 +109,16 @@ public class TackyToAsmCodeGenTest {
     printAsm(generateAsm(program));
   }
 
+  @Test
+  public void generateDoubleDiv() {
+    String input = """
+        double main(void) {
+          return 3.0 / 4.0;
+        }
+        """;
+    printAsm(generateAsm(input));
+  }
+
   private static void printAsm(List<String> asm) {
     System.out.println(Joiner.on("\n").join(asm));
   }

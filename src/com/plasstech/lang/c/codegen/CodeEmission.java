@@ -185,7 +185,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
   }
 
   @Override
-  public Void visit(AsmStaticConstant op) {
+  public Void visit(AsmStaticConstant n) {
     throw new UnsupportedOperationException("AsmStaticConstant");
   }
 }

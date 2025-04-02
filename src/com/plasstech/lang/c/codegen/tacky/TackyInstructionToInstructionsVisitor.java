@@ -1,16 +1,21 @@
 package com.plasstech.lang.c.codegen.tacky;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.AsmBinary;
+import com.plasstech.lang.c.codegen.AsmStaticConstant;
+import com.plasstech.lang.c.codegen.AsmTopLevel;
 import com.plasstech.lang.c.codegen.AsmUnary;
 import com.plasstech.lang.c.codegen.AssemblyType;
 import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.CondCode;
+import com.plasstech.lang.c.codegen.Data;
 import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
@@ -28,6 +33,7 @@ import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
 import com.plasstech.lang.c.lex.TokenType;
+import com.plasstech.lang.c.typecheck.DoubleInit;
 import com.plasstech.lang.c.typecheck.Symbol;
 import com.plasstech.lang.c.typecheck.SymbolTable;
 import com.plasstech.lang.c.typecheck.Type;
@@ -41,9 +47,14 @@ import com.plasstech.lang.c.typecheck.Type;
  */
 class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<List<Instruction>> {
   private final SymbolTable symbolTable;
+  private final Map<Double, AsmStaticConstant> doubleConstants = new HashMap<>();
 
   public TackyInstructionToInstructionsVisitor(SymbolTable symbolTable) {
     this.symbolTable = symbolTable;
+  }
+
+  public ImmutableList<AsmTopLevel> doubleGlobals() {
+    return ImmutableList.copyOf(doubleConstants.values());
   }
 
   private static final Imm ZERO = new Imm(0);
@@ -53,9 +64,35 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case TackyVar v -> {
         yield new Pseudo(v.identifier(), v.type());
       }
-      case TackyConstant ic -> new Imm(ic.val());
+      case TackyConstant<?> ic -> {
+        if (ic.type().equals(Type.DOUBLE)) {
+          double constantDouble = ic.val().doubleValue();
+          // 1. add or get a new StaticConstant top-level object with the double's value
+          AsmStaticConstant staticConstant = getOrMakeDoubleConstant(constantDouble, 8);
+          // 2. make a Data object referring to the constant's label & return it
+          yield new Data(staticConstant.name());
+        }
+        yield new Imm(ic.val().longValue());
+      }
       default -> throw new IllegalArgumentException("Unexpected value: " + val);
     };
+  }
+
+  // Page 326
+  private AsmStaticConstant getOrMakeDoubleConstant(double constantDouble, int alignment) {
+    AsmStaticConstant staticConstant = doubleConstants.get(constantDouble);
+    if (staticConstant == null) {
+      // doesn't exist yet; make a new one.
+      staticConstant = new AsmStaticConstant(newLabel(), alignment, new DoubleInit(constantDouble));
+      doubleConstants.put(constantDouble, staticConstant);
+    }
+    return staticConstant;
+  }
+
+  private int id = 0;
+
+  private String newLabel() {
+    return String.format("DOUBLE_%d", id++);
   }
 
   private Type getType(TackyVal tv) {
@@ -65,7 +102,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
         assert (s != null);
         yield s.type();
       }
-      case TackyConstant tc -> tc.type();
+      case TackyConstant<?> tc -> tc.type();
       default -> throw new IllegalArgumentException("Unexpected value: " + tv);
     };
   }
@@ -81,13 +118,21 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand dst = toOperand(op.dst());
     AssemblyType dstType = assemblyType(op.dst());
     AssemblyType srcType = assemblyType(op.src());
-    // TODO: deal with doubles
     if (op.operator() == TokenType.BANG) {
       // Page 86, 265
       instructions.add(new Cmp(srcType, ZERO, src));
       instructions.add(new Mov(dstType, ZERO, dst));
       instructions.add(new SetCC(CondCode.E, dst));
+    } else if (op.operator() == TokenType.MINUS && dstType == AssemblyType.Double) {
+      // page 327-328
+      // add new constant
+      AsmStaticConstant doubleConstant = getOrMakeDoubleConstant(-0.0, 16);
+      instructions.add(new Mov(srcType, src, dst));
+      // xor
+      instructions.add(new AsmBinary(TokenType.HAT, dstType, new Data(doubleConstant.name()), dst));
+      return instructions;
     } else {
+      // negate
       instructions.add(new Mov(srcType, src, dst));
       instructions.add(new AsmUnary(op.operator(), srcType, dst));
     }
@@ -106,7 +151,13 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     AssemblyType dstType = assemblyType(op.dst());
     switch (operator) {
       case SLASH:
-        // TODO: deal with doubles
+        if (op.left().type().equals(Type.DOUBLE)) {
+          // Page 327
+          instructions.add(new Mov(leftType, left, dst));
+          instructions.add(new AsmBinary(op.operator(), leftType, right, dst));
+          return instructions;
+        }
+        // fall through:
       case PERCENT:
         // mov (left, register(ax))
         instructions.add(new Mov(leftType, left, RegisterOperand.RAX));
@@ -147,23 +198,23 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       case NEQ:
         // Page 86
         instructions.add(new Cmp(leftType, right, left));
+        if (dstType == AssemblyType.Double) {
+          // Page 328
+          dstType = AssemblyType.Longword;
+        }
         instructions.add(new Mov(dstType, ZERO, dst));
         // page 288 adds signed
-        boolean signed = op.left().type().signed();
-        // TODO: deal with doubles
+        boolean signed = op.left().type().signed() || op.left().type().equals(Type.DOUBLE);
         instructions.add(new SetCC(CondCode.from(operator, signed), dst));
         break;
 
       case PLUS:
       case MINUS:
       case STAR:
-        // TODO: deal with doubles
-
         // For +, -, *: 
         // First move left to dest
         instructions.add(new Mov(leftType, left, dst));
         // Then use right and dest with the operator
-        // Are these types right?!
         instructions.add(new AsmBinary(op.operator(), leftType, right, dst));
         break;
 

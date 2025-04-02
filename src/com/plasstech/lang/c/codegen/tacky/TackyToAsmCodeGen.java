@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.common.collect.ImmutableList;
 import com.plasstech.lang.c.codegen.AsmBinary;
 import com.plasstech.lang.c.codegen.AsmFunction;
 import com.plasstech.lang.c.codegen.AsmProgram;
@@ -39,31 +40,37 @@ public class TackyToAsmCodeGen {
 
   public AsmState generate(TackyProgram program) {
     // Generate multiple functiondefs. Page 194
-    List<AsmTopLevel> fns = program.topLevelDefinitions().stream()
-        .map(tln -> {
-          return switch (tln) {
-            case TackyFunction fn -> generateFn(fn);
-            case TackyStaticVariable sv -> {
-              int alignment;
-              Type type = sv.type();
-              if (type.equals(Type.LONG) || type.equals(Type.UNSIGNED_LONG)
-                  || type.equals(Type.DOUBLE)) {
-                alignment = 8;
-              } else if (type.equals(Type.INT) || type.equals(Type.UNSIGNED_INT)) {
-                alignment = 4;
-              } else {
-                throw new IllegalStateException("Unknown static type " + sv.type());
-              }
-              yield new AsmStaticVariable(sv.identifier(), sv.global(), alignment, sv.init());
-            }
-            default -> throw new IllegalArgumentException("Unexpected value: " + tln);
-          };
-        }).toList();
+    List<AsmTopLevel> fns =
+        program.topLevelDefinitions().stream()
+            .map(tln -> {
+              return switch (tln) {
+                case TackyFunction fn -> generateFn(fn);
+                case TackyStaticVariable sv -> {
+                  int alignment;
+                  Type type = sv.type();
+                  if (type.equals(Type.LONG) || type.equals(Type.UNSIGNED_LONG)
+                      || type.equals(Type.DOUBLE)) {
+                    alignment = 8;
+                  } else if (type.equals(Type.INT) || type.equals(Type.UNSIGNED_INT)) {
+                    alignment = 4;
+                  } else {
+                    throw new IllegalStateException("Unknown static type " + sv.type());
+                  }
+                  yield ImmutableList
+                      .<AsmTopLevel>of(
+                          new AsmStaticVariable(sv.identifier(), sv.global(), alignment,
+                              sv.init()));
+                }
+                default -> throw new IllegalArgumentException("Unexpected value: " + tln);
+              };
+            }).flatMap(List::stream)
+            .toList();
     BackendSymbolTable bst = new BackendSymbolTable(symbolTable);
     return new AsmState(new AsmProgram(fns), bst);
   }
 
-  private AsmTopLevel generateFn(TackyFunction function) {
+  private List<AsmTopLevel> generateFn(TackyFunction function) {
+    List<AsmTopLevel> topLevels = new ArrayList<>();
     List<Instruction> instructions = new ArrayList<>();
     // Page 200, 264 (bottom)
     // Copy input registers to param names.
@@ -88,11 +95,14 @@ public class TackyToAsmCodeGen {
     // 4 because they're ints now??? that's not right
     int currentProcOffset = 4 * function.params().size();
 
-    TackyInstruction.Visitor<List<Instruction>> visitor =
+    TackyInstructionToInstructionsVisitor visitor =
         new TackyInstructionToInstructionsVisitor(symbolTable);
     List<Instruction> opInstructions = function.body().stream()
         .map(ti -> ti.accept(visitor)) // each tackyinstruction becomes a list of asmnodes
-        .flatMap(List::stream).toList();
+        .flatMap(List::stream)
+        .toList();
+    // Static constants
+    topLevels.addAll(visitor.doubleGlobals());
 
     //    System.err.println(symbolTable);
     PseudoRegisterReplacer siv =
@@ -118,7 +128,8 @@ public class TackyToAsmCodeGen {
       instructions.add(0, allocateStack);
     }
 
-    return new AsmFunction(function.identifier(), function.global(), instructions);
+    topLevels.add(new AsmFunction(function.identifier(), function.global(), instructions));
+    return topLevels;
   }
 
 }

@@ -9,7 +9,7 @@ interface TackyVal {
   interface Visitor<R> {
     R visit(TackyVar tackyVar);
 
-    R visit(TackyConstant tackyInt);
+    R visit(TackyConstant<?> tackyInt);
   }
 
   Type type();
