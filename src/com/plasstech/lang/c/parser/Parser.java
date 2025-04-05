@@ -366,8 +366,8 @@ public class Parser {
 
   private static final Map<TokenType, Integer> PRECEDENCES =
       ImmutableMap.<TokenType, Integer>builder()
-          .put(TokenType.STAR, 50)
-          .put(TokenType.SLASH, 50)
+          .put(TokenType.MULTIPLY, 50)
+          .put(TokenType.DIVIDE, 50)
           .put(TokenType.PERCENT, 50)
           .put(TokenType.PLUS, 45)
           .put(TokenType.MINUS, 45)

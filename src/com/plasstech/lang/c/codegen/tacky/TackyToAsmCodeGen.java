@@ -78,7 +78,7 @@ public class TackyToAsmCodeGen {
       String paramName = function.params().get(i);
       Symbol symbol = symbolTable.get(paramName);
       Type type = symbol.type();
-      instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.argRegisters(type).get(i),
+      instructions.add(new Mov(AssemblyType.from(type), RegisterOperand.argRegister(type, i),
           new Pseudo(paramName, type)));
     }
     // Copy stack to param names.

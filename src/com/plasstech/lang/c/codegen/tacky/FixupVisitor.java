@@ -88,7 +88,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       }
         break;
 
-      case STAR: {
+      case MULTIPLY: {
         // Can't mul into stack; use r11. See page 65
         // Also can't mul with a 64-bit immediate. Page 268. 
         boolean needsIntermediary =
@@ -101,6 +101,12 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
               new Mov(n.type(), R11, n.dst()));
         }
       }
+        break;
+
+      case XOR:
+        // xor
+      case DIVIDE:
+        // TODO: deal with doubles
         break;
 
       default:
@@ -135,6 +141,7 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
 
   @Override
   public List<Instruction> visit(AsmUnary n) {
+    // TODO: deal with doubles
     return ImmutableList.of(n);
   }
 

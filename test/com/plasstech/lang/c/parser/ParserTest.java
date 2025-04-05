@@ -199,7 +199,7 @@ public class ParserTest {
     assertThat(left).isEqualTo(new BinExp(Constant.of(3), TokenType.PLUS, Constant.of(4)));
     assertThat(bin.operator()).isEqualTo(TokenType.MINUS);
     Exp right = bin.right();
-    assertThat(right).isEqualTo(new BinExp(Constant.of(6), TokenType.STAR, Constant.of(7)));
+    assertThat(right).isEqualTo(new BinExp(Constant.of(6), TokenType.MULTIPLY, Constant.of(7)));
   }
 
   @Test
@@ -217,7 +217,7 @@ public class ParserTest {
     BinExp bin = (BinExp) exp;
     Exp left = bin.left();
     assertThat(left)
-        .isEqualTo(new BinExp(Constant.of(1), TokenType.STAR, Constant.of(2)));
+        .isEqualTo(new BinExp(Constant.of(1), TokenType.MULTIPLY, Constant.of(2)));
     assertThat(bin.operator()).isEqualTo(TokenType.MINUS);
     Exp right = bin.right();
     assertThat(right).isEqualTo(Constant.of(3));

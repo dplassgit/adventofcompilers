@@ -28,19 +28,19 @@ public enum TokenType {
   //  OBRACK("["),
   //  CBRACK("]"),
   COMMA(","),
-  STAR("*"),
+  MULTIPLY("*"),
   PLUS("+"),
   MINUS("-"),
   DECREMENT("--"),
   TWIDDLE("~"),
-  SLASH("/"),
+  DIVIDE("/"),
   PERCENT("%"),
   BANG("!"),
   DOUBLE_BAR("||"),
   DOUBLE_AMPERSAND("&&"),
   BAR("|"),
   AMPERSAND("&"),
-  HAT("^"),
+  XOR("^"),
   EQEQ("==", true),
   GT(">", true),
   GEQ(">=", true),
@@ -50,7 +50,8 @@ public enum TokenType {
   EQ("="), // note, not conditional!
   QUESTION("?"),
   COLON(":"),
-  SEMICOLON(";");
+  SEMICOLON(";"),
+  SHIFT_RIGHT(">>");
 
   public final String text;
   public final boolean isKeyword;

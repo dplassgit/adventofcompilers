@@ -43,7 +43,7 @@ public class TypeChecker implements Validator {
 
   private static final Set<TokenType> ARITHMETIC_OPS =
       ImmutableSet.of(TokenType.PLUS, TokenType.MINUS,
-          TokenType.STAR, TokenType.SLASH, TokenType.PERCENT);
+          TokenType.MULTIPLY, TokenType.DIVIDE, TokenType.PERCENT);
 
   public TypeChecker(SymbolTable symbols) {
     this.symbols = symbols;

@@ -15,6 +15,8 @@ import com.plasstech.lang.c.codegen.Call;
 import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.CondCode;
+import com.plasstech.lang.c.codegen.Cvtsi2sd;
+import com.plasstech.lang.c.codegen.Cvttsd2si;
 import com.plasstech.lang.c.codegen.Data;
 import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
@@ -32,6 +34,7 @@ import com.plasstech.lang.c.codegen.Push;
 import com.plasstech.lang.c.codegen.RegisterOperand;
 import com.plasstech.lang.c.codegen.Ret;
 import com.plasstech.lang.c.codegen.SetCC;
+import com.plasstech.lang.c.common.UniqueId;
 import com.plasstech.lang.c.lex.TokenType;
 import com.plasstech.lang.c.typecheck.DoubleInit;
 import com.plasstech.lang.c.typecheck.Symbol;
@@ -118,23 +121,46 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     Operand dst = toOperand(op.dst());
     AssemblyType dstType = assemblyType(op.dst());
     AssemblyType srcType = assemblyType(op.src());
-    if (op.operator() == TokenType.BANG) {
-      // Page 86, 265
-      instructions.add(new Cmp(srcType, ZERO, src));
-      instructions.add(new Mov(dstType, ZERO, dst));
-      instructions.add(new SetCC(CondCode.E, dst));
-    } else if (op.operator() == TokenType.MINUS && dstType == AssemblyType.Double) {
-      // page 327-328
-      // add new constant
-      AsmStaticConstant doubleConstant = getOrMakeDoubleConstant(-0.0, 16);
-      instructions.add(new Mov(srcType, src, dst));
-      // xor
-      instructions.add(new AsmBinary(TokenType.HAT, dstType, new Data(doubleConstant.name()), dst));
-      return instructions;
-    } else {
-      // negate
-      instructions.add(new Mov(srcType, src, dst));
-      instructions.add(new AsmUnary(op.operator(), srcType, dst));
+    switch (op.operator()) {
+      case TokenType.BANG:
+        if (dstType == AssemblyType.Double) {
+          // page 328 (implied)
+          return ImmutableList.of(
+              new AsmBinary(TokenType.XOR, srcType, RegisterOperand.XMM0, RegisterOperand.XMM0),
+              new Cmp(srcType, RegisterOperand.XMM0, src),
+              new Mov(dstType, RegisterOperand.XMM0, dst),
+              new SetCC(CondCode.E, dst));
+        } else {
+          // Page 86, 265
+          instructions.add(new Cmp(srcType, ZERO, src));
+          instructions.add(new Mov(dstType, ZERO, dst));
+          instructions.add(new SetCC(CondCode.E, dst));
+        }
+        break;
+
+      case TokenType.MINUS:
+        if (dstType == AssemblyType.Double) {
+          // page 327-328
+          // add new constant
+          AsmStaticConstant doubleConstant = getOrMakeDoubleConstant(-0.0, 16);
+          instructions.add(new Mov(srcType, src, dst));
+          instructions
+              .add(new AsmBinary(TokenType.XOR, dstType, new Data(doubleConstant.name()), dst));
+        } else {
+          // negate
+          instructions.add(new Mov(srcType, src, dst));
+          instructions.add(new AsmUnary(op.operator(), srcType, dst));
+        }
+        break;
+
+      case TokenType.TWIDDLE:
+        // bit not
+        instructions.add(new Mov(srcType, src, dst));
+        instructions.add(new AsmUnary(op.operator(), srcType, dst));
+        break;
+
+      default:
+        throw new IllegalStateException("Unknown unary operator " + op.operator());
     }
     return instructions;
   }
@@ -150,11 +176,11 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     AssemblyType leftType = assemblyType(op.left());
     AssemblyType dstType = assemblyType(op.dst());
     switch (operator) {
-      case SLASH:
+      case DIVIDE:
         if (op.left().type().equals(Type.DOUBLE)) {
           // Page 327
           instructions.add(new Mov(leftType, left, dst));
-          instructions.add(new AsmBinary(op.operator(), leftType, right, dst));
+          instructions.add(new AsmBinary(TokenType.DIVIDE, leftType, right, dst));
           return instructions;
         }
         // fall through:
@@ -166,7 +192,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
           instructions.add(new Cdq(leftType));
           // idiv(right)
           instructions.add(new Idiv(leftType, right));
-          if (operator == TokenType.SLASH) {
+          if (operator == TokenType.DIVIDE) {
             // mov(reg(ax), dst)
             instructions.add(new Mov(leftType, RegisterOperand.RAX, dst));
           } else {
@@ -180,7 +206,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
           instructions.add(new Mov(leftType, new Imm(0), RegisterOperand.RDX));
           // div(right)
           instructions.add(new Div(leftType, right));
-          if (operator == TokenType.SLASH) {
+          if (operator == TokenType.DIVIDE) {
             // mov(reg(ax), dst)
             instructions.add(new Mov(leftType, RegisterOperand.RAX, dst));
           } else {
@@ -203,14 +229,13 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
           dstType = AssemblyType.Longword;
         }
         instructions.add(new Mov(dstType, ZERO, dst));
-        // page 288 adds signed
-        boolean signed = op.left().type().signed() || op.left().type().equals(Type.DOUBLE);
+        boolean signed = op.left().type().signed();
         instructions.add(new SetCC(CondCode.from(operator, signed), dst));
         break;
 
       case PLUS:
       case MINUS:
-      case STAR:
+      case MULTIPLY:
         // For +, -, *: 
         // First move left to dest
         instructions.add(new Mov(leftType, left, dst));
@@ -224,13 +249,19 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     return instructions;
   }
 
+  private static RegisterOperand returnRegister(AssemblyType type) {
+    if (type == AssemblyType.Double) {
+      return RegisterOperand.XMM0;
+    }
+    return RegisterOperand.RAX;
+  }
+
   @Override
   public List<Instruction> visit(TackyReturn op) {
     AssemblyType srcType = assemblyType(op.val());
     Operand operand = toOperand(op.val());
-    // TODO: deal with doubles
     return ImmutableList.of(
-        new Mov(srcType, operand, RegisterOperand.RAX),
+        new Mov(srcType, operand, returnRegister(srcType)),
         new Ret());
   }
 
@@ -252,6 +283,13 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     AssemblyType srcType = assemblyType(op.condition());
     // Page 86
     Operand operand = toOperand(op.condition());
+    if (srcType == AssemblyType.Double) {
+      // Page 328
+      return ImmutableList.of(
+          new AsmBinary(TokenType.XOR, srcType, RegisterOperand.XMM0, RegisterOperand.XMM0),
+          new Cmp(srcType, operand, RegisterOperand.XMM0),
+          new JmpCC(CondCode.E, op.target()));
+    }
     return ImmutableList.of(
         new Cmp(srcType, ZERO, operand),
         new JmpCC(CondCode.E, op.target()));
@@ -262,6 +300,13 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     AssemblyType srcType = assemblyType(op.condition());
     // Page 86
     Operand operand = toOperand(op.condition());
+    if (srcType == AssemblyType.Double) {
+      // Page 328
+      return ImmutableList.of(
+          new AsmBinary(TokenType.XOR, srcType, RegisterOperand.XMM0, RegisterOperand.XMM0),
+          new Cmp(srcType, operand, RegisterOperand.XMM0),
+          new JmpCC(CondCode.NE, op.target()));
+    }
     return ImmutableList.of(
         new Cmp(srcType, ZERO, operand),
         new JmpCC(CondCode.NE, op.target()));
@@ -294,8 +339,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     // Pass args in registers
     for (int i = 0; i < numRegArgs; ++i) {
       TackyVal arg = op.args().get(i);
-      // TODO: deal with doubles
-      RegisterOperand register = RegisterOperand.ARG_REGISTERS.get(i);
+      RegisterOperand register = RegisterOperand.argRegister(arg.type(), i);
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
       instructions.add(new Mov(srcType, argOp, register));
@@ -307,15 +351,15 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
       TackyVal arg = op.args().get(i + 6);
       AssemblyType srcType = assemblyType(arg);
       Operand argOp = toOperand(arg);
-      if (srcType == AssemblyType.Quadword) {
+      if (srcType == AssemblyType.Double) {
         // TODO: deal with doubles
+      } else if (srcType == AssemblyType.Quadword) {
         instructions.add(new Push(argOp));
       } else {
         switch (argOp) {
           case RegisterOperand ro -> instructions.add(new Push(argOp));
           case Imm imm -> instructions.add(new Push(argOp));
           default -> {
-            // TODO: deal with doubles
             instructions.add(new Mov(AssemblyType.Longword, argOp, RegisterOperand.RAX));
             instructions.add(new Push(RegisterOperand.RAX));
           }
@@ -337,8 +381,7 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
     // retrieve return value
     Operand dest = toOperand(op.dst());
     AssemblyType dstType = assemblyType(op.dst());
-    // TODO: deal with doubles
-    instructions.add(new Mov(dstType, RegisterOperand.RAX, dest));
+    instructions.add(new Mov(dstType, returnRegister(dstType), dest));
 
     return instructions;
   }
@@ -364,21 +407,92 @@ class TackyInstructionToInstructionsVisitor implements TackyInstruction.Visitor<
 
   @Override
   public List<Instruction> visit(TackyDoubleToInt op) {
-    throw new UnsupportedOperationException("Not implemented");
+    // Page 317, 334
+    Operand src = toOperand(op.src());
+    Operand dst = toOperand(op.dst());
+    AssemblyType srcType = assemblyType(op.src());
+    return ImmutableList.of(new Cvttsd2si(srcType, src, dst));
   }
 
   @Override
   public List<Instruction> visit(TackyDoubleToUInt op) {
-    throw new UnsupportedOperationException("Not implemented");
+    // Page 335
+    Operand src = toOperand(op.src());
+    Operand dst = toOperand(op.dst());
+    Type srcType = op.src().type();
+    if (srcType.equals(Type.INT)) {
+      // to unsigned int.
+      return ImmutableList.of(
+          new Cvttsd2si(AssemblyType.Quadword, src, RegisterOperand.XMM1),
+          new Mov(AssemblyType.Longword, RegisterOperand.XMM1, dst));
+    }
+    // To unsigned long
+    AsmStaticConstant upperBound = getOrMakeDoubleConstant(9223372036854775808.0, 8);
+    List<Instruction> instructions = new ArrayList<>();
+    instructions.add(new Cmp(AssemblyType.Double, new Data(upperBound.name()), src));
+    String outOfRangeLabel = UniqueId.makeUnique("double2uint.outofrange");
+    String endLabel = UniqueId.makeUnique("double2uint.end");
+    instructions.add(new JmpCC(CondCode.AE, outOfRangeLabel));
+    instructions.add(new Cvttsd2si(AssemblyType.Quadword, src, dst));
+    instructions.add(new Jmp(endLabel));
+    instructions.add(new Label(outOfRangeLabel));
+    instructions.add(new Mov(AssemblyType.Double, src, RegisterOperand.XMM1));
+    instructions
+        .add(new AsmBinary(TokenType.MINUS, AssemblyType.Double, new Data(upperBound.name()),
+            RegisterOperand.XMM1));
+    instructions.add(new Cvttsd2si(AssemblyType.Quadword, RegisterOperand.XMM1, dst));
+    instructions
+        // 9223372036854775808L is out of range for a 64-bit signed number. WTH!?
+        // so I'm trying MIN_VALUE, which is 2^63 exactly
+        .add(new Mov(AssemblyType.Quadword, new Imm(Long.MIN_VALUE), RegisterOperand.RDX));
+    instructions
+        .add(new AsmBinary(TokenType.PLUS, AssemblyType.Quadword, RegisterOperand.RDX, dst));
+    instructions.add(new Label(endLabel));
+    return instructions;
   }
 
   @Override
   public List<Instruction> visit(TackyIntToDouble op) {
-    throw new UnsupportedOperationException("Not implemented");
+    // Page 318, 334
+    Operand src = toOperand(op.src());
+    Operand dst = toOperand(op.dst());
+    AssemblyType srcType = assemblyType(op.src());
+    return ImmutableList.of(new Cvtsi2sd(srcType, src, dst));
   }
 
   @Override
   public List<Instruction> visit(TackyUIntToDouble op) {
-    throw new UnsupportedOperationException("Not implemented");
+    Operand src = toOperand(op.src());
+    Operand dst = toOperand(op.dst());
+    Type srcType = op.src().type();
+    if (srcType.equals(Type.INT)) {
+      // from unsigned int.
+      return ImmutableList.of(
+          new MovZeroExtend(src, RegisterOperand.RAX),
+          new Cvtsi2sd(AssemblyType.Quadword, RegisterOperand.RAX, dst));
+    }
+
+    // from unsigned long
+    List<Instruction> instructions = new ArrayList<>();
+    String outOfRangelabel = UniqueId.makeUnique("uint2double.outofrange");
+    String endLabel = UniqueId.makeUnique("uint2double.end");
+    instructions.add(new Cmp(AssemblyType.Double, new Imm(0), src));
+    instructions.add(new JmpCC(CondCode.L, outOfRangelabel));
+    instructions.add(new Cvtsi2sd(AssemblyType.Quadword, src, dst));
+    instructions.add(new Jmp(endLabel));
+    instructions.add(new Label(outOfRangelabel));
+    instructions.add(new Mov(AssemblyType.Quadword, src, RegisterOperand.RAX));
+    instructions.add(new Mov(AssemblyType.Quadword, RegisterOperand.RAX, RegisterOperand.RDX));
+    instructions
+        .add(new AsmUnary(TokenType.SHIFT_RIGHT, AssemblyType.Quadword, RegisterOperand.RDX));
+    instructions.add(
+        new AsmBinary(TokenType.AMPERSAND, AssemblyType.Quadword, new Imm(1),
+            RegisterOperand.RAX));
+    instructions.add(new AsmBinary(TokenType.BAR, AssemblyType.Quadword, RegisterOperand.RAX,
+        RegisterOperand.RDX));
+    instructions.add(new Cvtsi2sd(AssemblyType.Quadword, RegisterOperand.RDX, dst));
+    instructions.add(new AsmBinary(TokenType.PLUS, AssemblyType.Double, dst, dst));
+    instructions.add(new Label(endLabel));
+    return instructions;
   }
 }

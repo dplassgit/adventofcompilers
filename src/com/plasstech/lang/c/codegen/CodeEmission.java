@@ -108,6 +108,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(AsmBinary n) {
+    // TODO: deal with doubles
     return emit(n);
   }
 
@@ -148,6 +149,7 @@ public class CodeEmission implements AsmNode.Visitor<Void> {
 
   @Override
   public Void visit(Push n) {
+    // TODO: deal with doubles
     return emit(n);
   }
 

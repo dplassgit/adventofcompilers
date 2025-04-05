@@ -18,7 +18,8 @@ public interface Type {
     }
   }
 
-  Type DOUBLE = new SimpleType("double", 64, true);
+  // double is considered unsigned, probably. Page 328
+  Type DOUBLE = new SimpleType("double", 64, false);
   Type INT = new SimpleType("int", 32, true);
   Type LONG = new SimpleType("long", 64, true);
   Type UNSIGNED_INT = new SimpleType("unsigned int", 32, false);

@@ -189,8 +189,8 @@ public class ScannerTest {
     assertThat(s.nextToken().type()).isEqualTo(TokenType.MINUS);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.TWIDDLE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.PLUS);
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.STAR);
-    assertThat(s.nextToken().type()).isEqualTo(TokenType.SLASH);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.MULTIPLY);
+    assertThat(s.nextToken().type()).isEqualTo(TokenType.DIVIDE);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.PERCENT);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.DOUBLE_AMPERSAND);
     assertThat(s.nextToken().type()).isEqualTo(TokenType.AMPERSAND);

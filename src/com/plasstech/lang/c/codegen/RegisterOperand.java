@@ -31,16 +31,22 @@ public record RegisterOperand(String name, String name1, String name4) implement
   public static RegisterOperand XMM14 = new RegisterOperand("XMM14");
   public static RegisterOperand XMM15 = new RegisterOperand("XMM15");
 
-  public static final List<RegisterOperand> ARG_REGISTERS = ImmutableList.of(
+  private static final List<RegisterOperand> ARG_REGISTERS = ImmutableList.of(
       RDI, RSI, RDX, RCX, R8, R9);
-  public static final List<RegisterOperand> DOUBLE_ARG_REGISTERS = ImmutableList.of(
+  private static final List<RegisterOperand> DOUBLE_ARG_REGISTERS = ImmutableList.of(
       XMM0, XMM1, XMM2, XMM3, XMM4, XMM5, XMM6);
 
-  public static final List<RegisterOperand> argRegisters(Type type) {
+  public static final RegisterOperand argRegister(Type type, int index) {
     if (type.equals(Type.DOUBLE)) {
-      return DOUBLE_ARG_REGISTERS;
+      if (index > DOUBLE_ARG_REGISTERS.size()) {
+        return null;
+      }
+      return DOUBLE_ARG_REGISTERS.get(index);
     }
-    return ARG_REGISTERS;
+    if (index > ARG_REGISTERS.size()) {
+      return null;
+    }
+    return ARG_REGISTERS.get(index);
   }
 
   private String nameToString(int bytes) {
