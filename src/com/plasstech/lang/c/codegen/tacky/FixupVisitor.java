@@ -2,6 +2,7 @@ package com.plasstech.lang.c.codegen.tacky;
 
 import static com.plasstech.lang.c.codegen.RegisterOperand.R10;
 import static com.plasstech.lang.c.codegen.RegisterOperand.R11;
+import static com.plasstech.lang.c.codegen.RegisterOperand.XMM14;
 
 import java.util.List;
 
@@ -19,6 +20,7 @@ import com.plasstech.lang.c.codegen.Cdq;
 import com.plasstech.lang.c.codegen.Cmp;
 import com.plasstech.lang.c.codegen.Cvtsi2sd;
 import com.plasstech.lang.c.codegen.Cvttsd2si;
+import com.plasstech.lang.c.codegen.Data;
 import com.plasstech.lang.c.codegen.Div;
 import com.plasstech.lang.c.codegen.Idiv;
 import com.plasstech.lang.c.codegen.Imm;
@@ -76,11 +78,17 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
         boolean needsIntermediary =
             n.dst().inMemory() &&
                 (n.src().inMemory()
+                    || (n.src() instanceof Data && n.type() == AssemblyType.Double)
                     || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src())));
         if (needsIntermediary) {
           // Can't add or subtract stack and stack; use r10. See page 64
           // Or, if left or right is an immediate that is bigger than 32 bits, need to fixup. Page 268
-          // TODO: deal with doubles
+          if (n.type() == AssemblyType.Double) {
+            // TODO: page ???
+            return ImmutableList.of(
+                new Mov(n.type(), n.src(), XMM14),
+                new AsmBinary(n.operator(), n.type(), XMM14, n.dst()));
+          }
           return ImmutableList.of(
               new Mov(n.type(), n.src(), R10),
               new AsmBinary(n.operator(), n.type(), R10, n.dst()));
@@ -88,25 +96,29 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
       }
         break;
 
+      case XOR:
+      case DIVIDE:
       case MULTIPLY: {
         // Can't mul into stack; use r11. See page 65
         // Also can't mul with a 64-bit immediate. Page 268. 
         boolean needsIntermediary =
-            n.dst().inMemory() || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src()));
+            n.dst().inMemory() || (n.src() instanceof Data && n.type() == AssemblyType.Double)
+                || (n.type() == AssemblyType.Quadword && immOutOfRange(n.src()));
         if (needsIntermediary) {
-          // TODO: deal with doubles
+          if (n.type() == AssemblyType.Double) {
+            // TODO: page number?
+            return ImmutableList.of(
+                // Is this right?!
+                new Mov(n.type(), n.src(), XMM14),
+                new AsmBinary(n.operator(), n.type(), n.dst(), XMM14),
+                new Mov(n.type(), XMM14, n.dst()));
+          }
           return ImmutableList.of(
               new Mov(n.type(), n.src(), R11), // NOTYPO
               new AsmBinary(n.operator(), n.type(), n.dst(), R11),
               new Mov(n.type(), R11, n.dst()));
         }
       }
-        break;
-
-      case XOR:
-        // xor
-      case DIVIDE:
-        // TODO: deal with doubles
         break;
 
       default:
@@ -119,7 +131,6 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   public List<Instruction> visit(Idiv n) {
     // Can't divide by a constant; use r10 as an intermediary. See page 64
     if (n.operand() instanceof Imm) {
-      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(n.type(), n.operand(), R10),
           new Idiv(n.type(), R10));
@@ -131,7 +142,6 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   public List<Instruction> visit(Div n) {
     // Can't divide by a constant; use r10 as an intermediary. See page 290
     if (n.operand() instanceof Imm) {
-      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(n.type(), n.operand(), R10),
           new Div(n.type(), R10));
@@ -234,11 +244,11 @@ class FixupVisitor implements AsmNode.Visitor<List<Instruction>> {
   @Override
   public List<Instruction> visit(Push n) {
     if (immOutOfRange(n.operand())) {
-      // TODO: deal with doubles
       return ImmutableList.of(
           new Mov(AssemblyType.Quadword, n.operand(), R10),
           new Push(R10));
     }
+    // TODO: deal with doubles
     return ImmutableList.of(n);
   }
 
